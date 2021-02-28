@@ -89,7 +89,7 @@ def search(pep_name):
     
     # print(request_body)
 
-    current_databases = current_dbs()
+    # current_databases = current_dbs()
     Primary = 'pep_db1' # current_databases['Primary']
 
     print(Primary)
