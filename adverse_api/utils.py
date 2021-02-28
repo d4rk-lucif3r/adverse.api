@@ -14,6 +14,33 @@ import pymongo
 from pymongo import MongoClient
 
 
+def update_ids_dbs(keywords, news_source_ids):
+    '''
+    function to update sources ids and keywords into database
+    '''
+    dbs = {}
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['news_ids']
+    dbs['keywords'] = keywords
+    dbs['news_source_ids'] = news_source_ids
+    collection_batches.insert(dbs)
+    # print("Batch Run ingesting into DB")
+    collection_batches.create_index([("news_ids", pymongo.ASCENDING)])
+    # print("BatchId is created")
+    return "Successfully Updated keywords and news source ids"
+
+def current_ids_dbs(keywords, news_source_ids):
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['news_ids']
+    cursor = collection_batches.find({}, {'_id': False})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
 def current_dbs():
     '''
     function to retrieve current databases from mongodb

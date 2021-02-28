@@ -47,31 +47,12 @@ def adverseapi3():
         "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
         })
 
-    if _request["keywords"]:
-      keywords = _request["keywords"]
-      keywords = keywords.split(',')
-      print('keywords is:', keywords)
-    else:
-      keywords = ["default"]
-
     if _request["mode"]:
       mode = _request["mode"]
     else:
       mode = "full"
 
-    if _request["news_source_id"]:
-      news_source_id = _request["news_source_id"]
-      news_source_id = news_source_id.split(',')
-    else:
-      news_source_id = []
-
-    if api != '35622ca4d6fc49c6b811df1e9fc10de4':
-      return jsonify({"status": "error",
-        "code": "apiKeyInvalid",
-        "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
-        })
-
-    if 'default' in keywords:
+    if api == '35622ca4d6fc49c6b811df1e9fc10de4':
       if mode == 'full':
 
         # fetch all the data from db
@@ -100,60 +81,22 @@ def adverseapi3():
 
         # results = {'results': search_results}
 
-        return jsonify({"news_source_id": None, 
-          "keywords_searched" : _request["keywords"], 
-          "date_of_response": None,
-          "mode_of_search": _request["mode"],
-          "search_results": search_results})
-
-      elif mode == 'incremental':
-
-        # fetch all the data from db
-        search_results = []
-
-        client = MongoClient('localhost', 27017)
-        db = client['adverse_db']
-        collection_batches = db['adverse_db']
-        cursor = collection_batches.find({}, {'uuid': False})
-        # cursor = collection_batches.find({})
-
-        for document in cursor:
-          date = datetime.strptime(document['Article Date'], "%Y-%m-%d %H:%M:%S")
-          past = datetime.now() - timedelta(days=1)
-
-          if date > past:
-            document['Article_Date'] = document.pop('Article Date')
-            document['City_of_News_Paper'] = document.pop('City of News Paper')
-            document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
-            document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
-            document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
-            document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
-            document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
-            document['Source_Name'] = document.pop('Source Name')
-            document['Source_of_Info'] = document.pop('Source of Info')
-            document['Web_link_of_news'] = document.pop('Web link of news')
-            document['uuid'] = f1.uuid4()
-
-            search_results.append(document)
-          else:
-            print('skipping news past 1 days')
-
-        return jsonify({"news_source_id": None, 
-          "keywords_searched" : _request["keywords"], 
+        return jsonify({"news_source_id": None,
+          "last_updated_time": "2021-02-25 00:00:00",
+          "keywords_searched" : None, 
           "date_of_response": None,
           "mode_of_search": _request["mode"],
           "search_results": search_results})
 
       elif mode == 'manual':
-
-        # fetch all the data from specified db
-        search_results = []
-
+        _search_results = []
         if _request["date"]:
-
           date = _request["date"]
-          date = date.split(',')
+          date = datetime.strptime(_request["date"], "%Y-%m-%d %H:%M:%S")
 
+          # fetch all the data from db
+          search_results = []
+          
           client = MongoClient('localhost', 27017)
           db = client['adverse_db']
           collection_batches = db['adverse_db']
@@ -161,13 +104,8 @@ def adverseapi3():
           # cursor = collection_batches.find({})
 
           for document in cursor:
-            _date = datetime.strptime(document['Article Date'], "%Y-%m-%d %H:%M:%S")
-            max_date = datetime.strptime(date[0], "%Y-%m-%d")
-            min_date = datetime.strptime(date[1], "%Y-%m-%d")
-            print('date:', _date, 'max_date:', max_date, 'min_date:', min_date)
-
-            if (_date <= max_date) and (_date >= min_date):
-              document['Article_Date'] = document.pop('Article Date')
+            document['Article_Date'] = document.pop('Article Date')
+            if datetime.strptime(document['Article_Date'], "%Y-%m-%d %H:%M:%S") > date:
               document['City_of_News_Paper'] = document.pop('City of News Paper')
               document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
               document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
@@ -178,130 +116,296 @@ def adverseapi3():
               document['Source_of_Info'] = document.pop('Source of Info')
               document['Web_link_of_news'] = document.pop('Web link of news')
               document['uuid'] = f1.uuid4()
-
               search_results.append(document)
-            
-            else:
-              print('skipping news past 1 days')
 
-          return jsonify({"news_source_id": None, 
-            "keywords_searched" : _request["keywords"], 
-            "date_of_response": _request["date"],
-            "mode_of_search": _request["mode"],
-            "search_results": search_results})
-
-        else:
-          return jsonify({"news_source_id": None, 
-            "keywords_searched" : _request["keywords"], 
-            "date_of_response": _request["date"],
-            "mode_of_search": _request["mode"],
-            "search_results": search_results})
-
-    else:
-      if mode == 'full':
-
-        # fetch all the data relative to keywords
-        search_results = search(_request["keywords"])
-        _search_results = []
-
-        for response in search_results:
-          response['uuid'] = f1.uuid4()
-          if news_source_id:
-            if response['Source Name'] in news_source_id:
-              print('it has found source name')
-              _search_results.append(response)
-              return jsonify({"news_source_id": news_source_id, 
-                "keywords_searched" : _request["keywords"], 
-                "date_of_response": None,
-                "mode_of_search": _request["mode"],
-                "search_results": _search_results})
-            else:
-              print('sourceid not present in request body')
-
-          else:
-            _search_results.append(response)
-
-            return jsonify({"news_source_id": None, 
-              "keywords_searched" : _request["keywords"], 
-              "date_of_response": None,
-              "mode_of_search": _request["mode"],
-              "search_results": _search_results})
-
-
-      elif mode == 'incremental':
-
-        # fetch all the data relative to keywords
-        search_results = search(_request["keywords"])
-        _search_results = []
-
-        for response in search_results:
-          response['uuid'] = f1.uuid4()
-          date = datetime.strptime(response['Article Date'], "%Y-%m-%d %H:%M:%S")
-          past = datetime.now() - timedelta(days=1)
-          if date > past:
-            if news_source_id:
-              if response['Source Name'] in news_source_id:
-                _search_results.append(response)
-                return jsonify({"news_source_id": news_source_id, 
-                  "keywords_searched" : _request["keywords"], 
-                  "date_of_response": None,
-                  "mode_of_search": _request["mode"],
-                  "search_results": _search_results})
-              else:
-                print('sourceid not present in request body')
-            else:
-              _search_results.append(response)
-
-              return jsonify({"news_source_id": None, 
-                "keywords_searched" : _request["keywords"], 
-                "date_of_response": None,
-                "mode_of_search": _request["mode"],
-                "search_results": _search_results})
-
-      elif mode == 'manual':
-        # fetch all the data relative to keywords
-        search_results = search(_request["keywords"])
-        _search_results = []
-
-        if _request["date"]:
-          date = _request["date"]
-          date = date.split(',')
-
-          for response in search_results:
-            _date = datetime.strptime(response['Article Date'], "%Y-%m-%d %H:%M:%S")
-            max_date = datetime.strptime(date[0], "%Y-%m-%d")
-            min_date = datetime.strptime(date[1], "%Y-%m-%d")
-            print('date:', _date, 'max_date:', max_date, 'min_date:', min_date)
-
-            if (_date <= max_date) and (_date >= min_date):
-              response['uuid'] = f1.uuid4()
-              if news_source_id:
-                if response['Source Name'] in news_source_id:
-                  _search_results.append(response)
-                  return jsonify({"news_source_id": news_source_id, 
-                    "keywords_searched" : _request["keywords"], 
-                    "date_of_response": None,
-                    "mode_of_search": _request["mode"],
-                    "search_results": _search_results})
-                else:
-                  print('sourceid not present in request body')
-              else:
-                _search_results.append(response)
-            else:
-              print('skipping news not in date range')
-
-          return jsonify({"news_source_id": None, 
-            "keywords_searched" : _request["keywords"], 
+          return jsonify({"news_source_id": None,
+            "last_updated_time": "2021-02-27 21:02:45",
+            "keywords_searched" : None, 
             "date_of_response": None,
             "mode_of_search": _request["mode"],
-            "search_results": _search_results})
+            "search_results": search_results})
 
-        else:
-          return jsonify({"news_source_id": None, 
-            "keywords_searched" : _request["keywords"], 
-            "date_of_response": _request["date"],
-            "mode_of_search": _request["mode"],
-            "search_results": _search_results})
+      elif mode == 'update':        
+        if _request['keywords'] and _request['news_source_ids']:
+
+          # add news keywords and news source ids to database
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": None,
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+
+    #   elif mode == 'update':        
+    #     if _request['keywords'] and _request['news_source_ids']:
+    #       keywords = _request['keywords'].split(',')
+    #       news_source_id = _request['news_source_ids'].split(',')
+
+
+
+
+
+
+    # if _request["keywords"]:
+    #   keywords = _request["keywords"]
+    #   keywords = keywords.split(',')
+    #   print('keywords is:', keywords)
+    # else:
+    #   keywords = ["default"]
+
+    # if _request["mode"]:
+    #   mode = _request["mode"]
+    # else:
+    #   mode = "full"
+
+    # if _request["news_source_id"]:
+    #   news_source_id = _request["news_source_id"]
+    #   news_source_id = news_source_id.split(',')
+    # else:
+    #   news_source_id = []
+
+    # if api != '35622ca4d6fc49c6b811df1e9fc10de4':
+    #   return jsonify({"status": "error",
+    #     "code": "apiKeyInvalid",
+    #     "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
+    #     })
+
+    # if 'default' in keywords:
+    #   if mode == 'full':
+
+    #     # fetch all the data from db
+    #     search_results = []
+
+    #     client = MongoClient('localhost', 27017)
+    #     db = client['adverse_db']
+    #     collection_batches = db['adverse_db']
+    #     cursor = collection_batches.find({}, {'uuid': False})
+    #     # cursor = collection_batches.find({})
+
+    #     for document in cursor:
+    #       document['Article_Date'] = document.pop('Article Date')
+    #       document['City_of_News_Paper'] = document.pop('City of News Paper')
+    #       document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
+    #       document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
+    #       document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
+    #       document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
+    #       document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+    #       document['Source_Name'] = document.pop('Source Name')
+    #       document['Source_of_Info'] = document.pop('Source of Info')
+    #       document['Web_link_of_news'] = document.pop('Web link of news')
+    #       document['uuid'] = f1.uuid4()
+
+    #       search_results.append(document)
+
+    #     # results = {'results': search_results}
+
+    #     return jsonify({"news_source_id": None, 
+    #       "keywords_searched" : _request["keywords"], 
+    #       "date_of_response": None,
+    #       "mode_of_search": _request["mode"],
+    #       "search_results": search_results})
+
+    #   elif mode == 'incremental':
+
+    #     # fetch all the data from db
+    #     search_results = []
+
+    #     client = MongoClient('localhost', 27017)
+    #     db = client['adverse_db']
+    #     collection_batches = db['adverse_db']
+    #     cursor = collection_batches.find({}, {'uuid': False})
+    #     # cursor = collection_batches.find({})
+
+    #     for document in cursor:
+    #       date = datetime.strptime(document['Article Date'], "%Y-%m-%d %H:%M:%S")
+    #       past = datetime.now() - timedelta(days=1)
+
+    #       if date > past:
+    #         document['Article_Date'] = document.pop('Article Date')
+    #         document['City_of_News_Paper'] = document.pop('City of News Paper')
+    #         document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
+    #         document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
+    #         document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
+    #         document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
+    #         document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+    #         document['Source_Name'] = document.pop('Source Name')
+    #         document['Source_of_Info'] = document.pop('Source of Info')
+    #         document['Web_link_of_news'] = document.pop('Web link of news')
+    #         document['uuid'] = f1.uuid4()
+
+    #         search_results.append(document)
+    #       else:
+    #         print('skipping news past 1 days')
+
+    #     return jsonify({"news_source_id": None, 
+    #       "keywords_searched" : _request["keywords"], 
+    #       "date_of_response": None,
+    #       "mode_of_search": _request["mode"],
+    #       "search_results": search_results})
+
+    #   elif mode == 'manual':
+
+    #     # fetch all the data from specified db
+    #     search_results = []
+
+    #     if _request["date"]:
+
+    #       date = _request["date"]
+    #       date = date.split(',')
+
+    #       client = MongoClient('localhost', 27017)
+    #       db = client['adverse_db']
+    #       collection_batches = db['adverse_db']
+    #       cursor = collection_batches.find({}, {'uuid': False})
+    #       # cursor = collection_batches.find({})
+
+    #       for document in cursor:
+    #         _date = datetime.strptime(document['Article Date'], "%Y-%m-%d %H:%M:%S")
+    #         max_date = datetime.strptime(date[0], "%Y-%m-%d")
+    #         min_date = datetime.strptime(date[1], "%Y-%m-%d")
+    #         print('date:', _date, 'max_date:', max_date, 'min_date:', min_date)
+
+    #         if (_date <= max_date) and (_date >= min_date):
+    #           document['Article_Date'] = document.pop('Article Date')
+    #           document['City_of_News_Paper'] = document.pop('City of News Paper')
+    #           document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
+    #           document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
+    #           document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
+    #           document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
+    #           document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+    #           document['Source_Name'] = document.pop('Source Name')
+    #           document['Source_of_Info'] = document.pop('Source of Info')
+    #           document['Web_link_of_news'] = document.pop('Web link of news')
+    #           document['uuid'] = f1.uuid4()
+
+    #           search_results.append(document)
+            
+    #         else:
+    #           print('skipping news past 1 days')
+
+    #       return jsonify({"news_source_id": None, 
+    #         "keywords_searched" : _request["keywords"], 
+    #         "date_of_response": _request["date"],
+    #         "mode_of_search": _request["mode"],
+    #         "search_results": search_results})
+
+    #     else:
+    #       return jsonify({"news_source_id": None, 
+    #         "keywords_searched" : _request["keywords"], 
+    #         "date_of_response": _request["date"],
+    #         "mode_of_search": _request["mode"],
+    #         "search_results": search_results})
+
+    # else:
+    #   if mode == 'full':
+
+    #     # fetch all the data relative to keywords
+    #     search_results = search(_request["keywords"])
+    #     _search_results = []
+
+    #     for response in search_results:
+    #       response['uuid'] = f1.uuid4()
+    #       if news_source_id:
+    #         if response['Source Name'] in news_source_id:
+    #           print('it has found source name')
+    #           _search_results.append(response)
+    #           return jsonify({"news_source_id": news_source_id, 
+    #             "keywords_searched" : _request["keywords"], 
+    #             "date_of_response": None,
+    #             "mode_of_search": _request["mode"],
+    #             "search_results": _search_results})
+    #         else:
+    #           print('sourceid not present in request body')
+
+    #       else:
+    #         _search_results.append(response)
+
+    #         return jsonify({"news_source_id": None, 
+    #           "keywords_searched" : _request["keywords"], 
+    #           "date_of_response": None,
+    #           "mode_of_search": _request["mode"],
+    #           "search_results": _search_results})
+
+
+    #   elif mode == 'incremental':
+
+    #     # fetch all the data relative to keywords
+    #     search_results = search(_request["keywords"])
+    #     _search_results = []
+
+    #     for response in search_results:
+    #       response['uuid'] = f1.uuid4()
+    #       date = datetime.strptime(response['Article Date'], "%Y-%m-%d %H:%M:%S")
+    #       past = datetime.now() - timedelta(days=1)
+    #       if date > past:
+    #         if news_source_id:
+    #           if response['Source Name'] in news_source_id:
+    #             _search_results.append(response)
+    #             return jsonify({"news_source_id": news_source_id, 
+    #               "keywords_searched" : _request["keywords"], 
+    #               "date_of_response": None,
+    #               "mode_of_search": _request["mode"],
+    #               "search_results": _search_results})
+    #           else:
+    #             print('sourceid not present in request body')
+    #         else:
+    #           _search_results.append(response)
+
+    #           return jsonify({"news_source_id": None, 
+    #             "keywords_searched" : _request["keywords"], 
+    #             "date_of_response": None,
+    #             "mode_of_search": _request["mode"],
+    #             "search_results": _search_results})
+
+    #   elif mode == 'manual':
+    #     # fetch all the data relative to keywords
+    #     search_results = search(_request["keywords"])
+    #     _search_results = []
+
+    #     if _request["date"]:
+    #       date = _request["date"]
+    #       date = date.split(',')
+
+    #       for response in search_results:
+    #         _date = datetime.strptime(response['Article Date'], "%Y-%m-%d %H:%M:%S")
+    #         max_date = datetime.strptime(date[0], "%Y-%m-%d")
+    #         min_date = datetime.strptime(date[1], "%Y-%m-%d")
+    #         print('date:', _date, 'max_date:', max_date, 'min_date:', min_date)
+
+    #         if (_date <= max_date) and (_date >= min_date):
+    #           response['uuid'] = f1.uuid4()
+    #           if news_source_id:
+    #             if response['Source Name'] in news_source_id:
+    #               _search_results.append(response)
+    #               return jsonify({"news_source_id": news_source_id, 
+    #                 "keywords_searched" : _request["keywords"], 
+    #                 "date_of_response": None,
+    #                 "mode_of_search": _request["mode"],
+    #                 "search_results": _search_results})
+    #             else:
+    #               print('sourceid not present in request body')
+    #           else:
+    #             _search_results.append(response)
+    #         else:
+    #           print('skipping news not in date range')
+
+    #       return jsonify({"news_source_id": None, 
+    #         "keywords_searched" : _request["keywords"], 
+    #         "date_of_response": None,
+    #         "mode_of_search": _request["mode"],
+    #         "search_results": _search_results})
+
+    #     else:
+    #       return jsonify({"news_source_id": None, 
+    #         "keywords_searched" : _request["keywords"], 
+    #         "date_of_response": _request["date"],
+    #         "mode_of_search": _request["mode"],
+    #         "search_results": _search_results})
 
 
 @app.route('/Adversecheck', methods=['GET', 'POST'])
