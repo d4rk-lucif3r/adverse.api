@@ -101,7 +101,7 @@ def adverseapi():
 
           search_results.append(document)
 
-        return jsonify({"news_source_id": ids["news_source_id"], 
+        return jsonify({"news_source_id": ids["news_source_ids"], 
             "last_updated_time": dbs[-1]["RunDate"],
             "keywords_searched" : ids['keywords'], 
             "date_of_response": None,
@@ -160,7 +160,7 @@ def adverseapi():
           # last_updated_time = datetime.strptime("2021-02-27 21:02:45", "%Y-%m-%d %H:%M:%S")
           # last_updated_time = last_updated_time.replace(tzinfo=timezone.utc)
 
-          return jsonify({"news_source_ids": ids["news_source_id"],
+          return jsonify({"news_source_ids": ids["news_source_ids"],
             "last_updated_time": dbs[-1]["RunDate"],
             "keywords_searched" : ids['keywords'], 
             "date_of_response": _request["date"],

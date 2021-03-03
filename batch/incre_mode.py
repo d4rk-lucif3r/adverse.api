@@ -36,7 +36,7 @@ def _incre_mode(batch_id):
     
     dbs = current_ids()
     
-    source_news_ids = dbs["news_source_id"].split(',')
+    source_news_ids = dbs["news_source_ids"].split(',')
     
     dictionary = {'2cdd8f28-01f5-4d18-b438-742f04fe3140': 'https://prod-qt-images.s3.amazonaws.com/production/bloombergquint/feed.xml',
         '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',
@@ -143,7 +143,7 @@ def _incre_mode(batch_id):
               # print('Date is greater:', article.publish_date)
     
           for keyword in keywords:
-            if keyword in text.lower():
+            if keyword.lower() in text.lower():
               if keyword not in profile['keyword']:
                 profile['keyword'] += keyword + ', '
               else:
