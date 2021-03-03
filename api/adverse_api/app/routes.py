@@ -83,6 +83,13 @@ def adverseapi():
           document['Source_Name'] = document.pop('Source Name')
           document['Source_of_Info'] = document.pop('Source of Info')
           document['Web_link_of_news'] = document.pop('Web link of news')
+          try:
+            if document['created_date']:
+              print('created date exist')
+              # document['created_date'] = ''
+          except Exception as e:
+            document['created_date'] = ''
+
 
           # print(document)
           # document['Article_Date'] = document.pop('Article Date')
@@ -142,6 +149,12 @@ def adverseapi():
             document['Source_Name'] = document.pop('Source Name')
             document['Source_of_Info'] = document.pop('Source of Info')
             document['Web_link_of_news'] = document.pop('Web link of news')
+            try:
+              if document['created_date']:
+                print('created date exist')
+                # document['created_date'] = ''
+            except Exception as e:
+              document['created_date'] = ''
 
               # document['City_of_News_Paper'] = '' # document.pop('City of News Paper')
               # document['City_State_mentioned_under_the_news'] = document.pop('Organization Name mentioned in the news')

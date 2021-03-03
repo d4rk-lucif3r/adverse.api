@@ -53,7 +53,7 @@ def _incre_mode(batch_id):
         'a9ecac2e-a7da-4bbd-b326-103de3149ece': 'http://feeds.bbci.co.uk/news/world/rss.xml',
         'ad60ab7b-906b-467d-b29e-92f200eb88fe': 'https://economictimes.indiatimes.com/rssfeedstopstories.cms',
         'bef37780-c007-4b96-89f4-5198b69f2c93': 'https://www.theguardian.com/world/rss',
-        'c1f4a45b-aa9c-4627-980b-f69509e5c862': 'https://www.thehindu.com/news/national/feeder/default.rss',
+        'c1f4a45b-aa9c-4627-980b-f69509e5c862': 'https://www.thehindu.com/news/cities/feeder/default.rss',
         'ca3c6507-8c4a-4269-a384-8de06f43bc4f': 'https://timesofindia.indiatimes.com/rssfeeds/1221656.cms',
         'd33446c7-a37b-4c5b-ba7a-275cc9583c05': 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
         'e43b544e-577b-4ed0-adb0-4661bda4c487': 'https://www.asianage.com/rss_feed/',
@@ -100,7 +100,7 @@ def _incre_mode(batch_id):
     
     
     csv_file = "incre_mode.csv"
-    csv_columns = ['name', 'org', 'loc', 'keyword', 'hdfcpresent', 'date', 'sourcename', 'weblink', 'batch_id']
+    csv_columns = ['name', 'org', 'loc', 'keyword', 'hdfcpresent', 'date', 'sourcename', 'weblink', 'batch_id', 'created_date']
     
     # news_link = ['https://timesofindia.indiatimes.com/city/hyderabad/hyderabad-two-sbi-managers-arrested-in-loan-sanction-fraud-case/articleshow/71745994.cms']
     
@@ -132,7 +132,7 @@ def _incre_mode(batch_id):
       _writer.writeheader()
       for link in news_link:
         try:
-          profile = {'name': '', 'org': '', 'loc': '', 'keyword': '', 'hdfcpresent': 'No', 'date': '', 'sourcename': '', 'weblink': ''}
+          profile = {'name': '', 'org': '', 'loc': '', 'keyword': '', 'hdfcpresent': 'No', 'date': '', 'sourcename': '', 'weblink': '', 'batch_id': '', 'created_date': ''}
           article = Article(link)
           article.download()
           article.parse()
@@ -151,6 +151,8 @@ def _incre_mode(batch_id):
     
           if 'hdfc' in text.lower():
             profile['hdfcpresent'] = 'YES'
+
+          profile['weblink'] = article.url
     
           profile['sourcename'] = link.split('/')[2]
     
@@ -192,10 +194,10 @@ def _incre_mode(batch_id):
               else:
                 pass
     
-            profile['weblink'] = article.url
     
             profile['date'] = article.publish_date
             profile['batch_id'] = batch_id
+            profile['created_date'] = datetime.now()
     
             _writer.writerow(profile)
     
@@ -218,7 +220,8 @@ def _incre_mode(batch_id):
         'Article Date', 
         'Source Name', 
         'Web link of news',
-        'batch_id'
+        'batch_id',
+        'created_date'
         ]
     
     df = df.drop_duplicates(subset='Web link of news', keep="last")
