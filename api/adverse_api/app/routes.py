@@ -30,16 +30,17 @@ def check():
         message = 'Searched PEP information'
         return render_template('check.html', response=results, msg=message)        
 
-@app.route('/adverseapi3', methods=['GET', 'POST'])
-def adverseapi3():
+@app.route('/adverseapi', methods=['GET', 'POST'])
+def adverseapi():
 
     _request = request.data
     _request = _request.decode("utf-8")
     _request = ast.literal_eval(_request)
 
-    dbs = current_ids_dbs()
+    dbs = get_batch_ids()
+    ids = current_ids_dbs()
 
-    print(dbs["last_updated_time"])
+    print("last run time:", dbs[-1]["RunDate"])
 
     print(_request)
 
@@ -73,12 +74,12 @@ def adverseapi3():
         for document in cursor:
           # print(document)
           document['Article_Date'] = document.pop('Article Date')
-          document['City_of_News_Paper'] = '' # document.pop('City of News Paper')
+          document['City_of_News_Paper'] = document.pop('City of News Paper')
           document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
           document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
           document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
           document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
-          document['Organization_Name_mentioned_in_the_news'] = document['Organization Name mentioned in the news']
+          document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
           document['Source_Name'] = document.pop('Source Name')
           document['Source_of_Info'] = document.pop('Source of Info')
           document['Web_link_of_news'] = document.pop('Web link of news')
@@ -100,9 +101,9 @@ def adverseapi3():
 
           search_results.append(document)
 
-        return jsonify({"news_source_id": None, 
-            "last_updated_time": None,
-            "keywords_searched" : None, 
+        return jsonify({"news_source_id": ids["news_source_id"], 
+            "last_updated_time": dbs[-1]["RunDate"],
+            "keywords_searched" : ids['keywords'], 
             "date_of_response": None,
             "mode_of_search": mode,
             "search_results": search_results})
@@ -113,28 +114,34 @@ def adverseapi3():
           date = _request["date"]
           date = datetime.strptime(_request["date"], "%Y-%m-%d %H:%M:%S")
 
+          # find the batch run which date belongs to
+          batch_ids = get_batch_ids()
+          _batch_ids = []
+          for batch in batch_ids:
+            if datetime.strptime(batch['RunDate'], "%Y-%m-%d %H:%M:%S") > date:
+              _batch_ids.append(str(batch['_id']))
+
           # fetch all the data from db
           search_results = []
           
           client = MongoClient('localhost', 27017)
           db = client['adverse_db']
           collection_batches = db['adverse_db']
-          cursor = collection_batches.find({}, {'_id': False})
+          cursor = collection_batches.find({"batch_id": {"$in" : _batch_ids}}, {'_id': False})
           # cursor = collection_batches.find({})
 
           for document in cursor:
+            # print(document)
             document['Article_Date'] = document.pop('Article Date')
-            if document['Article_Date'].split('.')[0]:
-              if datetime.strptime(document['Article_Date'].split('.')[0], "%Y-%m-%d %H:%M:%S") > date:
-                document['City_of_News_Paper'] = '' # document.pop('City of News Paper')
-                document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
-                document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
-                document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
-                document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
-                document['Organization_Name_mentioned_in_the_news'] = document['Organization Name mentioned in the news']
-                document['Source_Name'] = document.pop('Source Name')
-                document['Source_of_Info'] = document.pop('Source of Info')
-                document['Web_link_of_news'] = document.pop('Web link of news')
+            document['City_of_News_Paper'] = document.pop('City of News Paper')
+            document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
+            document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
+            document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
+            document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+            document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
+            document['Source_Name'] = document.pop('Source Name')
+            document['Source_of_Info'] = document.pop('Source of Info')
+            document['Web_link_of_news'] = document.pop('Web link of news')
 
               # document['City_of_News_Paper'] = '' # document.pop('City of News Paper')
               # document['City_State_mentioned_under_the_news'] = document.pop('Organization Name mentioned in the news')
@@ -148,14 +155,14 @@ def adverseapi3():
               # document['Web_link_of_news'] = document.pop('Web link of news')
               # document['Article_Date'] = document['Article_Date'].split('.')[0]
               # document['uuid'] = f1.uuid4()
-                search_results.append(document)
+            search_results.append(document)
 
-          last_updated_time = datetime.strptime("2021-02-27 21:02:45", "%Y-%m-%d %H:%M:%S")
-          last_updated_time = last_updated_time.replace(tzinfo=timezone.utc)
+          # last_updated_time = datetime.strptime("2021-02-27 21:02:45", "%Y-%m-%d %H:%M:%S")
+          # last_updated_time = last_updated_time.replace(tzinfo=timezone.utc)
 
-          return jsonify({"news_source_ids": None,
-            "last_updated_time": last_updated_time,
-            "keywords_searched" : None, 
+          return jsonify({"news_source_ids": ids["news_source_id"],
+            "last_updated_time": dbs[-1]["RunDate"],
+            "keywords_searched" : ids['keywords'], 
             "date_of_response": _request["date"],
             "mode_of_search": _request["mode"],
             "search_results": search_results})
@@ -168,7 +175,7 @@ def adverseapi3():
         	# news_source_id = _request['news_source_ids'].split(',')
 
         	return jsonify({"news_source_ids": _request['news_source_ids'], 
-                    "last_updated_time": None,
+                    "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : _request['keywords'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
@@ -863,8 +870,8 @@ def Adversecheck3():
     message = 'Searched PEP information'
     return render_template('check.html', response=results, msg=message)        
 
-@app.route('/adverseapi', methods=['GET', 'POST'])
-def adverseapi():
+# @app.route('/adverseapi', methods=['GET', 'POST'])
+# def adverseapi():
 
     # a = request.data
     # b = a.decode("utf-8")
@@ -872,301 +879,301 @@ def adverseapi():
     # print(c)
     # print(c["api"])
 
-    api = request.args.get('api')
-    mode = request.args.get('mode')
-    keywords = request.args.get('keywords')
-    sourceid = request.args.get('sourceid')
-    date = request.args.get('date')
+    # api = request.args.get('api')
+    # mode = request.args.get('mode')
+    # keywords = request.args.get('keywords')
+    # sourceid = request.args.get('sourceid')
+    # date = request.args.get('date')
 
-    try:
-      keywords = keywords.split(',')
-    except Exception as e:
-      print(e)
-      pass
+    # try:
+    #   keywords = keywords.split(',')
+    # except Exception as e:
+    #   print(e)
+    #   pass
 
-    if api != '35622ca4d6fc49c6b811df1e9fc10de4':
-      return jsonify({"status": "error",
-        "code": "apiKeyInvalid",
-        "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
-        })
+    # if api != '35622ca4d6fc49c6b811df1e9fc10de4':
+    #   return jsonify({"status": "error",
+    #     "code": "apiKeyInvalid",
+    #     "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
+    #     })
 
-    if api == '35622ca4d6fc49c6b811df1e9fc10de4':
-      if mode == 'full':
-        if 'default' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, NEW DELHI, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Coal India Ltd, Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ET Bureau, ED, Enforcement Directorate, NGO Advantage India, the Central Bureau of Investigation, Airbus, Isolux Corsan, Air India, Airbus/Isolux Corsan, Foreign Investment Promotion Board, FIPB, Govt, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service, DocuBay, TimesPrime",
-          "Person_Name_mentioned_in_the_news": "Deepak Talwar, Raghav Ohri, Nitesh Rana, Tanveer Ahmed Mir, Aditya Talwar, Manoranjan Dutta, Chidambaram, Praful Patel, Sridhar Reddy, Babus, Devidas, Deepak Talwar’s, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/laundering-of-csr-funds-ed-adjudicating-authority-confirms-attachment-of-properties-of-deepak-talwar-worth-rs-70-crore/articleshow/80826322.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
+    # if api == '35622ca4d6fc49c6b811df1e9fc10de4':
+    #   if mode == 'full':
+    #     if 'default' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, NEW DELHI, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Coal India Ltd, Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ET Bureau, ED, Enforcement Directorate, NGO Advantage India, the Central Bureau of Investigation, Airbus, Isolux Corsan, Air India, Airbus/Isolux Corsan, Foreign Investment Promotion Board, FIPB, Govt, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service, DocuBay, TimesPrime",
+    #       "Person_Name_mentioned_in_the_news": "Deepak Talwar, Raghav Ohri, Nitesh Rana, Tanveer Ahmed Mir, Aditya Talwar, Manoranjan Dutta, Chidambaram, Praful Patel, Sridhar Reddy, Babus, Devidas, Deepak Talwar’s, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/laundering-of-csr-funds-ed-adjudicating-authority-confirms-attachment-of-properties-of-deepak-talwar-worth-rs-70-crore/articleshow/80826322.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
 
-          return jsonify({'results': responses})
+    #       return jsonify({'results': responses})
 
-        elif 'money laundering' in keywords or 'money launder' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money launder",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, NEW DELHI, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Coal India Ltd, Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ET Bureau, ED, Enforcement Directorate, NGO Advantage India, the Central Bureau of Investigation, Airbus, Isolux Corsan, Air India, Airbus/Isolux Corsan, Foreign Investment Promotion Board, FIPB, Govt, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service, DocuBay, TimesPrime",
-          "Person_Name_mentioned_in_the_news": "Deepak Talwar, Raghav Ohri, Nitesh Rana, Tanveer Ahmed Mir, Aditya Talwar, Manoranjan Dutta, Chidambaram, Praful Patel, Sridhar Reddy, Babus, Devidas, Deepak Talwar’s, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/laundering-of-csr-funds-ed-adjudicating-authority-confirms-attachment-of-properties-of-deepak-talwar-worth-rs-70-crore/articleshow/80826322.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
+    #     elif 'money laundering' in keywords or 'money launder' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money launder",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, NEW DELHI, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Coal India Ltd, Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ET Bureau, ED, Enforcement Directorate, NGO Advantage India, the Central Bureau of Investigation, Airbus, Isolux Corsan, Air India, Airbus/Isolux Corsan, Foreign Investment Promotion Board, FIPB, Govt, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service, DocuBay, TimesPrime",
+    #       "Person_Name_mentioned_in_the_news": "Deepak Talwar, Raghav Ohri, Nitesh Rana, Tanveer Ahmed Mir, Aditya Talwar, Manoranjan Dutta, Chidambaram, Praful Patel, Sridhar Reddy, Babus, Devidas, Deepak Talwar’s, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/laundering-of-csr-funds-ed-adjudicating-authority-confirms-attachment-of-properties-of-deepak-talwar-worth-rs-70-crore/articleshow/80826322.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
 
-          return jsonify({'results': responses})
+    #       return jsonify({'results': responses})
 
-      elif mode == 'incremental':
-        if 'default' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
+    #   elif mode == 'incremental':
+    #     if 'default' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
 
-          return jsonify({'results': responses})
+    #       return jsonify({'results': responses})
 
-        elif 'money laundering' in keywords or 'money launder' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
+    #     elif 'money laundering' in keywords or 'money launder' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
 
-          return jsonify({'results': responses})
+    #       return jsonify({'results': responses})
 
 
-      elif mode == 'realtime':
-        if 'default' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
-          return jsonify({'results': responses})
+    #   elif mode == 'realtime':
+    #     if 'default' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
+    #       return jsonify({'results': responses})
 
-        elif 'money laundering' in keywords or 'money launder' in keywords:
-          responses = [
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-          "uuid": "603681a19b19655dab57cff8"
-          },
-          {
-          "Article Date": '2021-02-25',
-          "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-          "City_of_News_Paper": None,
-          "HDFC_Bank_Name_under_News_Article": "No",
-          "Key_word_Used_foruuidentify_the_article": "money laundering",
-          "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-          "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-          "Source_Name": "Economic Times",
-          "Source_of_Info": "News Paper",
-          "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-          "uuid": "f1.uuid4()"
-          }
-          ]
-          return jsonify({'results': responses})
+    #     elif 'money laundering' in keywords or 'money launder' in keywords:
+    #       responses = [
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #       "uuid": "603681a19b19655dab57cff8"
+    #       },
+    #       {
+    #       "Article Date": '2021-02-25',
+    #       "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #       "City_of_News_Paper": None,
+    #       "HDFC_Bank_Name_under_News_Article": "No",
+    #       "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #       "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #       "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #       "Source_Name": "Economic Times",
+    #       "Source_of_Info": "News Paper",
+    #       "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #       "uuid": "f1.uuid4()"
+    #       }
+    #       ]
+    #       return jsonify({'results': responses})
 
-      elif mode == 'manual':
-        if date == '20210226':
-          if 'default' in keywords:
-            responses = [
-            {
-            "Article Date": '20210226',
-            "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-            "City_of_News_Paper": None,
-            "HDFC_Bank_Name_under_News_Article": "No",
-            "Key_word_Used_foruuidentify_the_article": "money laundering",
-            "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-            "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-            "Source_Name": "Economic Times",
-            "Source_of_Info": "News Paper",
-            "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-            "uuid": "603681a19b19655dab57cff8"
-            }
-            ]
-            return jsonify({'results': responses})
+    #   elif mode == 'manual':
+    #     if date == '20210226':
+    #       if 'default' in keywords:
+    #         responses = [
+    #         {
+    #         "Article Date": '20210226',
+    #         "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #         "City_of_News_Paper": None,
+    #         "HDFC_Bank_Name_under_News_Article": "No",
+    #         "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #         "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #         "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #         "Source_Name": "Economic Times",
+    #         "Source_of_Info": "News Paper",
+    #         "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #         "uuid": "603681a19b19655dab57cff8"
+    #         }
+    #         ]
+    #         return jsonify({'results': responses})
 
-          elif 'money laundering' in keywords or 'money launder' in keywords:
-            responses = [
-            {
-            "Article Date": '20210226',
-            "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
-            "City_of_News_Paper": None,
-            "HDFC_Bank_Name_under_News_Article": "No",
-            "Key_word_Used_foruuidentify_the_article": "money laundering",
-            "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-            "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-            "Source_Name": "Economic Times",
-            "Source_of_Info": "News Paper",
-            "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
-            "uuid": "603681a19b19655dab57cff8"
-            },
-            {
-            "Article Date": '20210226',
-            "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
-            "City_of_News_Paper": None,
-            "HDFC_Bank_Name_under_News_Article": "No",
-            "Key_word_Used_foruuidentify_the_article": "money laundering",
-            "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
-            "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
-            "Source_Name": "Economic Times",
-            "Source_of_Info": "News Paper",
-            "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
-            "uuid": "f1.uuid4()"
-            }
-            ]
-            return jsonify({'results': responses})
+    #       elif 'money laundering' in keywords or 'money launder' in keywords:
+    #         responses = [
+    #         {
+    #         "Article Date": '20210226',
+    #         "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, Kerala, Mumbai, Bangalore, Colombia, New Delhi",
+    #         "City_of_News_Paper": None,
+    #         "HDFC_Bank_Name_under_News_Article": "No",
+    #         "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #         "Organization_Name_mentioned_in_the_news": "Mirae Asset Emerging Bluechip Fund, ICICI, SBI, Axis, Nokia, ET Markets, ET India Inc., The Economic Times Digital Payments Forum, Lok Sabha, ET TV, ED, Jharkhand Ispat Private Limited, JIPL, Enforcement Directorate, PMLA, CBI, CAG, State, SC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Nureca, Covid, Sensex Live, IRCTC, Infosys, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #         "Person_Name_mentioned_in_the_news": "Vittal Kamath, Dilip Ray, HC Gupta, Naveen Jindal, Narendra Modi, Mamata Banerjee, Rajnath Singh, Amit Shah, Sonia Gandhi, Elon Musk, Anil Deshmukh, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #         "Source_Name": "Economic Times",
+    #         "Source_of_Info": "News Paper",
+    #         "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/ed-attaches-assets-worth-rs-1-2-crore-in-coal-scam-case/articleshow/81175445.cms",
+    #         "uuid": "603681a19b19655dab57cff8"
+    #         },
+    #         {
+    #         "Article Date": '20210226',
+    #         "City_State_mentioned_under_the_news": "India, UAE, Saudi Arabia, US, Bihar, Delhi, MUMBAI, BNM, Mumbai, Gujarat, Kerala, Bangalore, Colombia, New Delhi",
+    #         "City_of_News_Paper": None,
+    #         "HDFC_Bank_Name_under_News_Article": "No",
+    #         "Key_word_Used_foruuidentify_the_article": "money laundering",
+    #         "Organization_Name_mentioned_in_the_news": "Nippon India, SBI, Mirae Asset Emerging Bluechip Fund, Nokia, ET Markets, The Economic Times Digital Payments Forum, ET India Inc., Lok Sabha, ET TV, PMLA, ED, the JM Joshi Group, the Enforcement Directorate, Omkar Group, Slum Rehabilitation Authority, NPA, Covid, BMC, Ministry of Finance, Indian Air Force, Indian Armed Forces News, Ministry of Coal, NRC, CAA, Sensex Live, IRCTC, Infosys, Boeing, Ministry of Agriculture, Ministry of External Affairs, Health News, IT News, IT Security News, AdAge India, Times of India, Bombay Times, ET Prime, Times Internet Limited, Bennett, Coleman & Co. Ltd., Times Syndication Service",
+    #         "Person_Name_mentioned_in_the_news": "Sachin Joshi, Omkar, Narendra Modi, Mamata Banerjee, Ashok Gehlot, Mehbooba Mufti, Amit Shah, Nitish Kumar, Sonia Gandhi, Mukesh Ambani, Elon Musk, Nirmala Sitharaman, Raghuram Rajan, Sundar Pichai, Eisamay, Kyra, Deepak Ajwani",
+    #         "Source_Name": "Economic Times",
+    #         "Source_of_Info": "News Paper",
+    #         "Web_link_of_news": "https://economictimes.indiatimes.com/news/politics-and-nation/pmla-case-bizman-actor-sachin-joshi-remanded-in-ed-custody/articleshow/80926650.cms",
+    #         "uuid": "f1.uuid4()"
+    #         }
+    #         ]
+    #         return jsonify({'results': responses})
 
-    else:
-      return jsonify({"status": "error",
-        "code": "apiKeyInvalid",
-        "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
-        })
+    # else:
+    #   return jsonify({"status": "error",
+    #     "code": "apiKeyInvalid",
+    #     "message": "Your API key is invalid or incorrect. Check your key, or contact administrator."
+    #     })
 
 
     # if api == '35622ca4d6fc49c6b811df1e9fc10de4' and mode == 'full', and keywords=='default' and :

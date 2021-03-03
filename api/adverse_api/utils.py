@@ -14,6 +14,17 @@ import pymongo
 from pymongo import MongoClient
 
 
+def get_batch_ids():
+    '''
+    function to get batch ids and date into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['BatchRunStatus']
+    collection_batches = db['DetailStatus']
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs
+
 def update_ids_dbs(keywords, news_source_ids):
     '''
     function to update sources ids and keywords into database

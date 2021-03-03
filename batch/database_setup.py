@@ -53,7 +53,7 @@ def add_default_ids():
 
     x = {}
     x['keywords'] = keywords
-    x['source_news_ids'] = source_news_ids
+    x['news_source_id'] = source_news_ids
     x['last_updated_time'] = last_updated_time
 
     collection_batches.insert_one(x)
@@ -78,7 +78,7 @@ def newsids2rss():
  '6c676cc1-2338-4834-a0fb-9ae8a04a2bda': 'https://www.ft.com/?format=rss',
  '7eba470b-1edc-4f69-840d-99cfde3a5fcb': 'http://www.abc.net.au/news/feed/2942460/rss.xml',
  '890d11b8-05e7-416e-b777-7ba62f4a7045': 'https://www.economist.com/international/rss.xml',
- '8cbc9eec-7255-43bf-bb72-2bce4f4764ea': 'http://feeds.feedburner.com/ndtvnews-top-stories?format=xml',
+ '8cbc9eec-7255-43bf-bb72-2bce4f4764ea': 'https://feeds.feedburner.com/ndtvnews-cities-news?format=xml',
  '91272662-bb73-4649-a8c2-026d112c190e': 'https://www.livemint.com/rss/news',
  'a70e9599-4480-46d2-889f-652fdd58cc55': 'https://indianexpress.com/section/india/feed/',
  'a9ecac2e-a7da-4bbd-b326-103de3149ece': 'http://feeds.bbci.co.uk/news/world/rss.xml',
