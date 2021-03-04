@@ -80,6 +80,11 @@ def adverseapi():
           document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
           document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
           document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].split(',')
+          document['Person_Name_mentioned_in_the_news'] = [x.strip() for x in document['Person_Name_mentioned_in_the_news'] if x.strip()]
+          print(document['Person_Name_mentioned_in_the_news'])
+          document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
+          document['Person_Name_mentioned_in_the_news'] = ', '.join(document['Person_Name_mentioned_in_the_news'])
           document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
           document['Source_Name'] = document.pop('Source Name')
           document['Source_of_Info'] = document.pop('Source of Info')
@@ -152,6 +157,10 @@ def adverseapi():
             document['HDFC_Bank_Name_under_News_Article'] = document.pop('HDFC Bank Name under News / Article')
             document['Key_word_Used_foruuidentify_the_article'] = document.pop('Key word Used for identify the article')
             document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
+            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].split(',')
+            document['Person_Name_mentioned_in_the_news'] = [x.strip() for x in document['Person_Name_mentioned_in_the_news'] if x.strip()]
+            document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
+            document['Person_Name_mentioned_in_the_news'] = ', '.join(document['Person_Name_mentioned_in_the_news'])
             document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
             document['Source_Name'] = document.pop('Source Name')
             document['Source_of_Info'] = document.pop('Source of Info')
@@ -197,12 +206,12 @@ def adverseapi():
 
       elif mode == 'update':        
         if _request['keywords'] and _request['news_source_ids']:
-        	# add news keywords and news source ids to database
-        	update_ids_dbs(_request['keywords'], _request['news_source_ids'])
-        	# keywords = _request['keywords'].split(',')
-        	# news_source_id = _request['news_source_ids'].split(',')
+          # add news keywords and news source ids to database
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
 
-        	return jsonify({"news_source_ids": _request['news_source_ids'], 
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : _request['keywords'], 
                     "date_of_response": None,

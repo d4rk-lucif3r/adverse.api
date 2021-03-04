@@ -12,6 +12,37 @@ import pandas as pd
 import os
 import numpy as np
 
+def check_duplicate_name(val):
+    '''
+    function to check if name exist in database with some threshold
+    '''
+    client = MongoClient('localhost', 27017)
+    dbnames = client.list_database_names()
+    if 'adverse_db' in dbnames:
+      db = client['adverse_db']
+      collection_batches = db['adverse_db']
+      cursor = collection_batches.find({}, {'_id': False})
+      dbs = [database['Person Name mentioned in the news'] for database in cursor]
+      val = val.split(',')
+      val = [x.strip() for x in val if x.strip()]
+      val = set(val)
+      for _dict in dbs:
+        _dict = _dict.split(',')
+        _dict = [x.strip() for x in _dict if x.strip()]
+        _dict = set(_dict)
+        _dictval = val.intersection(_dict)
+        if len(_dictval) > 0.4:
+          return 1
+        else:
+          print('threshold is not greater')
+          pass
+    else:
+      print("adverse_db doesnot exist id database")
+      pass
+
+    return 0
+
+
 def current_ids():
     '''
     function to retrieve current ids from mongodb
@@ -40,9 +71,9 @@ def _incre_mode(batch_id):
     source_news_ids = dbs["news_source_ids"].split(',')
     
     dictionary = {'2cdd8f28-01f5-4d18-b438-742f04fe3140': 'https://prod-qt-images.s3.amazonaws.com/production/bloombergquint/feed.xml',
-        '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',
-        '4dfab6d8-8246-469b-9e19-7ddbb55d806d': 'https://www.dnaindia.com/feeds/india.xml',
-        '52d0de86-1525-417d-b8fd-2158f1256c38': 'http://www.allindianewspapers.com/Feeds/nation.xml',
+        '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': {'Bengaluru': 'https://www.hindustantimes.com/feeds/rss/cities/bengaluru-news/rssfeed.xml', 'Bhopal': 'https://www.hindustantimes.com/feeds/rss/cities/bhopal-news/rssfeed.xml', 'Chandigarh': 'https://www.hindustantimes.com/feeds/rss/cities/chandigarh-news/rssfeed.xml', 'Dehradun': 'https://www.hindustantimes.com/feeds/rss/cities/dehradun-news/rssfeed.xml', 'Delhi': 'https://www.hindustantimes.com/feeds/rss/cities/delhi-news/rssfeed.xml', 'Gurugram': 'https://www.hindustantimes.com/feeds/rss/cities/gurugram-news/rssfeed.xml', 'Indore': 'https://www.hindustantimes.com/feeds/rss/cities/indore-news/rssfeed.xml', 'Jaipur': 'https://www.hindustantimes.com/feeds/rss/cities/jaipur-news/rssfeed.xml', 'Kolkata': 'https://www.hindustantimes.com/feeds/rss/cities/kolkata-news/rssfeed.xml', 'Lucknow': 'https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml', 'Mumbai': 'https://www.hindustantimes.com/feeds/rss/cities/mumbai-news/rssfeed.xml', 'Noida' : 'https://www.hindustantimes.com/feeds/rss/cities/noida-news/rssfeed.xml', 'Patna': 'https://www.hindustantimes.com/feeds/rss/cities/patna-news/rssfeed.xml', 'Pune': 'https://www.hindustantimes.com/feeds/rss/cities/pune-news/rssfeed.xml', 'Ranchi': 'https://www.hindustantimes.com/feeds/rss/cities/ranchi-news/rssfeed.xml'},
+        '4dfab6d8-8246-469b-9e19-7ddbb55d806d': {'Mumbai': 'https://www.dnaindia.com/feeds/mumbai.xml', 'Delhi': 'https://www.dnaindia.com/feeds/delhi.xml', 'Bangalore': 'https://www.dnaindia.com/feeds/bangalore.xml', 'Pune' : 'https://www.dnaindia.com/feeds/pune.xml', 'Ahmedabad' : 'https://www.dnaindia.com/feeds/ahmedabad.xml'},
+        '52d0de86-1525-417d-b8fd-2158f1256c38': 'http://www.allindianewspapers.com/Feeds/states.xml',
         '5b32994e-2e6e-417f-ba44-77f508742349': 'https://www.business-standard.com/rss/home_page_top_stories.rss',
         '65cb3dec-94a9-4274-b518-543c74e14a59': 'https://asia.nikkei.com/rss/feed/nar',
         '6c676cc1-2338-4834-a0fb-9ae8a04a2bda': 'https://www.ft.com/?format=rss',
@@ -50,12 +81,12 @@ def _incre_mode(batch_id):
         '890d11b8-05e7-416e-b777-7ba62f4a7045': 'https://www.economist.com/international/rss.xml',
         '8cbc9eec-7255-43bf-bb72-2bce4f4764ea': 'https://feeds.feedburner.com/ndtvnews-cities-news?format=xml',
         '91272662-bb73-4649-a8c2-026d112c190e': 'https://www.livemint.com/rss/news',
-        'a70e9599-4480-46d2-889f-652fdd58cc55': 'https://indianexpress.com/section/india/feed/',
+        'a70e9599-4480-46d2-889f-652fdd58cc55': {'Delhi': 'https://indianexpress.com/section/cities/delhi/feed/', 'Lucknow' : 'https://www.indianexpress.com/section/cities/lucknow/feed/', 'Pune' : 'https://www.indianexpress.com/section/cities/pune/feed/', 'Chandigarh' : 'https://indianexpress.com/section/cities/chandigarh/feed/', 'Mumbai': 'https://indianexpress.com/section/cities/mumbai/feed/', 'Kolkata' : 'https://indianexpress.com/section/cities/kolkata/feed/', 'Ludhiana' : 'https://indianexpress.com/section/cities/ludhiana/feed/', 'Gujarat': 'https://indianexpress.com/section/india/education/feed/', 'Maharashtra' : 'https://indianexpress.com/section/india/maharashtra/feed/', 'Uttar Pradesh': 'https://indianexpress.com/section/india/uttar-pradesh/feed/', 'West Bengal': 'https://indianexpress.com/section/india/west-bengal/feed/', 'Punjab and Haryana': 'https://indianexpress.com/section/india/punjab-and-haryana/feed/'},
         'a9ecac2e-a7da-4bbd-b326-103de3149ece': 'http://feeds.bbci.co.uk/news/world/rss.xml',
         'ad60ab7b-906b-467d-b29e-92f200eb88fe': 'https://economictimes.indiatimes.com/rssfeedstopstories.cms',
         'bef37780-c007-4b96-89f4-5198b69f2c93': 'https://www.theguardian.com/world/rss',
-        'c1f4a45b-aa9c-4627-980b-f69509e5c862': 'https://www.thehindu.com/news/cities/feeder/default.rss',
-        'ca3c6507-8c4a-4269-a384-8de06f43bc4f': 'https://timesofindia.indiatimes.com/rssfeeds/1221656.cms',
+        'c1f4a45b-aa9c-4627-980b-f69509e5c862': {'Andhra Pradesh': 'https://www.thehindu.com/news/national/andhra-pradesh/feeder/default.rss', 'Karnataka': 'https://www.thehindu.com/news/national/karnataka/feeder/default.rss', 'Kerala': 'https://www.thehindu.com/news/national/kerala/feeder/default.rss', 'Tamil Nadu': 'https://www.thehindu.com/news/national/tamil-nadu/feeder/default.rss', 'Telangana': 'https://www.thehindu.com/news/national/telangana/feeder/default.rss', 'Bengaluru': 'https://www.thehindu.com/news/cities/bangalore/feeder/default.rss', 'Chennai' : 'https://www.thehindu.com/news/cities/chennai/feeder/default.rss', 'Coimbatore': 'https://www.thehindu.com/news/cities/Coimbatore/feeder/default.rss', 'Delhi': 'https://www.thehindu.com/news/cities/Delhi/feeder/default.rss', 'Hyderabad': 'https://www.thehindu.com/news/cities/Hyderabad/feeder/default.rss', 'Kochi': 'https://www.thehindu.com/news/cities/Kochi/feeder/default.rss', 'Kolkata': 'https://www.thehindu.com/news/cities/kolkata/feeder/default.rss', 'Mumbai': 'https://www.thehindu.com/news/cities/mumbai/feeder/default.rss', 'Kozhikode': 'https://www.thehindu.com/news/cities/kozhikode/feeder/default.rss', 'Madurai': 'https://www.thehindu.com/news/cities/Madurai/feeder/default.rss', 'Mangaluru': 'https://www.thehindu.com/news/cities/Mangalore/feeder/default.rss', 'Puducherry': 'https://www.thehindu.com/news/cities/puducherry/feeder/default.rss', 'Thiruvananthapuram': 'https://www.thehindu.com/news/cities/Thiruvananthapuram/feeder/default.rss', 'Tiruchirapalli': 'https://www.thehindu.com/news/cities/Tiruchirapalli/feeder/default.rss', 'Vijayawada': 'https://www.thehindu.com/news/cities/Vijayawada/feeder/default.rss', 'Visakhapatnam': 'https://www.thehindu.com/news/cities/Visakhapatnam/feeder/default.rss'},
+        'ca3c6507-8c4a-4269-a384-8de06f43bc4f': 'https://timesofindia.indiatimes.com/rssfeeds/-2128932452.cms',
         'd33446c7-a37b-4c5b-ba7a-275cc9583c05': 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
         'e43b544e-577b-4ed0-adb0-4661bda4c487': 'https://www.asianage.com/rss_feed/',
         'e5a8f17c-58c6-4087-a5c0-2ab681446611': 'http://rss.cnn.com/rss/edition.rss',
@@ -165,32 +196,35 @@ def _incre_mode(batch_id):
               # save data in profile
               # find persons in text
               if ent.label_ == 'PERSON':
+                profile['name'] += ent.text + ', '
                 # remove name if present in false positives
-                if (ent.text not in profile['name']):
+                # if (ent.text not in profile['name']):
                   # print(str(string))
-                  profile['name'] += ent.text + ', '
-                else:
-                  print(ent.text)
-                  pass
+                  # profile['name'] += ent.text + ', '
+                # else:
+                  # print(ent.text)
+                  # pass
     
                 # find persons in text
               elif ent.label_ == 'ORG':
+                profile['org'] += ent.text + ', '
                 
                 # remove name if present in false positives
-                if (ent.text not in profile['org']):
-                  profile['org'] += ent.text + ', '
-                else:
+                # if (ent.text not in profile['org']):
+                  # profile['org'] += ent.text + ', '
+                # else:
                   # print(ent.text)
-                  pass
+                  # pass
     
               # find persons in text
               elif ent.label_ == 'GPE':
+                profile['loc'] += ent.text + ', '
                 # remove name if present in false positives
-                if (ent.text not in profile['loc']):
-                  profile['loc'] += ent.text + ', '
-                else:
+                # if (ent.text not in profile['loc']):
+                  # profile['loc'] += ent.text + ', '
+                # else:
                   # print(ent.text)
-                  pass
+                  # pass
     
               else:
                 pass
@@ -199,7 +233,23 @@ def _incre_mode(batch_id):
             profile['date'] = article.publish_date
             profile['batch_id'] = batch_id
             profile['created_date'] = datetime.now()
-    
+            profile['org'] = profile['org'].split(',')
+            print(profile['org'])
+            profile['org'] = [x.strip() for x in profile['org'] if x.strip()]
+            profile['org'] = list(set(profile['org']))
+            # profile['org'] = ', '.join(profile['org'])    
+            profile['name'] = profile['name'].split(',') + profile['org']
+            print(profile['name'])
+            profile['name'] = [x.strip() for x in profile['name'] if x.strip()]
+            profile['name'] = list(set(profile['name']))
+            profile['name'] = ', '.join(profile['name'])    
+            profile['org'] = ', '.join(profile['org'])    
+            profile['loc'] = profile['loc'].split(',')
+            print(profile['loc'])
+            profile['loc'] = [x.strip() for x in profile['loc'] if x.strip()]
+            profile['loc'] = list(set(profile['loc']))
+            profile['loc'] = ', '.join(profile['loc'])   
+             
             _writer.writerow(profile)
     
           else:
@@ -258,9 +308,12 @@ def _incre_mode(batch_id):
       dbs = [database['Web link of news'] for database in cursor]
 
       for _dict in dicts:
-        if _dict['Web link of news'] in dbs:
-          print('Web link of news exist in db')
-          continue
+        # if _dict['Web link of news'] in dbs:
+          # print('Web link of news exist in db')
+          # continue
+        # check for duplicate names
+        if check_duplicate_name(_dict['Person Name mentioned in the news']):
+          print('Names intersection crosses threshold')
         else:
           collection_batches.insert_one(_dict)
     else:
