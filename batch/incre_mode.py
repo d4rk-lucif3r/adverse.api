@@ -10,6 +10,7 @@ from pymongo import MongoClient
 from faker import Faker
 import pandas as pd
 import os
+import numpy as np
 
 def current_ids():
     '''
@@ -241,6 +242,11 @@ def _incre_mode(batch_id):
     df['City of News Paper'] = '' # document.pop('City of News Paper')
     
     # df['Source Name'] = ''
+
+    # replace empty string na values
+    df.replace(to_replace=np.nan, value='', inplace=True)
+    # df.replace(to_replace=None, value='', inplace=True)
+
     
     dicts = df.to_dict(orient='records')
     client = MongoClient('localhost', 27017)

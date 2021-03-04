@@ -5,6 +5,7 @@ from utils import *
 import ast
 import uuid
 from datetime import datetime, timedelta, timezone
+from dateutil.parser import parse
 
 from faker import Faker
 
@@ -83,12 +84,17 @@ def adverseapi():
           document['Source_Name'] = document.pop('Source Name')
           document['Source_of_Info'] = document.pop('Source of Info')
           document['Web_link_of_news'] = document.pop('Web link of news')
-          try:
-            if document['created_date']:
-              print('created date exist')
-              # document['created_date'] = ''
-          except Exception as e:
-            document['created_date'] = ''
+          document['created_date'] = document['created_date'].split('.')[0]
+
+          if document['Article_Date']:
+            document['Article_Date'] = parse(document['Article_Date'])
+            document['Article_Date'] = document['Article_Date'].strftime("%Y-%m-%d %H:%M:%S")
+          # try:
+          #   if document['created_date']:
+          #     print('created date exist')
+          #     # document['created_date'] = ''
+          # except Exception as e:
+          #   document['created_date'] = ''
 
 
           # print(document)
@@ -105,6 +111,7 @@ def adverseapi():
           # document['Web_link_of_news'] = document.pop('Web link of news')
           # document['Article_Date'] = document['Article_Date'].split('.')[0]
           # document['uuid'] = f1.uuid4()
+          document['Source_of_Info'] = 'Newspaper' # document.pop('Source of Info')
 
           search_results.append(document)
 
@@ -149,12 +156,18 @@ def adverseapi():
             document['Source_Name'] = document.pop('Source Name')
             document['Source_of_Info'] = document.pop('Source of Info')
             document['Web_link_of_news'] = document.pop('Web link of news')
-            try:
-              if document['created_date']:
-                print('created date exist')
-                # document['created_date'] = ''
-            except Exception as e:
-              document['created_date'] = ''
+            document['created_date'] = document['created_date'].split('.')[0]
+
+            if document['Article_Date']:
+              document['Article_Date'] = parse(document['Article_Date'])
+              document['Article_Date'] = document['Article_Date'].strftime("%Y-%m-%d %H:%M:%S")
+
+            # try:
+            #   if document['created_date']:
+            #     print('created date exist')
+            #     # document['created_date'] = ''
+            # except Exception as e:
+            #   document['created_date'] = ''
 
               # document['City_of_News_Paper'] = '' # document.pop('City of News Paper')
               # document['City_State_mentioned_under_the_news'] = document.pop('Organization Name mentioned in the news')
@@ -168,6 +181,8 @@ def adverseapi():
               # document['Web_link_of_news'] = document.pop('Web link of news')
               # document['Article_Date'] = document['Article_Date'].split('.')[0]
               # document['uuid'] = f1.uuid4()
+
+            document['Source_of_Info'] = 'Newspaper'
             search_results.append(document)
 
           # last_updated_time = datetime.strptime("2021-02-27 21:02:45", "%Y-%m-%d %H:%M:%S")
