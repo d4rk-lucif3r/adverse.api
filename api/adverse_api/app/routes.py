@@ -6,10 +6,15 @@ import ast
 import uuid
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
-
+import newspaper
+from newspaper import Article
 from faker import Faker
+import spacy
+import os
+
 
 f1 = Faker()
+nlp_Name = spacy.load("en_core_web_trf")
 
 @app.route('/')
 @app.route('/index')
@@ -92,7 +97,7 @@ def adverseapi():
           document['created_date'] = document['created_date'].split('.')[0]
 
           if document['Article_Date']:
-            document['Article_Date'] = parse(document['Article_Date'])
+            document['Article_Date'] = parse(document['Article_Date'].split('+')[0])
             document['Article_Date'] = document['Article_Date'].strftime("%Y-%m-%d %H:%M:%S")
           # try:
           #   if document['created_date']:
@@ -168,7 +173,7 @@ def adverseapi():
             document['created_date'] = document['created_date'].split('.')[0]
 
             if document['Article_Date']:
-              document['Article_Date'] = parse(document['Article_Date'])
+              document['Article_Date'] = parse(document['Article_Date'].split('+')[0])
               document['Article_Date'] = document['Article_Date'].strftime("%Y-%m-%d %H:%M:%S")
 
             # try:
@@ -218,6 +223,144 @@ def adverseapi():
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
+      elif mode == 'realtime':        
+        if _request['keywords'] and _request['urltobesearched']:
+          print(_request['keywords'], _request['urltobesearched'])
+          keywords = _request['keywords'].split(',')
+          keywords = [x.strip() for x in keywords if x.strip()]
+          urltobesearched = _request['urltobesearched']
+          if keywords and urltobesearched:
+            profile = {'Person_Name_mentioned_in_the_news': '', 'Organization_Name_mentioned_in_the_news': '', 'City_State_mentioned_under_the_news': '', 'Key_word_Used_foruuidentify_the_article': '', 'HDFC_Bank_Name_under_News_Article': 'No', 'Article_Date': '', 'Source_Name': '', 'Web_link_of_news': '', 'created_date': '', 'City_of_News_Paper': ''}
+            try:
+              article = Article(urltobesearched)
+              article.download()
+              article.parse()
+              text = article.title.lower() + os.linesep + article.text.lower()
+
+              for keyword in keywords:
+                if keyword.lower() in text.lower():
+                  if keyword not in profile['Key_word_Used_foruuidentify_the_article']:
+                    profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+                  else:
+                    continue
+
+              if not profile['Key_word_Used_foruuidentify_the_article']:
+                return jsonify({"news_source_ids": ids["news_source_ids"], 
+                  "last_updated_time": dbs[-1]["RunDate"],
+                  "keywords_updated" : ids['keywords'], 
+                  "date_of_response": None,
+                  "mode_of_search": mode,
+                  "search_results": []})
+
+
+
+              if 'hdfc' in text.lower():
+                profile['HDFC_Bank_Name_under_News_Article'] = 'YES'
+
+              profile['Web_link_of_news'] = article.url
+
+              profile['Source_Name'] = urltobesearched.split('/')[2]
+
+              doc = nlp_Name(article.title + os.linesep + article.text)
+
+              # iterate through each entity present
+              for count,ent in enumerate(doc.ents):
+                # save data in profile
+                # find persons in text
+                if ent.label_ == 'PERSON':
+                  profile['Person_Name_mentioned_in_the_news'] += ent.text + ', '
+              
+                # find persons in text
+                elif ent.label_ == 'ORG':
+                  profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+
+                # find persons in text
+                elif ent.label_ == 'GPE':
+                  profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+
+                else:
+                  pass
+
+              profile['Article_Date'] = article.publish_date
+              profile['City_of_News_Paper'] = ''
+              # profile['batch_id'] = batch_id
+              profile['created_date'] = datetime.now()
+              profile['created_date'] = profile['created_date'].strftime("%Y-%m-%d %H:%M:%S")
+              profile['Organization_Name_mentioned_in_the_news'] = profile['Organization_Name_mentioned_in_the_news'].split(',')
+              # print(profile['Organization_Name_mentioned_in_the_news'])
+              profile['Organization_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Organization_Name_mentioned_in_the_news'] if x.strip()]
+              profile['Organization_Name_mentioned_in_the_news'] = list(set(profile['Organization_Name_mentioned_in_the_news']))
+              # profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
+              profile['Person_Name_mentioned_in_the_news'] = profile['Person_Name_mentioned_in_the_news'].split(',') + profile['Organization_Name_mentioned_in_the_news']
+              # print(profile['Person Name mentioned in the news'])
+              profile['Person_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Person_Name_mentioned_in_the_news'] if x.strip()]
+              profile['Person_Name_mentioned_in_the_news'] = list(set(profile['Person_Name_mentioned_in_the_news']))
+              profile['Person_Name_mentioned_in_the_news'] = [ i for i in profile['Person_Name_mentioned_in_the_news'] if not any( [ i in a for a in profile['Person_Name_mentioned_in_the_news'] if a != i]   )]
+              person_dict = {k.lower():k for k in profile['Person_Name_mentioned_in_the_news']}
+              profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
+              profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
+              profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
+              profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
+              # print(profile['City_State_mentioned_under_the_news'])
+              profile['City_State_mentioned_under_the_news'] = [x.strip() for x in profile['City_State_mentioned_under_the_news'] if x.strip()]
+              profile['City_State_mentioned_under_the_news'] = list(set(profile['City_State_mentioned_under_the_news']))
+              profile['City_State_mentioned_under_the_news'] = [ i for i in profile['City_State_mentioned_under_the_news'] if not any( [ i in a for a in profile['City_State_mentioned_under_the_news'] if a != i]   )]
+              city_dict = {k.lower():k for k in profile['City_State_mentioned_under_the_news']}
+              profile['City_State_mentioned_under_the_news'] = list(city_dict.values())
+              profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
+              profile['Source_of_Info'] = 'Newspaper'
+              profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
+              profile['uuid'] = f1.uuid4()
+
+              if not profile['Article_Date']:
+                profile['Article_Date'] = ''
+
+              return jsonify({"news_source_ids": ids["news_source_ids"], 
+                "last_updated_time": dbs[-1]["RunDate"],
+                "keywords_updated" : ids['keywords'], 
+                "date_of_response": None,
+                "mode_of_search": mode,
+                "search_results": [profile]})
+
+            except Exception as e:
+                print(e)
+                return jsonify({"news_source_ids": ids["news_source_ids"], 
+                  "last_updated_time": dbs[-1]["RunDate"],
+                  "keywords_updated" : ids['keywords'], 
+                  "date_of_response": None,
+                  "mode_of_search": mode,
+                  "search_results": ["Please check urltobesearched"]})
+
+
+
+          else:
+            return jsonify({"news_source_ids": ids["news_source_ids"], 
+              "last_updated_time": dbs[-1]["RunDate"],
+              "keywords_updated" : ids['keywords'], 
+              "date_of_response": None,
+              "mode_of_search": mode,
+              "search_results": ['Please correct keywords and urltobesearched']})
+
+        else:
+            return jsonify({"news_source_ids": ids["news_source_ids"], 
+              "last_updated_time": dbs[-1]["RunDate"],
+              "keywords_updated" : ids['keywords'], 
+              "date_of_response": None,
+              "mode_of_search": mode,
+              "search_results": ['Please correct keywords and urltobesearched']})
+
+
+          # add news keywords and news source ids to database
+          # update_ids_dbs(_request['keywords'], _request['news_source_ids'])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+
+            # return 'request update' # jsonify({"news_source_ids": _request['news_source_ids'], 
+                    # "last_updated_time": dbs[-1]["RunDate"],
+                    # "keywords_updated" : _request['keywords'], 
+                    # "date_of_response": None,
+                    # "mode_of_search": mode,
+                    # "search_results": ['Updated successfully']})
 
     #   elif mode == 'update':        
     #     if _request['keywords'] and _request['news_source_ids']:

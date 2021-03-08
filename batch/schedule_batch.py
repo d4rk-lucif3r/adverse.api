@@ -11,7 +11,7 @@ def job():
 # schedule.every().hour.do(job)
 # schedule.every().day.at("10:30").do(job)
 # DON"T FORGET TO CHANGE DAY AND TIME
-schedule.every().day.at("15:00").do(job)
+schedule.every().day.at("02:00").do(job)
 # schedule.every().wednesday.at("13:15").do(job)
 # schedule.every().minute.at(":17").do(job)
 

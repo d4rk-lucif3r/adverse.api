@@ -13,6 +13,13 @@ import re
 import pymongo
 from pymongo import MongoClient
 
+def fnc_(x):
+  try:
+    x = x.strip(', ')
+    return x
+  except:
+    return x
+
 
 def get_batch_ids():
     '''
@@ -373,32 +380,32 @@ def check_designation(response):
             return False
 
 def qcode2val(response):
-	qregex = re.compile(r'Q\d+')
-	if response['political_associations']:
-		response['political_associations'] = ast.literal_eval(response['political_associations'])
-		response['political_associations'] = [qregex.sub(None, qcode) for qcode in response['political_associations']]
-	if response['relatives']:
-		response['relatives'] = ast.literal_eval(response['relatives'])
-		response['relatives'] = [qregex.sub(None, qcode) for qcode in response['relatives']]
-	if response['occupation']:
-		response['occupation'] = ast.literal_eval(response['occupation'])
-		response['occupation'] = [qregex.sub(None, qcode) for qcode in response['occupation']]
-	if response['spouse']:
-		response['spouse'] = ast.literal_eval(response['spouse'])
-		response['spouse'] = [qregex.sub(None, qcode) for qcode in response['spouse']]
-	if response['residence']:
-		response['residence'] = ast.literal_eval(response['residence'])
-		response['residence'] = [qregex.sub(None, qcode) for qcode in response['residence']]
-	if response['children']:
-		response['children'] = ast.literal_eval(response['children'])
-		response['children'] = [qregex.sub(None, qcode) for qcode in response['children']]
-	if response['positions_held']:
-		response['positions_held'] = ast.literal_eval(response['positions_held'])
-		response['positions_held'] = [qregex.sub(None, qcode) for qcode in response['positions_held']]
-	if response['mother']:
-		response['mother'] = qregex.sub(None, response['mother'])
+    qregex = re.compile(r'Q\d+')
+    if response['political_associations']:
+        response['political_associations'] = ast.literal_eval(response['political_associations'])
+        response['political_associations'] = [qregex.sub(None, qcode) for qcode in response['political_associations']]
+    if response['relatives']:
+        response['relatives'] = ast.literal_eval(response['relatives'])
+        response['relatives'] = [qregex.sub(None, qcode) for qcode in response['relatives']]
+    if response['occupation']:
+        response['occupation'] = ast.literal_eval(response['occupation'])
+        response['occupation'] = [qregex.sub(None, qcode) for qcode in response['occupation']]
+    if response['spouse']:
+        response['spouse'] = ast.literal_eval(response['spouse'])
+        response['spouse'] = [qregex.sub(None, qcode) for qcode in response['spouse']]
+    if response['residence']:
+        response['residence'] = ast.literal_eval(response['residence'])
+        response['residence'] = [qregex.sub(None, qcode) for qcode in response['residence']]
+    if response['children']:
+        response['children'] = ast.literal_eval(response['children'])
+        response['children'] = [qregex.sub(None, qcode) for qcode in response['children']]
+    if response['positions_held']:
+        response['positions_held'] = ast.literal_eval(response['positions_held'])
+        response['positions_held'] = [qregex.sub(None, qcode) for qcode in response['positions_held']]
+    if response['mother']:
+        response['mother'] = qregex.sub(None, response['mother'])
 
-	return response
+    return response
 
 def filter_responses(responses):
 

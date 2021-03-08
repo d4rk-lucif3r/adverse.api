@@ -12,6 +12,81 @@ import pandas as pd
 import os
 import numpy as np
 
+
+def subset_dupl(names_list, idxes):
+
+    names_dict = {k:v for k in names_list for v in idxes}
+
+    for k,v in names_dict.items():
+        k = k.split(',')
+        k = [x.strip() for x in k if x.strip()]
+        for k_ in names_list:
+            k_ = k_.split(',')
+            k_ = [x.strip() for x in k_ if x.strip()]
+            if set(k) < set(k_):
+                print(k, 'is a subset of ', k_)
+                names_dict.pop(k)
+                break
+            else:
+                print(k, 'is not a subset of', k_)
+
+    return list(names_dict.values())
+
+def lowercase_check(x):
+    x_dict = {k.lower():k for k in x}
+    return list(x_dict.values())
+    # x_ = []
+    # for _x in x:
+    #     z = 0
+    #     for _y in x:
+    #         if _x == _y:
+    #             z = 0
+    #             print(_x, 'is equal to', _y)
+    #         else:
+    #             if _x.lower() == _y.lower():
+    #                 z = 1
+    #                 print(_x, 'is a lowercase version of', _y)
+    #             else:
+    #                 print('not a lowercase version')
+
+    #     if z == 0:
+    #         x_.append(_x)
+    #     else:
+    #         print('it is already a lowercase version')
+
+    # return list(set(x_))
+
+
+def subset(x):
+    x_ = []
+    for _x in x:
+        z = 0
+        for _y in x:
+            if _x == _y:
+                z = 0
+                print(_x, 'is equal to', _y)
+            else:
+                if _x in _y:
+                    z = 1
+                    print(_x, 'is a subset of', _y)
+                else:
+                    print('not a subset')
+            # elif _x.lower() == _y.lower():
+            #     z = 1
+            #     print(_x, 'is a lowercase version of', _y)
+            # elif _x in _y:
+            #     z = 1
+            #     print(_x, 'is a subset of', _y)
+            # else:
+            #     pass
+        if z == 0:
+            x_.append(_x)
+        else:
+            print('it is already a subset of')
+
+    return list(set(x_))
+
+
 def check_duplicate_name(val):
     '''
     function to check if name exist in database with some threshold
@@ -85,7 +160,8 @@ def ids2rss(source_news_ids):
     'd33446c7-a37b-4c5b-ba7a-275cc9583c05': 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
     'e43b544e-577b-4ed0-adb0-4661bda4c487': 'https://www.asianage.com/rss_feed/',
     'e5a8f17c-58c6-4087-a5c0-2ab681446611': 'http://rss.cnn.com/rss/edition.rss',
-    'eeff09cb-6fdb-45f1-a206-32a55320d598': 'https://www.deccanchronicle.com/rss_feed/'}
+    'eeff09cb-6fdb-45f1-a206-32a55320d598': 'https://www.deccanchronicle.com/rss_feed/',
+    '9bb25aa5-2536-4c0e-b897-c957b8de61d0': {'Amritsar': 'https://www.tribuneindia.com/rss/feed?catId=17', 'Bathinda': 'https://www.tribuneindia.com/rss/feed?catId=18', 'Chandigarh': 'https://www.tribuneindia.com/rss/feed?catId=20', 'Delhi': 'https://www.tribuneindia.com/rss/feed?catId=24', 'Jalandhar': 'https://www.tribuneindia.com/rss/feed?catId=34', 'Ludhiana': 'https://www.tribuneindia.com/rss/feed?catId=40', 'Patiala': 'https://www.tribuneindia.com/rss/feed?catId=213'}}
 
     for news_id in source_news_ids:
         news_id = news_id.strip()
@@ -119,7 +195,7 @@ def rss2news(rss):
                 if 'published' in news.keys():
                     week = datetime.now() - timedelta(days=1)
                     week = week.strftime("%Y-%m-%d %H:%M:%S")
-                    date = parse(news['published'])
+                    date = parse(news['published'].split('+')[0])
                     date = date.strftime("%Y-%m-%d %H:%M:%S")
                     if date > week:
                         link_dict[k] = news['link']
@@ -203,25 +279,25 @@ def _incre_mode(batch_id):
     # news_link = []
     
     # for rss in rss_list:
-    	# if type(rss)==dict:
-    		# for key, values in rss.items():
-    			# cities[key] = value
-    			# news_link.append(cities)
-    	# else:
-    		# cities['Nation'] = rss
-    		# news_link.append(cities)
+        # if type(rss)==dict:
+            # for key, values in rss.items():
+                # cities[key] = value
+                # news_link.append(cities)
+        # else:
+            # cities['Nation'] = rss
+            # news_link.append(cities)
 
     # cities_list = []
 
     # for new_link in news_link:
-    	# for k,v in new_link.items():
-    		# article_dict = {}
-    		# article_link = []
-    		# NewsFeed = feedparser.parse(v)
-    		# for news in NewsFeed.entries:
-    			# article_link.append(news['link'])
-    		# article_dict[k] = article_link
-    	# cities_list.append(article_dict)
+        # for k,v in new_link.items():
+            # article_dict = {}
+            # article_link = []
+            # NewsFeed = feedparser.parse(v)
+            # for news in NewsFeed.entries:
+                # article_link.append(news['link'])
+            # article_dict[k] = article_link
+        # cities_list.append(article_dict)
 
 
 
@@ -272,7 +348,7 @@ def _incre_mode(batch_id):
           article = Article(val[0])
           article.download()
           article.parse()
-          text = article.text.lower()
+          text = article.title.lower() + os.linesep + article.text.lower()
           # if article.publish_date:
             # print(article.publish_date)
             # if parse(article.publish_date) > date:
@@ -293,7 +369,7 @@ def _incre_mode(batch_id):
           profile['sourcename'] = val[0].split('/')[2]
     
           if profile['keyword']:
-            doc = nlp_Name(article.text)
+            doc = nlp_Name(article.title + os.linesep + article.text)
     
             # iterate through each entity present
             for count,ent in enumerate(doc.ents):
@@ -347,12 +423,26 @@ def _incre_mode(batch_id):
             print(profile['name'])
             profile['name'] = [x.strip() for x in profile['name'] if x.strip()]
             profile['name'] = list(set(profile['name']))
+            # check if any name is a subset of any other name
+            profile['name'] = [ i for i in profile['name'] if not any( [ i in a for a in profile['name'] if a != i]   )]
+            # profile['name'] = [ i.lower() for i in profile['name']]
+            # profile['name'] = list(set(profile['name']))
+            # profile['name'] = [ i.title() for i in profile['name']]
+            # profile['name'] = subset(profile['name'])
+            profile['name'] = lowercase_check(profile['name'])
             profile['name'] = ', '.join(profile['name'])    
             profile['org'] = ', '.join(profile['org'])    
             profile['loc'] = profile['loc'].split(',')
             print(profile['loc'])
             profile['loc'] = [x.strip() for x in profile['loc'] if x.strip()]
             profile['loc'] = list(set(profile['loc']))
+            # check if any name is a subset of any other name
+            profile['loc'] = [ i for i in profile['loc'] if not any( [ i in a for a in profile['loc'] if a != i]   )]
+            # profile['loc'] = [ i.lower() for i in profile['loc']]
+            # profile['loc'] = list(set(profile['loc']))
+            # profile['loc'] = [ i.title() for i in profile['loc']]
+            # profile['loc'] = subset(profile['loc'])
+            profile['loc'] = lowercase_check(profile['loc'])
             profile['loc'] = ', '.join(profile['loc'])
 
             print(profile) 
@@ -400,6 +490,14 @@ def _incre_mode(batch_id):
     # df['City of News Paper'] = '' # document.pop('City of News Paper')
     
     # df['Source Name'] = ''
+
+    # names_list = df['Person Name mentioned in the news'].tolist()
+    # idxes = df.index.tolist()
+
+    # _idx = subset_dupl(names_list, idxes)
+
+    # df = df[df.index.isin(_idx)]
+
 
     # replace empty string na values
     df.replace(to_replace=np.nan, value='', inplace=True)
