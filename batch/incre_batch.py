@@ -53,6 +53,7 @@ def update_detail_status(_id, end_time, date, status, ids):
     collection_batches = db['DetailStatus']
     post = collection_batches.find_one({'_id': bson.objectid.ObjectId(_id)})
     if post:
+        post["RunDate"] = date
         post["BatchRunStatus"] = status
         post["RunEndTime"] = end_time
         post["RunDuration"] = post["RunEndTime"] - post["RunStartTime"]
@@ -80,10 +81,10 @@ def overall_status(start_time, end_time, date, status):
 
 def run_batch():
     t0 = time.time()
-    date = time.strftime("%Y-%m-%d %H:%M:%S")
     start_time = time.time()
     status1 = 'Increment mode started'
-    batch_id = detail_status(start_time, date)
+    date1 = time.strftime("%Y-%m-%d %H:%M:%S")
+    batch_id = detail_status(start_time, date1)
     # try:
     status2 = _incre_mode(batch_id)
     # except Exception as e:
@@ -91,9 +92,10 @@ def run_batch():
         # status2 = str(e)
     dbs = current_ids()
     end_time = time.time()
-    update_detail_status(batch_id, end_time, date, status2, str(dbs['_id']))
+    date2 = time.strftime("%Y-%m-%d %H:%M:%S")
+    update_detail_status(batch_id, end_time, date2, status2, str(dbs['_id']))
     # detail_status(start_time, end_time, date, status2)
-    overall_status(t0, end_time, date, status2)
+    overall_status(t0, end_time, date2, status2)
     
 if __name__ == "__main__":
     run_batch()

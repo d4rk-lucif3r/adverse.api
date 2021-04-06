@@ -11,6 +11,10 @@ from newspaper import Article
 from faker import Faker
 import spacy
 import os
+from newspaper.utils import BeautifulSoup
+from newspaper import Config
+import re
+
 
 
 f1 = Faker()
@@ -18,26 +22,60 @@ nlp_Name = spacy.load("en_core_web_trf")
 
 @app.route('/')
 @app.route('/index')
-def home():
-    return render_template('home.html')
+def index():
+    return "Adverse Media being prepared for HDFC"
 
-@app.route('/check', methods=['GET', 'POST'])
-def check():
-    message = ""
-    if request.method == 'POST' or request.method == 'GET':
-
-        pep_name = request.form['pep_name']
-        pep_name = ''.join([char if ord(char) < 128 else '' for char in pep_name])
-
-        responses = search(pep_name)
-        results = {'results': responses}
-
-        results = dumps(results, sort_keys=False, indent=4, ensure_ascii=False)
-        message = 'Searched PEP information'
-        return render_template('check.html', response=results, msg=message)        
 
 @app.route('/adverseapi', methods=['GET', 'POST'])
 def adverseapi():
+
+    if not request.data:
+      return """
+      API can be called in following modes, please use GET verb in raw body format to invoke the APIs:<br/>
+      <br/>
+      Please note: you need to use the right API key, please get in touch with IntelleWings.<br/>
+      <br/>
+      Manual Mode:<br/>
+      This mode is meant to fetch data for everyday scan from the news sources.<br/>
+      Date parameters needs to specify the “from date” to fetch data.
+      <br/>
+      {<br/>
+      "api" : "4675622ca4d6fc49c6b811df1e9fc1",<br/>
+      "mode": "manual",<br/>
+      "date": "2021-03-08 15:19:47"<br/>
+      }<br/>
+      <br/>
+      Please note that everyday scan has been running starting Fri, 19 Mar 2021 21:03:15 +0530.<br/>
+      <br/>
+      Full Mode:<br/>
+      This mode is to be used when you need to get whole data available at IntelleWings data source end in one shot.<br/>
+      {<br/>
+      "api" : "46735622ca4d6fc49c6b811df1e9fc1",<br/>
+      "mode": "full"<br/>
+      }<br/>
+      Please note that everyday scan has been running starting Fri, 19 Mar 2021 21:03:15 +0530.<br/>
+      <br/>
+      Real-Time Mode:<br/>
+      This mode is to be used when you need to get search result from a particular url.<br/>
+      This is to test and verify the correctness of parsers in accurately finding matching news articles and correctness of predicting names, this feature may not be required in production<br/>
+      <br/>
+      {<br/>
+      "api" : "46735622ca4d6fc49c6b811df1e9fc1",<br/>
+      "mode": "realtime",<br/>
+      "keywords": "death",<br/>
+      "urltobesearched": "https://www.tribuneindia.com/news/amritsar/two-outsiders-mistaken-for-terrorists-make-pathankot-cops-sweat-224129"<br/>
+      }<br/>
+      <br/>
+      Update Mode:<br/>
+      This mode is to be used when you need to update Keywords/New Sources. After the update, next batch run of everyday scan will scrape and match the news articles per latest updated Keywords/news sources.<br/>
+      {<br/>
+      "api" : "46735622ca4d6fc49c6b811df1e9fc1",<br/>
+      "keywords" : "terror financing,terror,drug trafficking,Hawala,money mule,money mule,lauder the money,money launder,money laundering",<br/>
+      "mode":"update",<br/>
+      "news_source_ids":"e5a8f17c-58c6-4087-a5c0-2ab681446611"<br/>
+      }<br/>
+
+      """
 
     _request = request.data
     _request = _request.decode("utf-8")
@@ -45,10 +83,11 @@ def adverseapi():
 
     dbs = get_batch_ids()
     ids = current_ids_dbs()
+    # print(ids)
 
-    print("last run time:", dbs[-1]["RunDate"])
+    # print("last run time:", dbs[-1]["RunDate"])
 
-    print(_request)
+    # print(_request)
 
     if _request["api"]:
       api = _request["api"]
@@ -64,9 +103,10 @@ def adverseapi():
       mode = "full"
 
     if api == '35622ca4d6fc49c6b811df1e9fc10de4':
+      print(_request)
       if mode == 'full':
         # fetch all the data from db
-        print('mode:', mode)
+        # print('mode:', mode)
 
         # fetch all the data from db
         search_results = []
@@ -79,6 +119,9 @@ def adverseapi():
 
         for document in cursor:
           # print(document)
+          if document['Source Name'] == "www.ft.com":
+            continue
+
           document['Article_Date'] = document.pop('Article Date')
           document['City_of_News_Paper'] = document.pop('City of News Paper')
           document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
@@ -122,8 +165,21 @@ def adverseapi():
           # document['Article_Date'] = document['Article_Date'].split('.')[0]
           # document['uuid'] = f1.uuid4()
           document['Source_of_Info'] = 'Newspaper' # document.pop('Source of Info')
+          # remove Getty Images
+          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
+          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
+
+          # remove Covid
+          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
+          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
+
+          # remove Covid
+          document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
+          document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
 
           search_results.append(document)
+
+        search_results = list({v['Web_link_of_news']:v for v in search_results}.values())
 
         return jsonify({"news_source_id": ids["news_source_ids"], 
             "last_updated_time": dbs[-1]["RunDate"],
@@ -155,6 +211,9 @@ def adverseapi():
           # cursor = collection_batches.find({})
 
           for document in cursor:
+            if document['Source Name'] == "www.ft.com":
+              continue
+
             # print(document)
             document['Article_Date'] = document.pop('Article Date')
             document['City_of_News_Paper'] = document.pop('City of News Paper')
@@ -197,10 +256,22 @@ def adverseapi():
               # document['uuid'] = f1.uuid4()
 
             document['Source_of_Info'] = 'Newspaper'
+            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
+            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
+
+            # remove Covid
+            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
+            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
+
+            document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
+            document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
+
             search_results.append(document)
 
           # last_updated_time = datetime.strptime("2021-02-27 21:02:45", "%Y-%m-%d %H:%M:%S")
           # last_updated_time = last_updated_time.replace(tzinfo=timezone.utc)
+
+          search_results = list({v['Web_link_of_news']:v for v in search_results}.values())
 
           return jsonify({"news_source_ids": ids["news_source_ids"],
             "last_updated_time": dbs[-1]["RunDate"],
@@ -209,10 +280,40 @@ def adverseapi():
             "mode_of_search": _request["mode"],
             "search_results": search_results})
 
-      elif mode == 'update':        
-        if _request['keywords'] and _request['news_source_ids']:
+      elif mode == 'update':
+        _keys = list(_request.keys())
+        print(_request.keys())
+        print(_request.values())
+
+        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys):
+        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          print('this is request for name, city, keywords and news_source_id')
+          _request['fp_name'] = _request['fp_name'].split(',') + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(_request['keywords'], _request['news_source_ids'])
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+          # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys):
+        # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
+          print("this request is for keywords, news_source_id and name")
+          _request['fp_name'] = _request['fp_name'].split(',') + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -223,19 +324,136 @@ def adverseapi():
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_city' in _keys):
+        # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_city']:
+          print("this request is for keywords, news_source_id and fp_city")
+          _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys):
+        # elif _request['keywords'] and _request['news_source_ids']:
+          print("this is request is for keywords and news_source_ids")
+          _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+
+      elif mode == 'parse_existing':
+        # update the database to parse existing = True
+        update_parse_existing(str(ids['_id']))
+        # get all the existing urls and updating them
+        return jsonify({"news_source_ids": ids["news_source_ids"], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : ids['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updating all the urls in the database']})
+
+
       elif mode == 'realtime':        
         if _request['keywords'] and _request['urltobesearched']:
-          print(_request['keywords'], _request['urltobesearched'])
+          # print(_request['keywords'], _request['urltobesearched'])
           keywords = _request['keywords'].split(',')
           keywords = [x.strip() for x in keywords if x.strip()]
           urltobesearched = _request['urltobesearched']
           if keywords and urltobesearched:
             profile = {'Person_Name_mentioned_in_the_news': '', 'Organization_Name_mentioned_in_the_news': '', 'City_State_mentioned_under_the_news': '', 'Key_word_Used_foruuidentify_the_article': '', 'HDFC_Bank_Name_under_News_Article': 'No', 'Article_Date': '', 'Source_Name': '', 'Web_link_of_news': '', 'created_date': '', 'City_of_News_Paper': ''}
+            # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
+            HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
+           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+            config = Config()
+            # config.browser_user_agent = USER_AGENT
+            config.headers = HEADERS
+            config.request_timeout = 40
+
             try:
-              article = Article(urltobesearched)
+              profile['Source_Name'] = urltobesearched.split('/')[2]
+              article = Article(urltobesearched, config=config)
               article.download()
               article.parse()
-              text = article.title.lower() + os.linesep + article.text.lower()
+
+              soup = BeautifulSoup(article.html, 'html.parser')
+
+              text = soup_text(soup, profile['Source_Name'])
+
+              if not text:
+                text = article.title + os.linesep + article.text
+                # print(text)
+
+              # if 'economictimes.indiatimes' in profile['Source_Name']:
+              #   soup = BeautifulSoup(article.html, 'html.parser')
+
+              #   regex = re.compile('.*artText.*')
+              #   text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
+              #   if text:
+              #     text = [article.title] + text
+              #     text = '\n'.join(text)
+              #   else:
+              #     regex = re.compile('.*content1.*')
+              #     text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
+              #     if text:
+              #       text = [article.title] + text
+              #       text = '\n'.join(text)
+              #     else:
+              #       text = [tag.get_text() for tag in soup.find_all("p", attrs={"itemprop": "caption description"})]
+              #       if text:
+              #         text = [article.title] + text
+              #         text = '\n'.join(text)
+              #       else:
+              #         text = article.title + os.linesep + article.text
+              
+              # elif 'timesofindia.indiatimes' in profile['Source_Name']:
+              #   soup = BeautifulSoup(article.html, 'html.parser')
+
+              #   regex = re.compile('.*Normal.*')
+
+              #   text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
+              #   if text:
+              #     text = [article.title] + text
+              #     text = '\n'.join(text)
+              #   else:
+              #     text = article.title + os.linesep + article.text
+              
+              # elif 'business-standard' in profile['Source_Name']:
+              #   soup = BeautifulSoup(article.html, 'html.parser')
+
+              #   text = [tag.get_text() for tag in soup.find_all('span', {'class': 'p-content'})]
+              #   if text:
+              #     text = [article.title] + text
+              #     text = '\n'.join(text)
+              #   else:
+              #     text = article.title + os.linesep + article.text
+
+              # else:
+              #   text = article.title + os.linesep + article.text
+                # text = article.title.lower() + os.linesep + article.text.lower()
+
+              print(text)
 
               for keyword in keywords:
                 if keyword.lower() in text.lower():
@@ -259,27 +477,38 @@ def adverseapi():
 
               profile['Web_link_of_news'] = article.url
 
-              profile['Source_Name'] = urltobesearched.split('/')[2]
+              # remove Getty Images
+              text = text.replace('Getty Images', '')
 
-              doc = nlp_Name(article.title + os.linesep + article.text)
+              # remove Covid
+              text = text.replace('Covid', '')
 
-              # iterate through each entity present
-              for count,ent in enumerate(doc.ents):
-                # save data in profile
-                # find persons in text
-                if ent.label_ == 'PERSON':
-                  profile['Person_Name_mentioned_in_the_news'] += ent.text + ', '
-              
-                # find persons in text
-                elif ent.label_ == 'ORG':
-                  profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+              text2 = text.split('\n')
 
-                # find persons in text
-                elif ent.label_ == 'GPE':
-                  profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+              print('length of article:', len(text2))
 
-                else:
-                  pass
+              for i in range(len(text2)):
+
+                doc = nlp_Name(text2[i])
+
+                # iterate through each entity present
+                for ent in doc.ents:
+                  # save data in profile
+                  # find persons in text
+                  if ent.label_ == 'PERSON':
+                    profile['Person_Name_mentioned_in_the_news'] += ent.text + ', '
+
+                  # find persons in text
+                  elif ent.label_ == 'ORG':
+                    profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+
+                  # find persons in text
+                  elif ent.label_ == 'GPE':
+                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+
+                  else:
+                    continue
+
 
               profile['Article_Date'] = article.publish_date
               profile['City_of_News_Paper'] = ''
@@ -298,6 +527,7 @@ def adverseapi():
               profile['Person_Name_mentioned_in_the_news'] = [ i for i in profile['Person_Name_mentioned_in_the_news'] if not any( [ i in a for a in profile['Person_Name_mentioned_in_the_news'] if a != i]   )]
               person_dict = {k.lower():k for k in profile['Person_Name_mentioned_in_the_news']}
               profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
+              profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in ids['fp_name']]
               profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
               profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
@@ -307,6 +537,7 @@ def adverseapi():
               profile['City_State_mentioned_under_the_news'] = [ i for i in profile['City_State_mentioned_under_the_news'] if not any( [ i in a for a in profile['City_State_mentioned_under_the_news'] if a != i]   )]
               city_dict = {k.lower():k for k in profile['City_State_mentioned_under_the_news']}
               profile['City_State_mentioned_under_the_news'] = list(city_dict.values())
+              profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in ids['fp_city']]
               profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
@@ -314,6 +545,8 @@ def adverseapi():
 
               if not profile['Article_Date']:
                 profile['Article_Date'] = ''
+
+              print(profile)
 
               return jsonify({"news_source_ids": ids["news_source_ids"], 
                 "last_updated_time": dbs[-1]["RunDate"],

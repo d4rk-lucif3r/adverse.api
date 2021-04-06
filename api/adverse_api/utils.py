@@ -12,6 +12,101 @@ from datetime import datetime
 import re
 import pymongo
 from pymongo import MongoClient
+import time
+import bson
+
+
+fp_name = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images']
+fp_city = ['Covid']
+
+
+def update_parse_existing(_id):
+    '''
+    function to save batch table in mongodb
+    '''
+    batch = {}
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['news_ids']
+    # db = client['BatchRunStatus']
+    # collection_batches = db['DetailStatus']
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId(_id)})
+    if post:
+        print(post)
+        # post["UpdateDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        post["ParseExisting"] = True
+        collection_batches.save(post)
+
+    return "Updated Document"
+
+
+def soup_text(soup, sourcename):
+
+    text_ = []
+
+    dictionary = {
+    # 'www.hindustantimes.com': {'h1': ['hdg1', 'hdg3'], 'div': ['sortDec', 'detail', 'storyDetails']},
+    # 'www.dnaindia.com': {'div': ['container']},
+    # 'www.business-standard.com': {'h1': ['headline'], 'h2': ['alternativeHeadline'], 'span': ['p-content']},
+    'www.nytimes.com': {'Headlines': {'h1': ['css-19rw7kf e1h9rw200']}, 'Synopsis': {'p': ['css-w6ymp8 e1wiw3jv0']}, 'Text': {'div': ['css-53u6y8']}},
+    'www.business-standard.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'h2': ['alternativeHeadline']}, 'Text': {'span': ['p-content']}},
+    'www.ndtv.com': {'Headlines': {'h1': ['sp-ttl']}, 'Synopsis': {'h2': ['sp-descp']}, 'Text': {'div': ['sp-cn ins_storybody', '.*sp-cn.*']}},
+    # 'indianexpress.com': {'h1': ['native_story_title'], 'h2' : ['synopsis'], 'div' : ['full-details', 'pcl-full-content']},
+    'www.bbc.com': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
+    'economictimes.indiatimes.com': {'Headlines': {'h1': ['artTitle font_faus']}, 'Synopsis': {'h2': ['summary', 'artSyn tac font_mon']}, 'Text': {'div': ['.*artText.*', 'pageContent flt', '.*content1.*', 'primeContent col s_col font_faus artText paywall']}},
+    # 'www.thehindu.com': {'div': ['title', 'paywall']},
+    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498']}, 'Text': {'div': ['ga-headlines', '.*Normal.*']}},
+    'bangaloremirror.indiatimes.com': {'Headlines': {'div': ['heading2']}, 'Text': {'div': ['.*Normal.*', 'ga-headlines']}},
+    'edition.cnn.com': {'Headlines': {'h1': ['pg-headline']}, 'Text':  {'div': ['pg-headline', 'l-container', 'zn-body__paragraph']}},
+    'www.deccanchronicle.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'div': ['strap']}, 'Text': {'div': ['story-body']}},
+    'www.deccanherald.com': {'Headlines': {'h1': ['f-left sanspro-b']}, 'Synopsis': {'h3': ['sanspro-reg strap-heading']}, 'Text': {'div': ['field-items']}},
+    'www.tribuneindia.com': {'Headlines': {'div': ['glb-heading']}, 'Text': {'div': ['story-desc']}},
+    'www.dailypioneer.com': {'Headlines': {'div': ['col-12']}, 'Text': {'div': ['col-22 mt-4', 'col-12 col-md order-md-2 order-1', 'newsDetailedContent', 'row no-gutters bodyContentSection', 'storyDetailBox']}},
+    'www.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular'], 'p': ['p_txt_kj']}},
+    'epaper.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular', 'website_story_inside', 'col-12'], 'p': ['p_txt_kj']}},
+    # 'epaper.telegraphindia.com': {'div': ['website_story_inside', 'col-12', 'fs-20 uk-text-69 noto-regular', 'fs-17 pt-2 noto-regular', 'fontStyle'], 'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1'], 'p': ['p_txt_kj']}
+    # 'www.dailypioneer.com': {}
+    }
+
+    try:
+        print('sourcename:', sourcename)
+        tag_class = dictionary[sourcename]
+        print('tag_class:', tag_class)
+        # for _key in tag_class.values():
+        Headlines = []
+        Synopsis = []
+        Text = []
+        for tag, _class in tag_class.items(): # i = 0, headline, i = 1, synopysis, i =2 text
+            for __tag, __class in _class.items():
+                for ___class in __class:
+                    if (tag == 'Headlines' and not Headlines) or (tag == 'Synopsis' and not Synopsis) or (tag == 'Text' and not Text):
+                        regex = re.compile(___class)
+                        for block in soup.find_all(__tag, {"class" : regex}):
+                            for strings in block.stripped_strings:
+                                if tag == 'Headlines':
+                                    Headlines.append(strings)
+                                elif tag == 'Synopsis':
+                                    Synopsis.append(strings)
+                                elif tag == 'Text':
+                                    Text.append(strings)
+                                else:
+                                    continue
+
+        text_ = Headlines + Synopsis + Text
+                            # text_.append(strings)
+            # text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
+            # text_ += [tag.get_text() for tag in soup.find_all(tag, {"class" : regex})]
+    except Exception as e:
+        print(e)
+        return None
+
+    if text_:
+        # print(text_)
+        # return '\n'.join(text_)
+        return ' '.join(text_)
+    else:
+        print('text not found')
+        return None
 
 def fnc_(x):
   try:
@@ -32,7 +127,7 @@ def get_batch_ids():
     dbs = [database for database in cursor]
     return dbs
 
-def update_ids_dbs(keywords, news_source_ids):
+def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
     '''
     function to update sources ids and keywords into database
     '''
@@ -42,6 +137,13 @@ def update_ids_dbs(keywords, news_source_ids):
     collection_batches = db['news_ids']
     dbs['keywords'] = keywords
     dbs['news_source_ids'] = news_source_ids
+    if fp_name and fp_city:
+        dbs['fp_name'] = fp_name
+        dbs['fp_city'] = fp_city
+    elif fp_city:
+        dbs['fp_city'] = fp_city
+    elif fp_name:
+        dbs['fp_name'] = fp_name
     collection_batches.insert(dbs)
     # print("Batch Run ingesting into DB")
     collection_batches.create_index([("news_ids", pymongo.ASCENDING)])
@@ -55,7 +157,8 @@ def current_ids_dbs():
     client = MongoClient('localhost', 27017)
     db = client['news_ids']
     collection_batches = db['news_ids']
-    cursor = collection_batches.find({}, {'_id': False})
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
     dbs = [database for database in cursor]
     return dbs[-1]
 
