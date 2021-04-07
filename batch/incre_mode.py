@@ -225,13 +225,11 @@ def ids2rss(source_news_ids):
 
     dictionary = {
     '3cdd8f28-01f5-4d18-b438-742f04fe3141': 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-    # '2cdd8f28-01f5-4d18-b438-742f04fe3140': 'https://prod-qt-images.s3.amazonaws.com/production/bloombergquint/feed.xml',
     '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': {'Bengaluru': 'https://www.hindustantimes.com/feeds/rss/cities/bengaluru-news/rssfeed.xml', 'Bhopal': 'https://www.hindustantimes.com/feeds/rss/cities/bhopal-news/rssfeed.xml', 'Chandigarh': 'https://www.hindustantimes.com/feeds/rss/cities/chandigarh-news/rssfeed.xml', 'Dehradun': 'https://www.hindustantimes.com/feeds/rss/cities/dehradun-news/rssfeed.xml', 'Delhi': 'https://www.hindustantimes.com/feeds/rss/cities/delhi-news/rssfeed.xml', 'Gurugram': 'https://www.hindustantimes.com/feeds/rss/cities/gurugram-news/rssfeed.xml', 'Indore': 'https://www.hindustantimes.com/feeds/rss/cities/indore-news/rssfeed.xml', 'Jaipur': 'https://www.hindustantimes.com/feeds/rss/cities/jaipur-news/rssfeed.xml', 'Kolkata': 'https://www.hindustantimes.com/feeds/rss/cities/kolkata-news/rssfeed.xml', 'Lucknow': 'https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml', 'Mumbai': 'https://www.hindustantimes.com/feeds/rss/cities/mumbai-news/rssfeed.xml', 'Noida' : 'https://www.hindustantimes.com/feeds/rss/cities/noida-news/rssfeed.xml', 'Patna': 'https://www.hindustantimes.com/feeds/rss/cities/patna-news/rssfeed.xml', 'Pune': 'https://www.hindustantimes.com/feeds/rss/cities/pune-news/rssfeed.xml', 'Ranchi': 'https://www.hindustantimes.com/feeds/rss/cities/ranchi-news/rssfeed.xml'},
     '4dfab6d8-8246-469b-9e19-7ddbb55d806d': {'Mumbai': 'https://www.dnaindia.com/feeds/mumbai.xml', 'Delhi': 'https://www.dnaindia.com/feeds/delhi.xml', 'Bangalore': 'https://www.dnaindia.com/feeds/bangalore.xml', 'Pune' : 'https://www.dnaindia.com/feeds/pune.xml', 'Ahmedabad' : 'https://www.dnaindia.com/feeds/ahmedabad.xml'},
     '52d0de86-1525-417d-b8fd-2158f1256c38': {'National': 'http://www.allindianewspapers.com/Feeds/states.xml'},
     '5b32994e-2e6e-417f-ba44-77f508742349': {'National': 'https://www.business-standard.com/rss/home_page_top_stories.rss'},
     '65cb3dec-94a9-4274-b518-543c74e14a59': 'https://asia.nikkei.com/rss/feed/nar',
-    # '6c676cc1-2338-4834-a0fb-9ae8a04a2bda': 'https://www.ft.com/?format=rss',
     '7eba470b-1edc-4f69-840d-99cfde3a5fcb': 'http://www.abc.net.au/news/feed/2942460/rss.xml',
     '890d11b8-05e7-416e-b777-7ba62f4a7045': 'https://www.economist.com/international/rss.xml',
     '8cbc9eec-7255-43bf-bb72-2bce4f4764ea': {'National': 'https://feeds.feedburner.com/ndtvnews-cities-news?format=xml'},
@@ -823,11 +821,11 @@ def _incre_mode(batch_id):
       dbs = [database['Web link of news'] for database in cursor]
 
       for _dict in dicts:
-        # if _dict['Web link of news'] in dbs:
-          # print('Web link of news exist in db')
-          # continue
+        if _dict['Web link of news'] in dbs:
+          print('Web link of news exist in db')
+          continue
         # check for duplicate names
-        if check_duplicate_name(_dict['Person Name mentioned in the news']):
+        elif check_duplicate_name(_dict['Person Name mentioned in the news']):
           print('Names intersection crosses threshold')
         else:
           collection_batches.insert_one(_dict)
