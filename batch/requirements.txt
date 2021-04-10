@@ -16,7 +16,7 @@ constantly==15.1.0
 cryptography==3.1
 cssselect==1.1.0
 cymem==2.0.3
-en-core-web-trf==3.0.0
+en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.0.0/en_core_web_trf-3.0.0-py3-none-any.whl
 fake-headers==1.0.2
 Faker==6.5.0
 feedfinder2==0.0.4
