@@ -83,6 +83,15 @@ def adverseapi():
 
     dbs = get_batch_ids()
     ids = current_ids_dbs()
+    fps = current_ids_fps()
+    fps['fp_name'] = fps['fp_name'].split(',')
+    fps['fp_name'] = [x.strip() for x in fps['fp_name'] if x.strip()]
+    fps['fp_name'] = list(set(fps['fp_name']))
+    fps['fp_city'] = fps['fp_city'].split(',')
+    fps['fp_city'] = [x.strip() for x in fps['fp_city'] if x.strip()]
+    fps['fp_city'] = list(set(fps['fp_city']))
+    print('fp_name:', fps['fp_name'])
+    print('fp_city:', fps['fp_city'])
     # print(ids)
 
     # print("last run time:", dbs[-1]["RunDate"])
@@ -119,6 +128,7 @@ def adverseapi():
 
         for document in cursor:
           # print(document)
+          # remove financial times
           if document['Source Name'] == "www.ft.com":
             continue
 
@@ -130,9 +140,19 @@ def adverseapi():
           document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
           document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].split(',')
           document['Person_Name_mentioned_in_the_news'] = [x.strip() for x in document['Person_Name_mentioned_in_the_news'] if x.strip()]
-          print(document['Person_Name_mentioned_in_the_news'])
-          document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
+          document['Person_Name_mentioned_in_the_news'] = [i for i in document['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
+
+          # print(document['Person_Name_mentioned_in_the_news'])
+          # document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
           document['Person_Name_mentioned_in_the_news'] = ', '.join(document['Person_Name_mentioned_in_the_news'])
+          document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].split(',')
+          document['City_State_mentioned_under_the_news'] = [x.strip() for x in document['City_State_mentioned_under_the_news'] if x.strip()]
+          document['City_State_mentioned_under_the_news'] = [i for i in document['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
+
+          # print(document['City_State_mentioned_under_the_news'])
+          # document['City_State_mentioned_under_the_news'] = list(set(document['City_State_mentioned_under_the_news']))
+          document['City_State_mentioned_under_the_news'] = ', '.join(document['City_State_mentioned_under_the_news'])
+
           document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
           document['Source_Name'] = document.pop('Source Name')
           document['Source_of_Info'] = document.pop('Source of Info')
@@ -166,16 +186,16 @@ def adverseapi():
           # document['uuid'] = f1.uuid4()
           document['Source_of_Info'] = 'Newspaper' # document.pop('Source of Info')
           # remove Getty Images
-          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
-          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
+          # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
+          # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
 
           # remove Covid
-          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
-          document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
+          # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
+          # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
 
           # remove Covid
-          document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
-          document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
+          # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
+          # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
 
           search_results.append(document)
 
@@ -223,8 +243,18 @@ def adverseapi():
             document['Person_Name_mentioned_in_the_news'] = document.pop('Person Name mentioned in the news')
             document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].split(',')
             document['Person_Name_mentioned_in_the_news'] = [x.strip() for x in document['Person_Name_mentioned_in_the_news'] if x.strip()]
-            document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
+            document['Person_Name_mentioned_in_the_news'] = [i for i in document['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
+
+            # print(document['Person_Name_mentioned_in_the_news'])
+            # document['Person_Name_mentioned_in_the_news'] = list(set(document['Person_Name_mentioned_in_the_news']))
             document['Person_Name_mentioned_in_the_news'] = ', '.join(document['Person_Name_mentioned_in_the_news'])
+            document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].split(',')
+            document['City_State_mentioned_under_the_news'] = [x.strip() for x in document['City_State_mentioned_under_the_news'] if x.strip()]
+            document['City_State_mentioned_under_the_news'] = [i for i in document['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
+
+            # print(document['City_State_mentioned_under_the_news'])
+            # document['City_State_mentioned_under_the_news'] = list(set(document['City_State_mentioned_under_the_news']))
+            document['City_State_mentioned_under_the_news'] = ', '.join(document['City_State_mentioned_under_the_news'])
             document['Organization_Name_mentioned_in_the_news'] = document.pop('Organization Name mentioned in the news')
             document['Source_Name'] = document.pop('Source Name')
             document['Source_of_Info'] = document.pop('Source of Info')
@@ -256,15 +286,15 @@ def adverseapi():
               # document['uuid'] = f1.uuid4()
 
             document['Source_of_Info'] = 'Newspaper'
-            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
-            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
+            # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images, ', '')
+            # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Getty Images', '')
 
             # remove Covid
-            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
-            document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
+            # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid, ', '')
+            # document['Person_Name_mentioned_in_the_news'] = document['Person_Name_mentioned_in_the_news'].replace('Covid', '')
 
-            document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
-            document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
+            # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
+            # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
 
             search_results.append(document)
 
@@ -288,12 +318,12 @@ def adverseapi():
         if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys):
         # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
           print('this is request for name, city, keywords and news_source_id')
-          _request['fp_name'] = _request['fp_name'].split(',') + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
           _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-          _request['fp_city'] = _request['fp_city'].split(',') + ['Covid']
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
           _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
           # print(_request)
@@ -308,12 +338,12 @@ def adverseapi():
         elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
           print("this request is for keywords, news_source_id and name")
-          _request['fp_name'] = _request['fp_name'].split(',') + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
           _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-          _request['fp_city'] = ['Covid']
-          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # _request['fp_city'] = ['Covid']
+          # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name']) # , _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -327,12 +357,12 @@ def adverseapi():
         elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_city' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_city']:
           print("this request is for keywords, news_source_id and fp_city")
-          _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
-          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-          _request['fp_city'] = _request['fp_city'].split(',') + ['Covid']
+          # _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          # _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
           _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_city=_request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -346,12 +376,12 @@ def adverseapi():
         elif ('keywords' in _keys) and ('news_source_ids' in _keys):
         # elif _request['keywords'] and _request['news_source_ids']:
           print("this is request is for keywords and news_source_ids")
-          _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
-          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-          _request['fp_city'] = ['Covid']
-          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          # _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          # _request['fp_city'] = ['Covid']
+          # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(_request['keywords'], _request['news_source_ids'], _request['fp_name'], _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids']) # , _request['fp_name'], _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -478,10 +508,10 @@ def adverseapi():
               profile['Web_link_of_news'] = article.url
 
               # remove Getty Images
-              text = text.replace('Getty Images', '')
+              # text = text.replace('Getty Images', '')
 
               # remove Covid
-              text = text.replace('Covid', '')
+              # text = text.replace('Covid', '')
 
               text2 = text.split('\n')
 
@@ -527,7 +557,7 @@ def adverseapi():
               profile['Person_Name_mentioned_in_the_news'] = [ i for i in profile['Person_Name_mentioned_in_the_news'] if not any( [ i in a for a in profile['Person_Name_mentioned_in_the_news'] if a != i]   )]
               person_dict = {k.lower():k for k in profile['Person_Name_mentioned_in_the_news']}
               profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
-              profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in ids['fp_name']]
+              profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
               profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
               profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
@@ -537,7 +567,7 @@ def adverseapi():
               profile['City_State_mentioned_under_the_news'] = [ i for i in profile['City_State_mentioned_under_the_news'] if not any( [ i in a for a in profile['City_State_mentioned_under_the_news'] if a != i]   )]
               city_dict = {k.lower():k for k in profile['City_State_mentioned_under_the_news']}
               profile['City_State_mentioned_under_the_news'] = list(city_dict.values())
-              profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in ids['fp_city']]
+              profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
               profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])

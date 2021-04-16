@@ -16,9 +16,70 @@ import time
 import bson
 
 
-fp_name = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images']
-fp_city = ['Covid']
+def current_ids_fps():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['fp_list']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
 
+
+def update_fp(fp_name='', fp_city=''):
+    '''
+    function to update false positives list in mongodb
+    '''
+    batch = {}
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['fp_list']
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("60795b08f47fadb9f900b735")})
+    if post:
+        if fp_name and fp_city:
+            temp_name = post['fp_name'].split(',')
+            fp_name = fp_name.split(',')
+            fp_name = [x.strip() for x in fp_name if x.strip()]
+            temp_name = [x.strip() for x in temp_name if x.strip()]
+            temp_name += fp_name
+            temp_name = list(set(temp_name))
+            temp_name = ', '.join(temp_name)
+            post['fp_name'] = temp_name
+            temp_city = post['fp_city'].split(',')
+            fp_city = fp_city.split(',')
+            fp_city = [x.strip() for x in fp_city if x.strip()]
+            temp_city = [x.strip() for x in temp_city if x.strip()]
+            temp_city += fp_city
+            temp_city = list(set(temp_city))
+            temp_city = ', '.join(temp_city)
+            post['fp_city'] = temp_city
+            post['last_updated_time'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        elif fp_city:
+            temp_city = post['fp_city'].split(',')
+            fp_city = fp_city.split(',')
+            fp_city = [x.strip() for x in fp_city if x.strip()]
+            temp_city = [x.strip() for x in temp_city if x.strip()]
+            temp_city += fp_city
+            temp_city = list(set(temp_city))
+            temp_city = ', '.join(temp_city)
+            post['fp_city'] = temp_city
+            post['last_updated_time'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        elif fp_name:
+            temp_name = post['fp_name'].split(',')
+            fp_name = fp_name.split(',')
+            fp_name = [x.strip() for x in fp_name if x.strip()]
+            temp_name = [x.strip() for x in temp_name if x.strip()]
+            temp_name += fp_name
+            temp_name = list(set(temp_name))
+            temp_name = ', '.join(temp_name)
+            post['fp_name'] = temp_name
+
+        collection_batches.save(post)
+
+    return "Updated Document"
 
 def update_parse_existing(_id):
     '''
@@ -132,6 +193,7 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
     function to update sources ids and keywords into database
     '''
     dbs = {}
+    update_db = {}
     client = MongoClient('localhost', 27017)
     db = client['news_ids']
     collection_batches = db['news_ids']
@@ -140,15 +202,18 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
     if fp_name and fp_city:
         dbs['fp_name'] = fp_name
         dbs['fp_city'] = fp_city
+        update_fp(fp_name, fp_city)
     elif fp_city:
         dbs['fp_city'] = fp_city
+        update_fp(fp_city)
     elif fp_name:
         dbs['fp_name'] = fp_name
+        update_fp(fp_name)
     collection_batches.insert(dbs)
     # print("Batch Run ingesting into DB")
     collection_batches.create_index([("news_ids", pymongo.ASCENDING)])
     # print("BatchId is created")
-    return "Successfully Updated keywords and news source ids"
+    return "Successfully Updated keywords and news source ids and false positives"
 
 def current_ids_dbs():
     '''

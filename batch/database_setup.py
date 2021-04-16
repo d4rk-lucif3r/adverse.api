@@ -2,6 +2,38 @@ import pymongo
 from pymongo import MongoClient
 from datetime import datetime
 
+def add_default_fp():
+    '''
+    function to default news_id databases in mongodb
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['fp_list']
+
+    fp_name = ['AFP/Getty', 'AGRA', 'Asia Pacific', 'Budget', 'Centre', 'Corona', 'Defense', 'Getty Images', 'NZHPHOTO/AP', 'Paris', 'Taliban', 'UP', 'Union', 'state']
+    fp_name = [x.strip() for x in fp_name if x.strip()]
+    fp_name = list(set(fp_name))
+
+
+    fp_city = ['Covid', 'Corona']
+    fp_city = [x.strip() for x in fp_city if x.strip()]
+    fp_city = list(set(fp_city))
+
+    fp_name = ', '.join(fp_name)
+    fp_city = ', '.join(fp_city)
+
+    last_updated_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    x = {}
+    x['fp_name'] = fp_name
+    x['fp_city'] = fp_city
+    x['last_updated_time'] = last_updated_time
+
+    collection_batches.insert_one(x)
+    print('Successfully inserted default false positives list')
+
+    return 'Successfully inserted default false positives list'
+
 def add_default_ids():
     '''
     function to default news_id databases in mongodb
@@ -188,5 +220,6 @@ def update_dbs(primary, secondary):
 
 
 if __name__ == '__main__':
-    add_default_ids()
-    newsids2rss()
+    # add_default_ids()
+    # newsids2rss()
+    add_default_fp()
