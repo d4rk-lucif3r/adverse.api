@@ -37,7 +37,7 @@ def update_fp(fp_name='', fp_city=''):
     client = MongoClient('localhost', 27017)
     db = client['news_ids']
     collection_batches = db['fp_list']
-    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("60795b08f47fadb9f900b735")})
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("60799419ba4eda7932fc2ec2")})
     if post:
         if fp_name and fp_city:
             temp_name = post['fp_name'].split(',')

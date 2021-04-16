@@ -212,6 +212,18 @@ def current_ids():
     dbs = [database for database in cursor]
     return dbs[-1]
 
+def current_ids_fps():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['fp_list']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
 def fnc_(x):
   try:
     x = x.strip(', ')
@@ -307,6 +319,15 @@ def _incre_mode(batch_id):
     config.request_timeout = 20
         
     dbs = current_ids()
+    fps = current_ids_fps()
+    fps['fp_name'] = fps['fp_name'].split(',')
+    fps['fp_name'] = [x.strip() for x in fps['fp_name'] if x.strip()]
+    fps['fp_name'] = list(set(fps['fp_name']))
+    fps['fp_city'] = fps['fp_city'].split(',')
+    fps['fp_city'] = [x.strip() for x in fps['fp_city'] if x.strip()]
+    fps['fp_city'] = list(set(fps['fp_city']))
+
+
     print(dbs)
     
     source_news_ids = dbs["news_source_ids"].split(',')
@@ -683,10 +704,10 @@ def _incre_mode(batch_id):
           if profile['keyword']:
 
             # remove Getty Images
-            text = text.replace('Getty Images', '')
+            # text = text.replace('Getty Images', '')
 
             # remove Covid
-            text = text.replace('Covid', '')
+            # text = text.replace('Covid', '')
 
             text2 = text.split('\n')
 
@@ -737,6 +758,8 @@ def _incre_mode(batch_id):
             # profile['name'] = [ i.title() for i in profile['name']]
             # profile['name'] = subset(profile['name'])
             profile['name'] = lowercase_check(profile['name'])
+            profile['name'] = [i for i in profile['name'] if i not in fps['fp_name']]
+            
             profile['name'] = ', '.join(profile['name'])    
             profile['org'] = ', '.join(profile['org'])    
             profile['loc'] = profile['loc'].split(',')
@@ -750,6 +773,7 @@ def _incre_mode(batch_id):
             # profile['loc'] = [ i.title() for i in profile['loc']]
             # profile['loc'] = subset(profile['loc'])
             profile['loc'] = lowercase_check(profile['loc'])
+            profile['loc'] = [i for i in profile['loc'] if i not in fps['fp_city']]
             profile['loc'] = ', '.join(profile['loc'])
 
             # print(profile) 
