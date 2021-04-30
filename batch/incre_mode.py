@@ -498,6 +498,11 @@ def _incre_mode(batch_id):
                             elif ent.label_ == 'GPE':
                                 document['City of News Paper'] += ent.text + ', '
 
+                            # find persons in text
+                            elif ent.label_ == 'LOC':
+                                document['City of News Paper'] += ent.text + ', '
+
+
                             else:
                                 continue
 
@@ -734,6 +739,10 @@ def _incre_mode(batch_id):
                     elif ent.label_ == 'GPE':
                         profile['loc'] += ent.text + ', '
 
+                    # find persons in text
+                    elif ent.label_ == 'LOC':
+                        profile['loc'] += ent.text + ', '
+
                     else:
                         continue
     
@@ -759,6 +768,10 @@ def _incre_mode(batch_id):
             # profile['name'] = subset(profile['name'])
             profile['name'] = lowercase_check(profile['name'])
             profile['name'] = [i for i in profile['name'] if i not in fps['fp_name']]
+            profile['name'] = [i for i in profile['name'] if "covid" not in i.lower()]
+            profile['name'] = [i.split("’")[0] for i in profile['name']]
+
+
             
             profile['name'] = ', '.join(profile['name'])    
             profile['org'] = ', '.join(profile['org'])    
@@ -774,6 +787,9 @@ def _incre_mode(batch_id):
             # profile['loc'] = subset(profile['loc'])
             profile['loc'] = lowercase_check(profile['loc'])
             profile['loc'] = [i for i in profile['loc'] if i not in fps['fp_city']]
+            profile['loc'] = [i for i in profile['loc'] if "covid" not in i.lower()]
+            profile['loc'] = [i.split("’")[0] for i in profile['loc']]
+
             profile['loc'] = ', '.join(profile['loc'])
 
             # print(profile) 

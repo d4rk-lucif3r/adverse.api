@@ -536,6 +536,10 @@ def adverseapi():
                   elif ent.label_ == 'GPE':
                     profile['City_State_mentioned_under_the_news'] += ent.text + ', '
 
+                  # find persons in text
+                  elif ent.label_ == 'LOC':
+                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+
                   else:
                     continue
 
@@ -558,6 +562,8 @@ def adverseapi():
               person_dict = {k.lower():k for k in profile['Person_Name_mentioned_in_the_news']}
               profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
               profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
+              profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if "covid" not in i.lower()]
+              profile['Person_Name_mentioned_in_the_news'] = [i.split("’")[0] for i in profile['Person_Name_mentioned_in_the_news']]
               profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
               profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
@@ -568,6 +574,8 @@ def adverseapi():
               city_dict = {k.lower():k for k in profile['City_State_mentioned_under_the_news']}
               profile['City_State_mentioned_under_the_news'] = list(city_dict.values())
               profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
+              profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if "covid" not in i.lower()]
+              profile['City_State_mentioned_under_the_news'] = [i.split("’")[0] for i in profile['City_State_mentioned_under_the_news']]
               profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
