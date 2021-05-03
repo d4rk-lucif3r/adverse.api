@@ -84,14 +84,25 @@ def adverseapi():
     dbs = get_batch_ids()
     ids = current_ids_dbs()
     fps = current_ids_fps()
+    cities = current_ids_cities()
+    names = current_ids_names()
     fps['fp_name'] = fps['fp_name'].split(',')
     fps['fp_name'] = [x.strip() for x in fps['fp_name'] if x.strip()]
     fps['fp_name'] = list(set(fps['fp_name']))
     fps['fp_city'] = fps['fp_city'].split(',')
     fps['fp_city'] = [x.strip() for x in fps['fp_city'] if x.strip()]
     fps['fp_city'] = list(set(fps['fp_city']))
-    print('fp_name:', fps['fp_name'])
-    print('fp_city:', fps['fp_city'])
+    cities['cities'] = cities['cities'].split(',')
+    cities['cities'] = [x.strip() for x in cities['cities'] if x.strip()]
+    cities['cities'] = list(set(cities['cities']))
+    cities['cities'] = [x.lower() for x in cities['cities']]
+    names['names'] = names['names'].split(',')
+    names['names'] = [x.strip() for x in names['names'] if x.strip()]
+    names['names'] = list(set(names['names']))
+    names['names'] = [x.lower() for x in names['names']]
+    # print('fp_name:', fps['fp_name'])
+    # print('fp_city:', fps['fp_city'])
+    # print('cities:', cities['cities'])
     # print(ids)
 
     # print("last run time:", dbs[-1]["RunDate"])
@@ -315,18 +326,80 @@ def adverseapi():
         print(_request.keys())
         print(_request.values())
 
-        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys):
+        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys):
+        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          print('this is request for name, city, keywords, news_source_id and added_cities')
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          _request['cities'] = _request['cities'].split(',') # + ['Covid']
+          _request['cities'] = ','.join(list(set(_request['cities'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+          # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys):
         # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
           print('this is request for name, city, keywords and news_source_id')
           _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
           _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
           _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
           _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # _request['cities'] = _request['cities'].split(',') # + ['Covid']
+          # _request['cities'] = ','.join(list(set(_request['cities'])))
           # add news keywords and news source ids to database
           update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
           # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('cities' in _keys):
+        # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
+          print("this request is for cities")
+          _request['cities'] = _request['cities'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['cities'] = ','.join(list(set(_request['cities'])))
+          # _request['fp_city'] = ['Covid']
+          # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], cities=_request['cities']) # , _request["fp_city"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('names' in _keys):
+        # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
+          print("this request is for names")
+          _request['names'] = _request['names'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['names'] = ','.join(list(set(_request['names'])))
+          # _request['fp_city'] = ['Covid']
+          # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], names=_request['names']) # , _request["fp_city"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
 
           return jsonify({"news_source_ids": _request['news_source_ids'], 
                     "last_updated_time": dbs[-1]["RunDate"],
@@ -394,7 +467,39 @@ def adverseapi():
 
 
       elif mode == 'parse_existing':
-        # update the database to parse existing = True
+        # _keys = list(_request.keys())
+
+        # if 'uuid' in _keys:
+          # if _request['uuid'] == 'all':
+            # update the database to parse existing = True
+            # update_parse_existing(str(ids['_id']))
+            # get all the existing urls and updating them
+            # return jsonify({"news_source_ids": ids["news_source_ids"], 
+                    # "last_updated_time": dbs[-1]["RunDate"],
+                    # "keywords_updated" : ids['keywords'], 
+                    # "date_of_response": None,
+                    # "mode_of_search": mode,
+                    # "search_results": ['Updating all the urls in the database']})
+        # else:
+          # _request['uuid'] = _request['uuid'].split(',')
+
+
+
+        # # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          # print('this is request for name, city, keywords, news_source_id and added_cities')
+        #   _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+        #   _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+        #   _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
+        #   _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+        #   _request['cities'] = _request['cities'].split(',') # + ['Covid']
+        #   _request['cities'] = ','.join(list(set(_request['cities'])))
+        #   # add news keywords and news source ids to database
+        #   update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"])
+        #   # keywords = _request['keywords'].split(',')
+        #   # news_source_id = _request['news_source_ids'].split(',')
+        #   # print(_request)
+
+        # # update the database to parse existing = True
         update_parse_existing(str(ids['_id']))
         # get all the existing urls and updating them
         return jsonify({"news_source_ids": ids["news_source_ids"], 
@@ -483,7 +588,7 @@ def adverseapi():
               #   text = article.title + os.linesep + article.text
                 # text = article.title.lower() + os.linesep + article.text.lower()
 
-              print(text)
+              # print(text)
 
               for keyword in keywords:
                 if keyword.lower() in text.lower():
@@ -506,6 +611,8 @@ def adverseapi():
                 profile['HDFC_Bank_Name_under_News_Article'] = 'YES'
 
               profile['Web_link_of_news'] = article.url
+
+              print(text)
 
               # remove Getty Images
               # text = text.replace('Getty Images', '')
@@ -543,6 +650,21 @@ def adverseapi():
                   else:
                     continue
 
+                _loc = text2[i].split(':')
+                _loc = [y for x in _loc for y in x.split(' ')]
+                _loc = [x.strip() for x in _loc]
+                _loc = [x for x in _loc if x.lower() in cities['cities']]
+                print('location:detected:', _loc)
+                for __loc in _loc:
+                  profile['City_State_mentioned_under_the_news'] += __loc + ', '
+
+
+                # for __loc in _loc:
+                  # __loc = __loc.split(' ')
+                  # __loc = [x for x in __loc if x in cities['cities']]
+                  # print('location found:', __loc)
+                  # profile['City_State_mentioned_under_the_news'] += __loc[-1] + ', '
+
 
               profile['Article_Date'] = article.publish_date
               profile['City_of_News_Paper'] = ''
@@ -563,7 +685,13 @@ def adverseapi():
               profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
               profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
               profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if "covid" not in i.lower()]
-              profile['Person_Name_mentioned_in_the_news'] = [i.split("’")[0] for i in profile['Person_Name_mentioned_in_the_news']]
+              # profile['Person_Name_mentioned_in_the_news'] = [i.split("’")[0] for i in profile['Person_Name_mentioned_in_the_news']]
+
+              for name in profile['Person_Name_mentioned_in_the_news']:
+                if name.lower() in cities['cities']:
+                  profile['Person_Name_mentioned_in_the_news'].remove(name)
+                  profile['City_State_mentioned_under_the_news'] += name + ', '
+
               profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
               profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
@@ -575,11 +703,18 @@ def adverseapi():
               profile['City_State_mentioned_under_the_news'] = list(city_dict.values())
               profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
               profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if "covid" not in i.lower()]
-              profile['City_State_mentioned_under_the_news'] = [i.split("’")[0] for i in profile['City_State_mentioned_under_the_news']]
+              # profile['City_State_mentioned_under_the_news'] = [i.split("’")[0] for i in profile['City_State_mentioned_under_the_news']]
+
+              for name in profile['City_State_mentioned_under_the_news']:
+                if name.lower() in names['names']:
+                  profile['City_State_mentioned_under_the_news'].remove(name)
+                  profile['Person_Name_mentioned_in_the_news'] += ', ' + name
+
               profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
+              profile.pop('Organization_Name_mentioned_in_the_news')
 
               if not profile['Article_Date']:
                 profile['Article_Date'] = ''

@@ -16,6 +16,54 @@ from newspaper import Config
 import re
 
 
+def current_ids_names():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['names']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
+def current_ids_cities():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['cities']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
+def update_current_cities(cities=''):
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['cities']
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("608bb5960895f552b1f5c9d0")})
+    if post:
+        if cities:
+            temp_name = post['cities'].split(',')
+            cities = cities.split(',')
+            cities = [x.strip() for x in cities if x.strip()]
+            temp_name = [x.strip() for x in temp_name if x.strip()]
+            temp_name += cities
+            temp_name = list(set(temp_name))
+            temp_name = ', '.join(temp_name)
+            post['cities'] = temp_name
+            post['last_updated_time'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+        collection_batches.save(post)
+
+    return "Updated Document"
+
 def get_batch_ids():
     '''
     function to get batch ids and date into database
@@ -40,9 +88,10 @@ def soup_text(soup, sourcename):
     'www.ndtv.com': {'Headlines': {'h1': ['sp-ttl']}, 'Synopsis': {'h2': ['sp-descp']}, 'Text': {'div': ['sp-cn ins_storybody', '.*sp-cn.*']}},
     # 'indianexpress.com': {'h1': ['native_story_title'], 'h2' : ['synopsis'], 'div' : ['full-details', 'pcl-full-content']},
     'www.bbc.com': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
+    'www.bbc.co.uk': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
     'economictimes.indiatimes.com': {'Headlines': {'h1': ['artTitle font_faus']}, 'Synopsis': {'h2': ['summary', 'artSyn tac font_mon']}, 'Text': {'div': ['.*artText.*', 'pageContent flt', '.*content1.*', 'primeContent col s_col font_faus artText paywall']}},
     # 'www.thehindu.com': {'div': ['title', 'paywall']},
-    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498']}, 'Text': {'div': ['ga-headlines', '.*Normal.*']}},
+    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498', '.*_1Y-96.*']}, 'Text': {'div': ['ga-headlines', '.*Normal.*', '.*_3YYSt.*']}},
     'bangaloremirror.indiatimes.com': {'Headlines': {'div': ['heading2']}, 'Text': {'div': ['.*Normal.*', 'ga-headlines']}},
     'edition.cnn.com': {'Headlines': {'h1': ['pg-headline']}, 'Text':  {'div': ['pg-headline', 'l-container', 'zn-body__paragraph']}},
     'www.deccanchronicle.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'div': ['strap']}, 'Text': {'div': ['story-body']}},
@@ -51,6 +100,7 @@ def soup_text(soup, sourcename):
     'www.dailypioneer.com': {'Headlines': {'div': ['col-12']}, 'Text': {'div': ['col-22 mt-4', 'col-12 col-md order-md-2 order-1', 'newsDetailedContent', 'row no-gutters bodyContentSection', 'storyDetailBox']}},
     'www.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular'], 'p': ['p_txt_kj']}},
     'epaper.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular', 'website_story_inside', 'col-12'], 'p': ['p_txt_kj']}},
+    'www.wsj.com': {'Headlines': {'h1': ['wsj-article-headline']}, 'Synopsis': {'h2': ['sub-head'], 'figcaption': [".*article__inset__video__caption.*"]}, 'Text': {'div': ['column at8-col8 at12-col7 at16-col9 at16-offset1', 'wsj-snippet-body'], 'p': ['p_txt_kj']}},
     # 'epaper.telegraphindia.com': {'div': ['website_story_inside', 'col-12', 'fs-20 uk-text-69 noto-regular', 'fs-17 pt-2 noto-regular', 'fontStyle'], 'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1'], 'p': ['p_txt_kj']}
     # 'www.dailypioneer.com': {}
     }
@@ -88,7 +138,7 @@ def soup_text(soup, sourcename):
         return None
 
     if text_:
-        # print(text_)
+        print(text_)
         # return '\n'.join(text_)
         return ' '.join(text_)
     else:
@@ -192,10 +242,11 @@ def check_duplicate_name(val):
         if len(_dictval) > 0.4:
           return 1
         else:
-          print('threshold is not greater')
-          pass
+          continue
+          # print('threshold is not greater')
+          # pass
     else:
-      print("adverse_db doesnot exist id database")
+      # print("adverse_db doesnot exist creating database")
       pass
 
     return 0
@@ -282,27 +333,43 @@ def rss2news(rss):
     news_link = []
 
     for rss_link in rss:
+
         for k, v in rss_link.items():
-        	try:
-        		NewsFeed = feedparser.parse(v)
-        		for news in NewsFeed.entries:
-        			link_dict = {}
-        			link_dict[k] = news['link']
-        			if 'published' in news.keys():
-        				week = datetime.now() - timedelta(days=1)
-        				week = week.strftime("%Y-%m-%d %H:%M:%S")
-        				date = parse(news['published'].split('+')[0])
-        				date = date.strftime("%Y-%m-%d %H:%M:%S")
-        				if date > week:
-        					link_dict[k] = news['link']
-        					link_dict['published'] = news['published']
-        					news_link.append(link_dict)
-        				else:
-        					print('date is not greater than week')
-        			else:
-        				print('published not found in news[link]')
-        	except Exception as e:
-        		print("feedparser error:", e)
+
+            try:
+
+                NewsFeed = feedparser.parse(v)
+
+                for news in NewsFeed.entries:
+
+                    link_dict = {}
+                    link_dict[k] = news['link']
+
+                    if 'published' in news.keys():
+
+                        week = datetime.now() - timedelta(days=1)
+                        week = week.strftime("%Y-%m-%d %H:%M:%S")
+                        date = parse(news['published'].split('+')[0])
+                        date = date.strftime("%Y-%m-%d %H:%M:%S")
+
+                        if date > week:
+
+                            link_dict[k] = news['link']
+                            link_dict['published'] = news['published']
+                            news_link.append(link_dict)
+
+                        else:
+                            
+                            continue
+                            print('date is not greater than week')
+                    else:
+
+                        continue
+                        print('published not found in news.keys')
+
+            except Exception as e:
+
+                print("feedparser error:", e)
 
     return news_link
 
@@ -312,23 +379,35 @@ def _incre_mode(batch_id):
     # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
     HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
-
+    
     config = Config()
     # config.browser_user_agent = USER_AGENT
     config.headers = HEADERS
-    config.request_timeout = 20
-        
+    config.request_timeout = 40        
+    
     dbs = current_ids()
     fps = current_ids_fps()
+    cities = current_ids_cities()
+    names = current_ids_names()
     fps['fp_name'] = fps['fp_name'].split(',')
     fps['fp_name'] = [x.strip() for x in fps['fp_name'] if x.strip()]
     fps['fp_name'] = list(set(fps['fp_name']))
     fps['fp_city'] = fps['fp_city'].split(',')
     fps['fp_city'] = [x.strip() for x in fps['fp_city'] if x.strip()]
     fps['fp_city'] = list(set(fps['fp_city']))
+    cities['cities'] = cities['cities'].split(',')
+    cities['cities'] = [x.strip() for x in cities['cities'] if x.strip()]
+    cities['cities'] = list(set(cities['cities']))
+    cities['cities'] = [x.lower() for x in cities['cities']]
+    names['names'] = names['names'].split(',')
+    names['names'] = [x.strip() for x in names['names'] if x.strip()]
+    names['names'] = list(set(names['names']))
+    names['names'] = [x.lower() for x in names['names']]    # print('fp_name:', fps['fp_name'])
+    # print('fp_city:', fps['fp_city'])
+    # print('cities:', cities['cities'])
 
 
-    print(dbs)
+    # print(dbs)
     
     source_news_ids = dbs["news_source_ids"].split(',')
 
@@ -363,7 +442,7 @@ def _incre_mode(batch_id):
     #   else:
     #     print('news_id not found')
     
-    print('rss is:', rss)
+    # print('rss is:', rss)
 
     news_link = rss2news(rss)
     print('total news articles are:', len(news_link))
@@ -434,7 +513,7 @@ def _incre_mode(batch_id):
     utc=pytz.UTC
     
     keywords = dbs['keywords'].split(',')
-    print('keywords are:', keywords)
+    # print('keywords are:', keywords)
     
     # keywords = [
     #                 'black money'
@@ -457,7 +536,7 @@ def _incre_mode(batch_id):
 
         print('----------------- Parse Existing ------------------------')
 
-        print(dbs)
+        # print(dbs)
 
         if dbs["ParseExisting"]:
             client = MongoClient('localhost', 27017)
@@ -467,6 +546,10 @@ def _incre_mode(batch_id):
 
             for document in cursor:
                 # print(document)
+                document['Person Name mentioned in the news'] = ''
+                document['Organization Name mentioned in the news'] = ''
+                document['City/ State mentioned under the news'] = ''
+
                 try:
                     article = Article(document['Web link of news'], config=config)
                     article.download()
@@ -480,7 +563,7 @@ def _incre_mode(batch_id):
 
                     text2 = text.split('\n')
 
-                    print('length of article:', len(text2))
+                    # print('length of article:', len(text2))
 
                     for i in range(len(text2)):
 
@@ -496,17 +579,30 @@ def _incre_mode(batch_id):
                                 document['Organization Name mentioned in the news'] += ent.text + ', '
 
                             elif ent.label_ == 'GPE':
-                                document['City of News Paper'] += ent.text + ', '
+                                document['City/ State mentioned under the news'] += ent.text + ', '
 
                             # find persons in text
                             elif ent.label_ == 'LOC':
-                                document['City of News Paper'] += ent.text + ', '
+                                document['City/ State mentioned under the news'] += ent.text + ', '
 
 
                             else:
                                 continue
 
-                    document['updated_date'] = datetime.now()
+                        _loc = text2[i].split(':')
+
+                        # _loc = [y for x in _loc for y in x.split(' ')]
+
+                        _loc = [x.strip() for x in _loc]
+
+                        _loc = [x for x in _loc if x.lower() in cities['cities']]
+
+                        print('location:detected:', _loc)
+
+                        for __loc in _loc:
+                            document['City/ State mentioned under the news'] += __loc + ', '
+
+
                     document['Organization Name mentioned in the news'] = document['Organization Name mentioned in the news'].split(',')
                     document['Organization Name mentioned in the news'] = [x.strip() for x in document['Organization Name mentioned in the news'] if x.strip()]
                     document['Organization Name mentioned in the news'] = list(set(document['Organization Name mentioned in the news']))
@@ -514,20 +610,51 @@ def _incre_mode(batch_id):
                     document['Person Name mentioned in the news'] = [x.strip() for x in document['Person Name mentioned in the news'] if x.strip()]
                     document['Person Name mentioned in the news'] = list(set(document['Person Name mentioned in the news']))
                     document['Person Name mentioned in the news'] = [ i for i in document['Person Name mentioned in the news'] if not any( [ i in a for a in document['Person Name mentioned in the news'] if a != i]   )]
-                    document['Person Name mentioned in the news'] = lowercase_check(document['Person Name mentioned in the news'])
+                    person_dict = {k.lower():k for k in document['Person Name mentioned in the news']}
+                    document['Person Name mentioned in the news'] = list(person_dict.values())
+                    document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if i not in fps['fp_name']]
+                    document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if "covid" not in i.lower()]
+                    # document['Person Name mentioned in the news'] = [i.split("’")[0] for i in document['Person Name mentioned in the news']]
+
+                    for name in document['Person Name mentioned in the news']:
+                        if name.lower() in cities['cities']:
+                            document['Person Name mentioned in the news'].remove(name)
+                            document['City/ State mentioned under the news'] += name + ', '
+
+
                     document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
+
+                    # document['Person Name mentioned in the news'] = lowercase_check(document['Person Name mentioned in the news'])
+                    # document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
                     document['Organization Name mentioned in the news'] = ', '.join(document['Organization Name mentioned in the news'])    
-                    document['City of News Paper'] = document['City of News Paper'].split(',')
-                    document['City of News Paper'] = [x.strip() for x in document['City of News Paper'] if x.strip()]
-                    document['City of News Paper'] = list(set(document['City of News Paper']))
-                    document['City of News Paper'] = [ i for i in document['City of News Paper'] if not any( [ i in a for a in document['City of News Paper'] if a != i]   )]
-                    document['City of News Paper'] = lowercase_check(document['City of News Paper'])
-                    document['City of News Paper'] = ', '.join(document['City of News Paper'])
+                    document['City/ State mentioned under the news'] = document['City/ State mentioned under the news'].split(',')
+                    document['City/ State mentioned under the news'] = [x.strip() for x in document['City/ State mentioned under the news'] if x.strip()]
+                    document['City/ State mentioned under the news'] = list(set(document['City/ State mentioned under the news']))
+                    document['City/ State mentioned under the news'] = [ i for i in document['City/ State mentioned under the news'] if not any( [ i in a for a in document['City/ State mentioned under the news'] if a != i]   )]
+                    city_dict = {k.lower():k for k in document['City/ State mentioned under the news']}
+                    document['City/ State mentioned under the news'] = list(city_dict.values())
+                    document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if i not in fps['fp_city']]
+                    document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if "covid" not in i.lower()]
+                    # document['City/ State mentioned under the news'] = [i.split("’")[0] for i in document['City/ State mentioned under the news']]
+
+                    for name in document['City/ State mentioned under the news']:
+
+                        if name.lower() in names['names']:
+
+                            document['City/ State mentioned under the news'].remove(name)
+
+                            document['Person Name mentioned in the news'] += ', ' + name
+
+                    document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
+
+                    # document['City/ State mentioned under the news'] = lowercase_check(document['City/ State mentioned under the news'])
+                    # document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
+                    document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                     collection_batches.save(document)
 
 
                 except Exception as e:
-                    print(e)
+                    print('parse_existing exception:', e)
 
             print("------------------ Parse Existing Complete:-----------------------")
 
@@ -716,7 +843,7 @@ def _incre_mode(batch_id):
 
             text2 = text.split('\n')
 
-            print('length of article:', len(text2))
+            # print('length of article:', len(text2))
 
             for i in range(len(text2)):
                 
@@ -766,10 +893,18 @@ def _incre_mode(batch_id):
             # profile['name'] = list(set(profile['name']))
             # profile['name'] = [ i.title() for i in profile['name']]
             # profile['name'] = subset(profile['name'])
-            profile['name'] = lowercase_check(profile['name'])
+            # profile['name'] = lowercase_check(profile['name'])
+            person_dict = {k.lower():k for k in profile['name']}
+            profile['name'] = list(person_dict.values())
             profile['name'] = [i for i in profile['name'] if i not in fps['fp_name']]
             profile['name'] = [i for i in profile['name'] if "covid" not in i.lower()]
-            profile['name'] = [i.split("’")[0] for i in profile['name']]
+            # profile['name'] = [i.split("’")[0] for i in profile['name']]
+
+            for name in profile['name']:
+                if name.lower() in cities['cities']:
+                    profile['name'].remove(name)
+                    profile['loc'] += name + ', '
+
 
 
             
@@ -785,10 +920,18 @@ def _incre_mode(batch_id):
             # profile['loc'] = list(set(profile['loc']))
             # profile['loc'] = [ i.title() for i in profile['loc']]
             # profile['loc'] = subset(profile['loc'])
-            profile['loc'] = lowercase_check(profile['loc'])
+            # profile['loc'] = lowercase_check(profile['loc'])
+            city_dict = {k.lower():k for k in profile['loc']}
+            profile['loc'] = list(city_dict.values())
             profile['loc'] = [i for i in profile['loc'] if i not in fps['fp_city']]
             profile['loc'] = [i for i in profile['loc'] if "covid" not in i.lower()]
-            profile['loc'] = [i.split("’")[0] for i in profile['loc']]
+            # profile['loc'] = [i.split("’")[0] for i in profile['loc']]
+
+            for name in profile['loc']:
+                if name.lower() in names['names']:
+                    profile['loc'].remove(name)
+                    profile['name'] += ', ' + name
+
 
             profile['loc'] = ', '.join(profile['loc'])
 
@@ -797,10 +940,11 @@ def _incre_mode(batch_id):
             _writer.writerow(profile)
     
           else:
-            print(profile)
+            continue
+            # print(profile)
     
         except Exception as e:
-          print(e)
+          print('_incre_mode:', e)
 
     print("Starting Saving Database into mongodb")
     
@@ -866,7 +1010,8 @@ def _incre_mode(batch_id):
           continue
         # check for duplicate names
         elif check_duplicate_name(_dict['Person Name mentioned in the news']):
-          print('Names intersection crosses threshold')
+          continue
+          # print('Names intersection crosses threshold')
         else:
           collection_batches.insert_one(_dict)
     else:

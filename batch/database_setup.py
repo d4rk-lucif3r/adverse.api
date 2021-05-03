@@ -2,6 +2,57 @@ import pymongo
 from pymongo import MongoClient
 from datetime import datetime
 
+def add_default_names():
+    '''
+    function to default news_id databases in mongodb
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['names']
+
+    names = ['Kaushal', 'Monu']
+    names = [x.strip() for x in names if x.strip()]
+    names = list(set(names))
+
+    names = ', '.join(names)
+
+    last_updated_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    x = {}
+    x['names'] = names
+    x['last_updated_time'] = last_updated_time
+
+    collection_batches.insert_one(x)
+    print('Successfully inserted default names')
+
+    return 'Successfully inserted default names'
+
+
+def add_default_cities():
+    '''
+    function to default news_id databases in mongodb
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['cities']
+
+    cities = ['AMRITSAR', 'BN Reddy Nagar']
+    cities = [x.strip() for x in cities if x.strip()]
+    cities = list(set(cities))
+
+    cities = ', '.join(cities)
+
+    last_updated_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    x = {}
+    x['cities'] = cities
+    x['last_updated_time'] = last_updated_time
+
+    collection_batches.insert_one(x)
+    print('Successfully inserted default cities')
+
+    return 'Successfully inserted default cities'
+
 def add_default_fp():
     '''
     function to default news_id databases in mongodb
@@ -222,4 +273,6 @@ def update_dbs(primary, secondary):
 if __name__ == '__main__':
     # add_default_ids()
     # newsids2rss()
-    add_default_fp()
+    # add_default_fp()
+    # add_default_cities()
+    add_default_names()

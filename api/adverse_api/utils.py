@@ -16,6 +16,79 @@ import time
 import bson
 
 
+def current_ids_names():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['names']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
+def update_current_names(names=''):
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['names']
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("608fd0093532c6e24763040e")})
+    if post:
+        if names:
+            temp_name = post['names'].split(',')
+            names = names.split(',')
+            names = [x.strip() for x in names if x.strip()]
+            temp_name = [x.strip() for x in temp_name if x.strip()]
+            temp_name += names
+            temp_name = list(set(temp_name))
+            temp_name = ', '.join(temp_name)
+            post['names'] = temp_name
+            post['last_updated_time'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+        collection_batches.save(post)
+
+    return "Updated Document"
+
+
+def current_ids_cities():
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['cities']
+    # cursor = collection_batches.find({}, {'_id': False})
+    cursor = collection_batches.find({})
+    dbs = [database for database in cursor]
+    return dbs[-1]
+
+def update_current_cities(cities=''):
+    '''
+    function to update sources ids and keywords into database
+    '''
+    client = MongoClient('localhost', 27017)
+    db = client['news_ids']
+    collection_batches = db['cities']
+    post = collection_batches.find_one({'_id': bson.objectid.ObjectId("608bb5960895f552b1f5c9d0")})
+    if post:
+        if cities:
+            temp_name = post['cities'].split(',')
+            cities = cities.split(',')
+            cities = [x.strip() for x in cities if x.strip()]
+            temp_name = [x.strip() for x in temp_name if x.strip()]
+            temp_name += cities
+            temp_name = list(set(temp_name))
+            temp_name = ', '.join(temp_name)
+            post['cities'] = temp_name
+            post['last_updated_time'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+        collection_batches.save(post)
+
+    return "Updated Document"
+
 def current_ids_fps():
     '''
     function to update sources ids and keywords into database
@@ -114,9 +187,10 @@ def soup_text(soup, sourcename):
     'www.ndtv.com': {'Headlines': {'h1': ['sp-ttl']}, 'Synopsis': {'h2': ['sp-descp']}, 'Text': {'div': ['sp-cn ins_storybody', '.*sp-cn.*']}},
     # 'indianexpress.com': {'h1': ['native_story_title'], 'h2' : ['synopsis'], 'div' : ['full-details', 'pcl-full-content']},
     'www.bbc.com': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
+    'www.bbc.co.uk': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
     'economictimes.indiatimes.com': {'Headlines': {'h1': ['artTitle font_faus']}, 'Synopsis': {'h2': ['summary', 'artSyn tac font_mon']}, 'Text': {'div': ['.*artText.*', 'pageContent flt', '.*content1.*', 'primeContent col s_col font_faus artText paywall']}},
     # 'www.thehindu.com': {'div': ['title', 'paywall']},
-    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498']}, 'Text': {'div': ['ga-headlines', '.*Normal.*']}},
+    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498', '.*_1Y-96.*']}, 'Text': {'div': ['ga-headlines', '.*Normal.*', '.*_3YYSt.*']}},
     'bangaloremirror.indiatimes.com': {'Headlines': {'div': ['heading2']}, 'Text': {'div': ['.*Normal.*', 'ga-headlines']}},
     'edition.cnn.com': {'Headlines': {'h1': ['pg-headline']}, 'Text':  {'div': ['pg-headline', 'l-container', 'zn-body__paragraph']}},
     'www.deccanchronicle.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'div': ['strap']}, 'Text': {'div': ['story-body']}},
@@ -125,6 +199,7 @@ def soup_text(soup, sourcename):
     'www.dailypioneer.com': {'Headlines': {'div': ['col-12']}, 'Text': {'div': ['col-22 mt-4', 'col-12 col-md order-md-2 order-1', 'newsDetailedContent', 'row no-gutters bodyContentSection', 'storyDetailBox']}},
     'www.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular'], 'p': ['p_txt_kj']}},
     'epaper.telegraphindia.com': {'Headlines': {'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1']}, 'Synopsis': {'div': ['fs-20 uk-text-69 noto-regular', 'fontStyle', 'col-12']}, 'Text': {'div': ['fs-17 pt-2 noto-regular', 'website_story_inside', 'col-12'], 'p': ['p_txt_kj']}},
+    'www.wsj.com': {'Headlines': {'h1': ['wsj-article-headline']}, 'Synopsis': {'h2': ['sub-head'], 'figcaption': [".*article__inset__video__caption.*"]}, 'Text': {'div': ['column at8-col8 at12-col7 at16-col9 at16-offset1', 'wsj-snippet-body'], 'p': ['p_txt_kj']}},
     # 'epaper.telegraphindia.com': {'div': ['website_story_inside', 'col-12', 'fs-20 uk-text-69 noto-regular', 'fs-17 pt-2 noto-regular', 'fontStyle'], 'h1': ['fs-45 uk-text-1D noto-bold mb-2', 'sub_head  haedlinesstory1'], 'p': ['p_txt_kj']}
     # 'www.dailypioneer.com': {}
     }
@@ -162,7 +237,7 @@ def soup_text(soup, sourcename):
         return None
 
     if text_:
-        # print(text_)
+        print(text_)
         # return '\n'.join(text_)
         return ' '.join(text_)
     else:
@@ -188,7 +263,7 @@ def get_batch_ids():
     dbs = [database for database in cursor]
     return dbs
 
-def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
+def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city='', cities='', names=''):
     '''
     function to update sources ids and keywords into database
     '''
@@ -199,7 +274,12 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
     collection_batches = db['news_ids']
     dbs['keywords'] = keywords
     dbs['news_source_ids'] = news_source_ids
-    if fp_name and fp_city:
+    if fp_name and fp_city and cities:
+        dbs['fp_name'] = fp_name
+        dbs['fp_city'] = fp_city
+        update_fp(fp_name, fp_city)
+        update_current_cities(cities)
+    elif fp_name and fp_city:
         dbs['fp_name'] = fp_name
         dbs['fp_city'] = fp_city
         update_fp(fp_name, fp_city)
@@ -209,11 +289,15 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city=''):
     elif fp_name:
         dbs['fp_name'] = fp_name
         update_fp(fp_name)
+    elif cities:
+        update_current_cities(cities)
+    elif names:
+        update_current_names(names)
     collection_batches.insert(dbs)
     # print("Batch Run ingesting into DB")
     collection_batches.create_index([("news_ids", pymongo.ASCENDING)])
     # print("BatchId is created")
-    return "Successfully Updated keywords and news source ids and false positives"
+    return "Successfully Updated keywords and news source ids, cities, names and false positives"
 
 def current_ids_dbs():
     '''
