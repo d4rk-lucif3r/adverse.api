@@ -650,13 +650,13 @@ def adverseapi():
                   else:
                     continue
 
-                _loc = text2[i].split(':')
+                # _loc = text2[i].split(':')
                 # _loc = [y for x in _loc for y in x.split(' ')]
-                _loc = [x.strip() for x in _loc]
-                _loc = [x for x in _loc if x.lower() in cities['cities']]
-                print('location:detected:', _loc)
-                for __loc in _loc:
-                  profile['City_State_mentioned_under_the_news'] += __loc + ', '
+                # _loc = [x.strip() for x in _loc]
+                # _loc = [x for x in _loc if x.lower() in cities['cities']]
+                # print('location:detected:', _loc)
+                # for __loc in _loc:
+                  # profile['City_State_mentioned_under_the_news'] += __loc + ', '
 
 
                 # for __loc in _loc:

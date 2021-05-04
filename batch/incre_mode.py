@@ -589,18 +589,18 @@ def _incre_mode(batch_id):
                             else:
                                 continue
 
-                        _loc = text2[i].split(':')
+                        # _loc = text2[i].split(':')
 
                         # _loc = [y for x in _loc for y in x.split(' ')]
 
-                        _loc = [x.strip() for x in _loc]
+                        # _loc = [x.strip() for x in _loc]
 
-                        _loc = [x for x in _loc if x.lower() in cities['cities']]
+                        # _loc = [x for x in _loc if x.lower() in cities['cities']]
 
-                        print('location:detected:', _loc)
+                        # print('location:detected:', _loc)
 
-                        for __loc in _loc:
-                            document['City/ State mentioned under the news'] += __loc + ', '
+                        # for __loc in _loc:
+                            # document['City/ State mentioned under the news'] += __loc + ', '
 
 
                     document['Organization Name mentioned in the news'] = document['Organization Name mentioned in the news'].split(',')
