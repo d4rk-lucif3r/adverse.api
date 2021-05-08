@@ -14,7 +14,265 @@ import numpy as np
 from newspaper.utils import BeautifulSoup
 from newspaper import Config
 import re
+from GoogleNews import GoogleNews
+import urllib.request
 
+
+def get_newsfeeds(feed_url):
+
+    all_articles = []
+
+    try:
+        NewsFeed = feedparser.parse(feed_url)
+
+        for news in NewsFeed.entries:
+            if 'published' in news.keys():
+                week = datetime.now() - timedelta(days=7)
+                week = week.strftime("%Y-%m-%d %H:%M:%S")
+                date = parse(news['published'].split('+')[0])
+                date = date.strftime("%Y-%m-%d %H:%M:%S")
+
+                if date >= week:
+                    result_ = {}
+                    result_['published'] = news['published']
+                    result_['link'] = news['link']
+                    all_articles.append(result_)
+                
+                else:
+                    print('date is not greater than week')
+                    print('skipping:', news['link'])
+                    continue
+
+            else:
+                print('published not found in news.keys')
+                print('skipping:', news['link'])
+                continue
+
+    except Exception as e:
+        print("feedparser error:", e)
+
+    return all_articles
+
+def get_google_rss_feed():
+
+    google_rss_feed = []
+
+    dbs = current_ids()
+    keywords = dbs['keywords'].split(',')
+    keywords = [x.strip() for x in keywords if x.strip()]
+
+    for keyword in keywords:
+        keyword = keyword.replace(" ", "%20")
+        _url = 'https://news.google.com/rss/search?q=%s+when:7d&hl=en-IN&gl=IN&ceid=IN:en' % keyword
+        google_rss_feed.append(_url)
+
+    google_rss_feed.append('https://news.google.com/news/rss')
+
+    return google_rss_feed
+
+def get_google_articles():
+
+    google_articles = []
+
+    google_rss_feed = get_google_rss_feed()
+
+    # print(google_rss_feed)
+
+    for rss in google_rss_feed:
+        all_articles = get_newsfeeds(rss)
+        # print('length of article:', len(all_articles))
+        google_articles += all_articles
+
+    # print('total articles:', len(google_articles))
+
+    return google_articles
+
+def restricted_sources():
+
+    articles_list = []
+
+    restricted_source_dict = {
+    'www.nytimes.com' : 'International',
+    'www.hindustantimes.com' : 'National',
+    'www.dnaindia.com' : 'National',
+    'www.allindianewspapers.com' : 'National',
+    'www.business-standard.com' : 'National',
+    'asia.nikkei.com' : 'International',
+    'www.abc.net.au' : 'International',
+    'www.economist.com' : 'International',
+    'www.ndtv.com' : 'National',
+    'www.livemint.com' : 'National',
+    'indianexpress.com' : 'National',
+    'www.bbc.co.uk' : 'International',
+    'economictimes.indiatimes.com' : 'National',
+    'www.theguardian.com' : 'International',
+    'www.thehindu.com' : 'National',
+    'timesofindia.indiatimes.com' : 'National',
+    'mumbaimirror.indiatimes.com' : 'National',
+    'www.wsj.com' : 'International',
+    'www.asianage.com' : 'National',
+    'www.cnn.com' : 'International',
+    'edition.cnn.com' : 'International',
+    'cnn.it' : 'International',
+    'www.deccanchronicle.com' : 'National',
+    'www.tribuneindia.com' : 'National' }
+
+    restricted_source = [ 'www.nytimes.com',
+    'www.hindustantimes.com',
+    'www.dnaindia.com',
+    'www.allindianewspapers.com',
+    'www.business-standard.com',
+    'asia.nikkei.com',
+    'www.abc.net.au',
+    'www.economist.com',
+    'www.ndtv.com',
+    'www.livemint.com',
+    'indianexpress.com',
+    'www.bbc.co.uk',
+    'economictimes.indiatimes.com',
+    'www.theguardian.com',
+    'www.thehindu.com',
+    'timesofindia.indiatimes.com',
+    'mumbaimirror.indiatimes.com',
+    'www.wsj.com',
+    'www.asianage.com',
+    'www.cnn.com',
+    'edition.cnn.com',
+    'cnn.it',
+    'www.deccanchronicle.com',
+    'www.tribuneindia.com' 
+    ]
+
+    all_articles = get_google_articles()
+    all_articles2 = google_news_articles()
+    all_articles += all_articles2
+    print('restricted_sources total articles:', len(all_articles))
+    
+    for article_link in all_articles:
+        try:
+            req = urllib.request.Request(article_link['link'], headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'})
+            res = urllib.request.urlopen(req, timeout=20)
+            finalurl = res.geturl()
+            # print('article link split: ', finalurl.split('/')[2])
+            if finalurl.split('/')[2] in restricted_source:
+                # print('article link in restricted sources')
+                cities = {}
+                cities[restricted_source_dict[finalurl.split('/')[2]]] = finalurl
+                cities['published'] = article_link['published'] # .strftime("%Y-%m-%d %H:%M:%S")
+                articles_list.append(cities)
+            else:
+                print(finalurl.split('/')[2], 'not in restricted_sources')
+                print('skipping:', finalurl)
+
+        except Exception as e:
+            print('restricted_sources exception:', e)
+            print('skipping url:', article_link['link'])
+            continue
+
+
+    # for link in all_articles:
+    #     if link.split('/')[2] in restricted_source:
+    #         cities = {}
+    #         cities[restricted_source_dict[link.split('/')[2]]] = link
+    #         # cities[link] = restricted_source_dict[link.split('/')[2]]
+    #         articles_list.append(cities)
+
+    return articles_list
+
+
+def google_rss_feed():
+
+    all_articles = []
+
+    dbs = current_ids()
+
+    keywords = dbs['keywords'].split(',')
+    keywords = [x.strip() for x in keywords if x.strip()]
+
+    for keyword in keywords:
+        keyword = keyword.replace(" ", "%20")
+        _url = 'https://news.google.com/rss/search?q=%s+when:7d' % keyword
+
+        try:
+            NewsFeed = feedparser.parse(feed_url)
+
+            for news in NewsFeed.entries:
+                if 'published' in news.keys():
+                    week = datetime.now() - timedelta(days=7)
+                    week = week.strftime("%Y-%m-%d %H:%M:%S")
+                    date = parse(news['published'].split('+')[0])
+                    date = date.strftime("%Y-%m-%d %H:%M:%S")
+
+                    if date >= week:
+                        result_ = {}
+                        result_['published'] = news['published']
+                        result_['link'] = news['link']
+                        all_articles.append(result_)
+                    
+                    else:
+                        print('date is not greater than week')
+                        print('skipping:', news['link'])
+                        continue
+
+                else:
+                    print('published not found in news.keys')
+                    print('skipping:', news['link'])
+                    continue
+
+        except Exception as e:
+            print("feedparser error:", e)
+
+    return all_articles
+
+def google_news_articles():
+
+    all_articles = []
+
+    today_date = datetime.now()
+    date1 = today_date.strftime('%m/%d/%Y')
+
+    day_ago_date = today_date - timedelta(days=7)
+    date2 = day_ago_date.strftime('%m/%d/%Y')
+
+    dbs = current_ids()
+
+    keywords = dbs['keywords'].split(',')
+    keywords = [x.strip() for x in keywords if x.strip()]
+
+    googlenews = GoogleNews()
+    googlenews = GoogleNews(lang='en')
+    googlenews = GoogleNews(start=date2, end=date1)
+    
+    for keyword in keywords:
+      googlenews.search(keyword)
+      result = googlenews.results()
+      
+      for _result in result:
+        result_ = {}
+        result_['published'] = _result['datetime'] # .strftime("%Y-%m-%d %H:%M:%S")
+        # result_['link'] = 'https://' + _result['link']
+        result_['link'] = _result['link']
+        all_articles.append(result_)
+      
+      googlenews.clear()
+    # for keyword in keywords:
+    #     googlenews.search(keyword)
+    #     googlenews.get_page(2)
+    #     # for i in range(1, 100):
+    #     # for i in range(1, 25):
+    #         # result = googlenews.page_at(i)
+    #         # if result:
+    #             # result = [_result['link'] for _result in result]
+    #             # all_articles += result
+    #         # else:
+    #             # continue
+
+    #     all_links = googlenews.get_links()
+    #     all_articles += all_links
+    #     # print(all_links)
+    #     googlenews.clear()
+
+    return all_articles
 
 def current_ids_names():
     '''
@@ -106,9 +364,9 @@ def soup_text(soup, sourcename):
     }
 
     try:
-        print('sourcename:', sourcename)
+        # print('sourcename:', sourcename)
         tag_class = dictionary[sourcename]
-        print('tag_class:', tag_class)
+        # print('tag_class:', tag_class)
         # for _key in tag_class.values():
         Headlines = []
         Synopsis = []
@@ -134,15 +392,15 @@ def soup_text(soup, sourcename):
             # text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
             # text_ += [tag.get_text() for tag in soup.find_all(tag, {"class" : regex})]
     except Exception as e:
-        print(e)
+        # print('soup_text exception:', e)
         return None
 
     if text_:
-        print(text_)
+        # print(text_)
         # return '\n'.join(text_)
         return ' '.join(text_)
     else:
-        print('text not found')
+        # print('text not found')
         return None
 
 
@@ -287,6 +545,7 @@ def ids2rss(source_news_ids):
     rss = []
 
     dictionary = {
+    'gghh223d-gifd-67h3-c428-54x77542f712': 'https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best',
     '3cdd8f28-01f5-4d18-b438-742f04fe3141': 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
     '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': {'Bengaluru': 'https://www.hindustantimes.com/feeds/rss/cities/bengaluru-news/rssfeed.xml', 'Bhopal': 'https://www.hindustantimes.com/feeds/rss/cities/bhopal-news/rssfeed.xml', 'Chandigarh': 'https://www.hindustantimes.com/feeds/rss/cities/chandigarh-news/rssfeed.xml', 'Dehradun': 'https://www.hindustantimes.com/feeds/rss/cities/dehradun-news/rssfeed.xml', 'Delhi': 'https://www.hindustantimes.com/feeds/rss/cities/delhi-news/rssfeed.xml', 'Gurugram': 'https://www.hindustantimes.com/feeds/rss/cities/gurugram-news/rssfeed.xml', 'Indore': 'https://www.hindustantimes.com/feeds/rss/cities/indore-news/rssfeed.xml', 'Jaipur': 'https://www.hindustantimes.com/feeds/rss/cities/jaipur-news/rssfeed.xml', 'Kolkata': 'https://www.hindustantimes.com/feeds/rss/cities/kolkata-news/rssfeed.xml', 'Lucknow': 'https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml', 'Mumbai': 'https://www.hindustantimes.com/feeds/rss/cities/mumbai-news/rssfeed.xml', 'Noida' : 'https://www.hindustantimes.com/feeds/rss/cities/noida-news/rssfeed.xml', 'Patna': 'https://www.hindustantimes.com/feeds/rss/cities/patna-news/rssfeed.xml', 'Pune': 'https://www.hindustantimes.com/feeds/rss/cities/pune-news/rssfeed.xml', 'Ranchi': 'https://www.hindustantimes.com/feeds/rss/cities/ranchi-news/rssfeed.xml'},
     '4dfab6d8-8246-469b-9e19-7ddbb55d806d': {'Mumbai': 'https://www.dnaindia.com/feeds/mumbai.xml', 'Delhi': 'https://www.dnaindia.com/feeds/delhi.xml', 'Bangalore': 'https://www.dnaindia.com/feeds/bangalore.xml', 'Pune' : 'https://www.dnaindia.com/feeds/pune.xml', 'Ahmedabad' : 'https://www.dnaindia.com/feeds/ahmedabad.xml'},
@@ -324,6 +583,8 @@ def ids2rss(source_news_ids):
                 rss.append(cities)
         else:
             print('news_id not found')
+            print('skipping:', news_id)
+            continue
 
     return rss
     
@@ -352,7 +613,7 @@ def rss2news(rss):
                         date = parse(news['published'].split('+')[0])
                         date = date.strftime("%Y-%m-%d %H:%M:%S")
 
-                        if date > week:
+                        if date >= week:
 
                             link_dict[k] = news['link']
                             link_dict['published'] = news['published']
@@ -362,10 +623,12 @@ def rss2news(rss):
                             
                             continue
                             print('date is not greater than week')
+                            print('skipping:', news['link'])
                     else:
 
                         continue
                         print('published not found in news.keys')
+                        print('skipping:', news['link'])
 
             except Exception as e:
 
@@ -445,9 +708,23 @@ def _incre_mode(batch_id):
     # print('rss is:', rss)
 
     news_link = rss2news(rss)
-    print('total news articles are:', len(news_link))
+    print('total news articles from rss are:', len(news_link))
     # print(news_link)
 
+    news_link2 = restricted_sources()
+    print('length of google news-link are:', len(news_link2))
+
+    # print('google news links are:', news_link2)
+
+    # news_link2 = restricted_sources()
+    # print('length of google news-link:', len(news_link2))
+
+    # news_link += news_link2
+    # print('total news articles are:', len(news_link))
+    # news_link = []
+    news_link += news_link2
+    print('total news articles are:', len(news_link))
+    # print('total news links are:', news_link)
 
     # rss_list = ['https://www.thehindu.com/news/national/feeder/default.rss', 
     #     'https://indianexpress.com/section/india/feed/',
@@ -870,6 +1147,10 @@ def _incre_mode(batch_id):
                     elif ent.label_ == 'LOC':
                         profile['loc'] += ent.text + ', '
 
+                    # find persons in text
+                    elif ent.label_ == 'FAC':
+                        profile['loc'] += ent.text + ', '
+
                     else:
                         continue
     
@@ -940,11 +1221,14 @@ def _incre_mode(batch_id):
             _writer.writerow(profile)
     
           else:
+            print('keyword not found')
+            print('skipping:', article.url)
             continue
             # print(profile)
     
         except Exception as e:
           print('_incre_mode:', e)
+          print('skipping:', val[0])
 
     print("Starting Saving Database into mongodb")
     
@@ -994,6 +1278,8 @@ def _incre_mode(batch_id):
     df.replace(to_replace=np.nan, value='', inplace=True)
     # df.replace(to_replace=None, value='', inplace=True)
 
+    print('total number of records saving:', len(df))
+
     
     dicts = df.to_dict(orient='records')
     client = MongoClient('localhost', 27017)
@@ -1007,11 +1293,13 @@ def _incre_mode(batch_id):
       for _dict in dicts:
         if _dict['Web link of news'] in dbs:
           print('Web link of news exist in db')
+          print('skipping:', _dict['Web link of news'])
           continue
         # check for duplicate names
-        elif check_duplicate_name(_dict['Person Name mentioned in the news']):
-          continue
+        # elif check_duplicate_name(_dict['Person Name mentioned in the news']):
           # print('Names intersection crosses threshold')
+          # print('skipping:', _dict['Web link of news'])
+          # continue
         else:
           collection_batches.insert_one(_dict)
     else:
