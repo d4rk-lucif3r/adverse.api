@@ -345,8 +345,8 @@ def soup_text(soup, sourcename):
     'www.business-standard.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'h2': ['alternativeHeadline']}, 'Text': {'span': ['p-content']}},
     'www.ndtv.com': {'Headlines': {'h1': ['sp-ttl']}, 'Synopsis': {'h2': ['sp-descp']}, 'Text': {'div': ['sp-cn ins_storybody', '.*sp-cn.*']}},
     # 'indianexpress.com': {'h1': ['native_story_title'], 'h2' : ['synopsis'], 'div' : ['full-details', 'pcl-full-content']},
-    'www.bbc.com': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
-    'www.bbc.co.uk': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-5h7eao-ArticleWrapper' 'ssrcss-14iz86j-BoldText']}},
+    'www.bbc.com': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0', 'ssrcss-hmf8ql-BoldText e5tfeyi3']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-18snukc-RichTextContainer e5tfeyi1', 'ssrcss-5h7eao-ArticleWrapper', 'ssrcss-5h7eao-ArticleWrapper e1nh2i2l6', 'ssrcss-14iz86j-BoldText']}},
+    'www.bbc.co.uk': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0', 'ssrcss-hmf8ql-BoldText e5tfeyi3']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-18snukc-RichTextContainer e5tfeyi1', 'ssrcss-5h7eao-ArticleWrapper', 'ssrcss-5h7eao-ArticleWrapper e1nh2i2l6', 'ssrcss-14iz86j-BoldText']}},
     'economictimes.indiatimes.com': {'Headlines': {'h1': ['artTitle font_faus']}, 'Synopsis': {'h2': ['summary', 'artSyn tac font_mon']}, 'Text': {'div': ['.*artText.*', 'pageContent flt', '.*content1.*', 'primeContent col s_col font_faus artText paywall']}},
     # 'www.thehindu.com': {'div': ['title', 'paywall']},
     'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498', '.*_1Y-96.*']}, 'Text': {'div': ['ga-headlines', '.*Normal.*', '.*_3YYSt.*']}},
@@ -364,9 +364,9 @@ def soup_text(soup, sourcename):
     }
 
     try:
-        # print('sourcename:', sourcename)
+        print('sourcename:', sourcename)
         tag_class = dictionary[sourcename]
-        # print('tag_class:', tag_class)
+        print('tag_class:', tag_class)
         # for _key in tag_class.values():
         Headlines = []
         Synopsis = []
@@ -392,15 +392,15 @@ def soup_text(soup, sourcename):
             # text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
             # text_ += [tag.get_text() for tag in soup.find_all(tag, {"class" : regex})]
     except Exception as e:
-        # print('soup_text exception:', e)
+        print(e)
         return None
 
     if text_:
-        # print(text_)
+        print(text_)
         # return '\n'.join(text_)
         return ' '.join(text_)
     else:
-        # print('text not found')
+        print('text not found')
         return None
 
 
