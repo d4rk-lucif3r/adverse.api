@@ -364,9 +364,9 @@ def soup_text(soup, sourcename):
     }
 
     try:
-        print('sourcename:', sourcename)
+        # print('sourcename:', sourcename)
         tag_class = dictionary[sourcename]
-        print('tag_class:', tag_class)
+        # print('tag_class:', tag_class)
         # for _key in tag_class.values():
         Headlines = []
         Synopsis = []
@@ -392,15 +392,15 @@ def soup_text(soup, sourcename):
             # text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
             # text_ += [tag.get_text() for tag in soup.find_all(tag, {"class" : regex})]
     except Exception as e:
-        print(e)
+        # print('soup_text exception:', e)
         return None
 
     if text_:
-        print(text_)
+        # print(text_)
         # return '\n'.join(text_)
         return ' '.join(text_)
     else:
-        print('text not found')
+        # print('text not found')
         return None
 
 
@@ -705,7 +705,7 @@ def _incre_mode(batch_id):
     #   else:
     #     print('news_id not found')
     
-    # print('rss is:', rss)
+    print('rsses are:', rss)
 
     news_link = rss2news(rss)
     print('total news articles from rss are:', len(news_link))
@@ -790,7 +790,7 @@ def _incre_mode(batch_id):
     utc=pytz.UTC
     
     keywords = dbs['keywords'].split(',')
-    # print('keywords are:', keywords)
+    print('keywords are:', keywords)
     
     # keywords = [
     #                 'black money'

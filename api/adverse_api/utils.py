@@ -14,6 +14,7 @@ import pymongo
 from pymongo import MongoClient
 import time
 import bson
+import pytz    
 
 
 def current_ids_names():
@@ -293,6 +294,11 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city='', cities='',
         update_current_cities(cities)
     elif names:
         update_current_names(names)
+
+    tz_NY = pytz.timezone('Asia/Kolkata')
+    datetime_NY = datetime.now(tz_NY)  
+
+    dbs['last_updated_time'] = datetime_NY.strftime("%Y-%m-%d %H:%M:%S")
     collection_batches.insert(dbs)
     # print("Batch Run ingesting into DB")
     collection_batches.create_index([("news_ids", pymongo.ASCENDING)])
