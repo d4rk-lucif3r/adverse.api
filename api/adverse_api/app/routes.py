@@ -597,6 +597,18 @@ def adverseapi():
                   else:
                     continue
 
+                elif len(keyword.split(' ')) > 1:
+                	found = []
+                	_keyword = keyword.split(' ')
+                	for __keyword in _keyword:
+                		if __keyword.lower() in text.lower():
+                			found.append(__keyword)
+                		else:
+                			continue
+
+                	if len(found) == len(_keyword):
+                		profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+
               if not profile['Key_word_Used_foruuidentify_the_article']:
                 return jsonify({"news_source_ids": ids["news_source_ids"], 
                   "last_updated_time": dbs[-1]["RunDate"],

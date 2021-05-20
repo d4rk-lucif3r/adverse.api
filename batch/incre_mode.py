@@ -1103,6 +1103,18 @@ def _incre_mode(batch_id):
               else:
                 continue
     
+            elif len(keyword.split(' ')) > 1:
+                found = []
+                _keyword = keyword.split(' ')
+                for __keyword in _keyword:
+                    if __keyword.lower() in text.lower():
+                        found.append(__keyword)
+                    else:
+                        continue
+
+                if len(found) == len(_keyword):
+                    profile['keyword'] += keyword + ', '
+
           if 'hdfc' in text.lower():
             profile['hdfcpresent'] = 'YES'
 
