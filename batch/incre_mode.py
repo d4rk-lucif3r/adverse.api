@@ -863,6 +863,9 @@ def _incre_mode(batch_id):
                             elif ent.label_ == 'LOC':
                                 document['City/ State mentioned under the news'] += ent.text + ', '
 
+                            # find persons in text
+                            elif ent.label_ == 'FAC':
+                                document['City/ State mentioned under the news'] += ent.text + ', '
 
                             else:
                                 continue
@@ -1225,35 +1228,36 @@ def _incre_mode(batch_id):
                     profile['name'] += ', ' + name
 
 
-            loc1 = ''
+            # loc1 = ''
 
-            for name in profile['name'] + profile['loc']:
+            # for name in profile['name'] + profile['loc']:
 
-                doc1 = nlp_Name1(name)
+                # doc1 = nlp_Name1(name)
 
-                for count,ent in enumerate(doc1.ents):
+                # for count,ent in enumerate(doc1.ents):
 
-                    if ent.label_ == 'GPE':
-                        loc1 += ent.text + ', '
+                    # if ent.label_ == 'GPE':
+                        # loc1 += ent.text + ', '
 
-                    elif ent.label_ == 'LOC':
-                        loc1 += ent.text + ', '
+                    # elif ent.label_ == 'LOC':
+                        # loc1 += ent.text + ', '
 
-                    elif ent.label_ == 'FAC':
-                        profile['loc'] += ent.text + ', '
+                    # elif ent.label_ == 'FAC':
+                        # profile['loc'] += ent.text + ', '
 
-                    else:
-                        continue
+                    # else:
+                        # continue
 
 
-            loc1 = loc1.split(',')
-            loc1 = [x.strip() for x in loc1]
-            loc1 = list(set(loc1))
-            loc1 = ', '.join(loc1)
+            # loc1 = loc1.split(',')
+            # loc1 = [x.strip() for x in loc1]
+            # loc1 = list(set(loc1))
+            # loc1 = ', '.join(loc1)
 
             profile['name'] = ', '.join(profile['name'])    
             profile['org'] = ', '.join(profile['org'])    
-            profile['loc'] = loc1 # ', '.join(profile['loc'])
+            # profile['loc'] = loc1 # ', '.join(profile['loc'])
+            profile['loc'] = ', '.join(profile['loc'])
 
             # print(profile) 
              

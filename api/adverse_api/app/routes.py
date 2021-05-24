@@ -660,6 +660,10 @@ def adverseapi():
                   elif ent.label_ == 'LOC':
                     profile['City_State_mentioned_under_the_news'] += ent.text + ', '
 
+                  # find persons in text
+                  elif ent.label_ == 'FAC':
+                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+
                   else:
                     continue
 
@@ -723,38 +727,39 @@ def adverseapi():
                   profile['City_State_mentioned_under_the_news'].remove(name)
                   profile['Person_Name_mentioned_in_the_news'] += ', ' + name
 
-              loc = ''
+              # loc = ''
 
-              for name in profile['City_State_mentioned_under_the_news'] + profile['Person_Name_mentioned_in_the_news']:
+              # for name in profile['City_State_mentioned_under_the_news'] + profile['Person_Name_mentioned_in_the_news']:
 
-                doc1 = nlp_Name1(name)
+              #   doc1 = nlp_Name1(name)
 
-                # iterate through each entity present
-                for ent in doc1.ents:
+              #   # iterate through each entity present
+              #   for ent in doc1.ents:
 
-                  # find persons in text
-                  if ent.label_ == 'GPE':
-                    loc += ent.text + ', '
+              #     # find persons in text
+              #     if ent.label_ == 'GPE':
+              #       loc += ent.text + ', '
 
-                  # find persons in text
-                  elif ent.label_ == 'LOC':
-                    loc += ent.text + ', '
+              #     # find persons in text
+              #     elif ent.label_ == 'LOC':
+              #       loc += ent.text + ', '
 
-                  # find persons in text
-                  elif ent.label_ == 'FAC':
-                    loc += ent.text + ', '
+              #     # find persons in text
+              #     elif ent.label_ == 'FAC':
+              #       loc += ent.text + ', '
 
-                  else:
-                    continue
+              #     else:
+              #       continue
 
 
-              loc = loc.split(',')
-              loc = [x.strip() for x in loc if x.strip()]
-              loc = list(set(loc))
-              loc = ', '.join(loc)
+              # loc = loc.split(',')
+              # loc = [x.strip() for x in loc if x.strip()]
+              # loc = list(set(loc))
+              # loc = ', '.join(loc)
               profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
               profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
-              profile['City_State_mentioned_under_the_news'] = loc # ', '.join(profile['City_State_mentioned_under_the_news'])
+              profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
+              # profile['City_State_mentioned_under_the_news'] = loc # ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
