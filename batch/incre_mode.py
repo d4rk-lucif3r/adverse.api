@@ -16,6 +16,7 @@ from newspaper import Config
 import re
 from GoogleNews import GoogleNews
 import urllib.request
+from fake_useragent import UserAgent
 
 
 def get_newsfeeds(feed_url):
@@ -639,9 +640,14 @@ def rss2news(rss):
 
 def _incre_mode(batch_id):
 
+    ua = UserAgent()
+
     # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
-    HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+    USER_AGENT = ua.random
+    HEADERS = {'user-agent': USER_AGENT,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+    # HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
+    # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
     
     config = Config()
     # config.browser_user_agent = USER_AGENT
@@ -786,7 +792,6 @@ def _incre_mode(batch_id):
     # news_link = ['https://timesofindia.indiatimes.com/city/hyderabad/hyderabad-two-sbi-managers-arrested-in-loan-sanction-fraud-case/articleshow/71745994.cms']
     
     nlp_Name = spacy.load("en_core_web_trf") # spacy.load(OUTPUT1)
-    nlp_Name1 = spacy.load("en_core_web_md") # spacy.load(OUTPUT1)
     
     utc=pytz.UTC
     
@@ -866,6 +871,7 @@ def _incre_mode(batch_id):
                             # find persons in text
                             elif ent.label_ == 'FAC':
                                 document['City/ State mentioned under the news'] += ent.text + ', '
+
 
                             else:
                                 continue
@@ -1203,8 +1209,10 @@ def _incre_mode(batch_id):
                     profile['loc'] += name + ', '
 
 
-            # profile['name'] = ', '.join(profile['name'])    
-            # profile['org'] = ', '.join(profile['org'])    
+
+            
+            profile['name'] = ', '.join(profile['name'])    
+            profile['org'] = ', '.join(profile['org'])    
             profile['loc'] = profile['loc'].split(',')
             # print(profile['loc'])
             profile['loc'] = [x.strip() for x in profile['loc'] if x.strip()]
@@ -1228,35 +1236,6 @@ def _incre_mode(batch_id):
                     profile['name'] += ', ' + name
 
 
-            # loc1 = ''
-
-            # for name in profile['name'] + profile['loc']:
-
-                # doc1 = nlp_Name1(name)
-
-                # for count,ent in enumerate(doc1.ents):
-
-                    # if ent.label_ == 'GPE':
-                        # loc1 += ent.text + ', '
-
-                    # elif ent.label_ == 'LOC':
-                        # loc1 += ent.text + ', '
-
-                    # elif ent.label_ == 'FAC':
-                        # profile['loc'] += ent.text + ', '
-
-                    # else:
-                        # continue
-
-
-            # loc1 = loc1.split(',')
-            # loc1 = [x.strip() for x in loc1]
-            # loc1 = list(set(loc1))
-            # loc1 = ', '.join(loc1)
-
-            profile['name'] = ', '.join(profile['name'])    
-            profile['org'] = ', '.join(profile['org'])    
-            # profile['loc'] = loc1 # ', '.join(profile['loc'])
             profile['loc'] = ', '.join(profile['loc'])
 
             # print(profile) 

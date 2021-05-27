@@ -14,12 +14,12 @@ import os
 from newspaper.utils import BeautifulSoup
 from newspaper import Config
 import re
+from fake_useragent import UserAgent
 
 
-
+ua = UserAgent()
 f1 = Faker()
 nlp_Name = spacy.load("en_core_web_trf")
-nlp_Name1 = spacy.load("en_core_web_md")
 
 @app.route('/')
 @app.route('/index')
@@ -520,7 +520,10 @@ def adverseapi():
           if keywords and urltobesearched:
             profile = {'Person_Name_mentioned_in_the_news': '', 'Organization_Name_mentioned_in_the_news': '', 'City_State_mentioned_under_the_news': '', 'Key_word_Used_foruuidentify_the_article': '', 'HDFC_Bank_Name_under_News_Article': 'No', 'Article_Date': '', 'Source_Name': '', 'Web_link_of_news': '', 'created_date': '', 'City_of_News_Paper': ''}
             # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
-            HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+            USER_AGENT = ua.random
+           #  HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
+           # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+            HEADERS = {'user-agent': USER_AGENT,
            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
             config = Config()
             # config.browser_user_agent = USER_AGENT
@@ -599,16 +602,16 @@ def adverseapi():
                     continue
 
                 elif len(keyword.split(' ')) > 1:
-                	found = []
-                	_keyword = keyword.split(' ')
-                	for __keyword in _keyword:
-                		if __keyword.lower() in text.lower():
-                			found.append(__keyword)
-                		else:
-                			continue
+                  found = []
+                  _keyword = keyword.split(' ')
+                  for __keyword in _keyword:
+                    if __keyword.lower() in text.lower():
+                      found.append(__keyword)
+                    else:
+                      continue
 
-                	if len(found) == len(_keyword):
-                		profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+                  if len(found) == len(_keyword):
+                    profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
 
               if not profile['Key_word_Used_foruuidentify_the_article']:
                 return jsonify({"news_source_ids": ids["news_source_ids"], 
@@ -709,8 +712,8 @@ def adverseapi():
                   profile['Person_Name_mentioned_in_the_news'].remove(name)
                   profile['City_State_mentioned_under_the_news'] += name + ', '
 
-              # profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
-              # profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
+              profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
+              profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
               # print(profile['City_State_mentioned_under_the_news'])
               profile['City_State_mentioned_under_the_news'] = [x.strip() for x in profile['City_State_mentioned_under_the_news'] if x.strip()]
@@ -727,39 +730,7 @@ def adverseapi():
                   profile['City_State_mentioned_under_the_news'].remove(name)
                   profile['Person_Name_mentioned_in_the_news'] += ', ' + name
 
-              # loc = ''
-
-              # for name in profile['City_State_mentioned_under_the_news'] + profile['Person_Name_mentioned_in_the_news']:
-
-              #   doc1 = nlp_Name1(name)
-
-              #   # iterate through each entity present
-              #   for ent in doc1.ents:
-
-              #     # find persons in text
-              #     if ent.label_ == 'GPE':
-              #       loc += ent.text + ', '
-
-              #     # find persons in text
-              #     elif ent.label_ == 'LOC':
-              #       loc += ent.text + ', '
-
-              #     # find persons in text
-              #     elif ent.label_ == 'FAC':
-              #       loc += ent.text + ', '
-
-              #     else:
-              #       continue
-
-
-              # loc = loc.split(',')
-              # loc = [x.strip() for x in loc if x.strip()]
-              # loc = list(set(loc))
-              # loc = ', '.join(loc)
-              profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
-              profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
-              # profile['City_State_mentioned_under_the_news'] = loc # ', '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
