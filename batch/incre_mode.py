@@ -46,8 +46,24 @@ def get_newsfeeds(feed_url):
 
             else:
                 print('published not found in news.keys')
-                print('skipping:', news['link'])
-                continue
+                week = datetime.now() - timedelta(days=7)
+                week = week.strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.now() # parse(news['published'].split('+')[0])
+                date = date.strftime("%Y-%m-%d %H:%M:%S")
+
+                if date >= week:
+                    result_ = {}
+                    result_['published'] = datetime.now()
+                    result_['link'] = news['link']
+                    all_articles.append(result_)
+                
+                else:
+                    print('date is not greater than week')
+                    print('skipping:', news['link'])
+                    continue
+
+                # print('skipping:', news['link'])
+                # continue
 
     except Exception as e:
         print("feedparser error:", e)
