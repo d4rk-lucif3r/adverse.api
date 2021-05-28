@@ -94,7 +94,9 @@ def restricted_sources():
 
     restricted_source_dict = {
     'www.nytimes.com' : 'International',
+    'www.reuters.com' : 'International',
     'www.hindustantimes.com' : 'National',
+    'www.deccanherald.com' : 'National',
     'www.dnaindia.com' : 'National',
     'www.allindianewspapers.com' : 'National',
     'www.business-standard.com' : 'National',
@@ -105,6 +107,7 @@ def restricted_sources():
     'www.livemint.com' : 'National',
     'indianexpress.com' : 'National',
     'www.bbc.co.uk' : 'International',
+    'www.bbc.com' : 'International',
     'economictimes.indiatimes.com' : 'National',
     'www.theguardian.com' : 'International',
     'www.thehindu.com' : 'National',
@@ -118,7 +121,10 @@ def restricted_sources():
     'www.deccanchronicle.com' : 'National',
     'www.tribuneindia.com' : 'National' }
 
-    restricted_source = [ 'www.nytimes.com',
+    restricted_source = [ 
+    'www.deccanherald.com',
+    'www.reuters.com',
+    'www.nytimes.com',
     'www.hindustantimes.com',
     'www.dnaindia.com',
     'www.allindianewspapers.com',
@@ -130,6 +136,7 @@ def restricted_sources():
     'www.livemint.com',
     'indianexpress.com',
     'www.bbc.co.uk',
+    'www.bbc.com',
     'economictimes.indiatimes.com',
     'www.theguardian.com',
     'www.thehindu.com',
@@ -825,7 +832,8 @@ def _incre_mode(batch_id):
             client = MongoClient('localhost', 27017)
             db = client['adverse_db']
             collection_batches = db['adverse_db']
-            cursor = collection_batches.find({}, {'_id': False})
+            # cursor = collection_batches.find({}, {'_id': False})
+            cursor = collection_batches.find({})
 
             for document in cursor:
                 # print(document)
