@@ -627,16 +627,14 @@ def rss2news(rss):
                             link_dict['published'] = news['published']
                             news_link.append(link_dict)
 
-                        else:
-                            
-                            continue
+                        else:                            
                             print('date is not greater than week')
                             print('skipping:', news['link'])
+                            continue
                     else:
-
-                        continue
                         print('published not found in news.keys')
                         print('skipping:', news['link'])
+                        continue
 
             except Exception as e:
 
