@@ -46,21 +46,10 @@ def get_newsfeeds(feed_url):
 
             else:
                 print('published not found in news.keys')
-                week = datetime.now() - timedelta(days=7)
-                week = week.strftime("%Y-%m-%d %H:%M:%S")
-                date = datetime.now() # parse(news['published'].split('+')[0])
-                date = date.strftime("%Y-%m-%d %H:%M:%S")
-
-                if date >= week:
-                    result_ = {}
-                    result_['published'] = datetime.now()
-                    result_['link'] = news['link']
-                    all_articles.append(result_)
-                
-                else:
-                    print('date is not greater than week')
-                    print('skipping:', news['link'])
-                    continue
+                result_ = {}
+                result_['published'] = datetime.now()
+                result_['link'] = news['link']
+                all_articles.append(result_)
 
                 # print('skipping:', news['link'])
                 # continue
@@ -240,8 +229,12 @@ def google_rss_feed():
 
                 else:
                     print('published not found in news.keys')
-                    print('skipping:', news['link'])
-                    continue
+                    result_ = {}
+                    result_['published'] = datetime.now()
+                    result_['link'] = news['link']
+                    all_articles.append(result_)
+                    # print('skipping:', news['link'])
+                    # continue
 
         except Exception as e:
             print("feedparser error:", e)
@@ -649,8 +642,11 @@ def rss2news(rss):
                             continue
                     else:
                         print('published not found in news.keys')
-                        print('skipping:', news['link'])
-                        continue
+                        link_dict[k] = news['link']
+                        link_dict['published'] = datetime.now()
+                        news_link.append(link_dict)
+                        # print('skipping:', news['link'])
+                        # continue
 
             except Exception as e:
 
