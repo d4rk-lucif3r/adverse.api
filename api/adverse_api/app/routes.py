@@ -468,47 +468,142 @@ def adverseapi():
 
 
       elif mode == 'parse_existing':
-        # _keys = list(_request.keys())
 
-        # if 'uuid' in _keys:
-          # if _request['uuid'] == 'all':
+        _keys = list(_request.keys())
+
+        if 'uuid' in _keys:
+
+          if _request['uuid'] == 'all':
             # update the database to parse existing = True
-            # update_parse_existing(str(ids['_id']))
+            update_parse_existing(str(ids['_id']))
+
             # get all the existing urls and updating them
-            # return jsonify({"news_source_ids": ids["news_source_ids"], 
-                    # "last_updated_time": dbs[-1]["RunDate"],
-                    # "keywords_updated" : ids['keywords'], 
-                    # "date_of_response": None,
-                    # "mode_of_search": mode,
-                    # "search_results": ['Updating all the urls in the database']})
-        # else:
-          # _request['uuid'] = _request['uuid'].split(',')
+            return jsonify({"news_source_ids": ids["news_source_ids"], 
+              "last_updated_time": dbs[-1]["RunDate"],
+              "keywords_updated" : ids['keywords'], 
+              "date_of_response": None,
+              "mode_of_search": mode,
+              "search_results": ['Updating all the urls in the database']})
 
+          else:
 
+            uuids = _request['uuid'].split(',')
+            uuids = [x.strip() for x in uuids if x.strip()]
 
-        # # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
-          # print('this is request for name, city, keywords, news_source_id and added_cities')
-        #   _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
-        #   _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-        #   _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
-        #   _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
-        #   _request['cities'] = _request['cities'].split(',') # + ['Covid']
-        #   _request['cities'] = ','.join(list(set(_request['cities'])))
-        #   # add news keywords and news source ids to database
-        #   update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"])
-        #   # keywords = _request['keywords'].split(',')
-        #   # news_source_id = _request['news_source_ids'].split(',')
-        #   # print(_request)
+            client = MongoClient('localhost', 27017)
+            db = client['adverse_db']
+            collection_batches = db['adverse_db']
+            cursor = collection_batches.find({})
 
-        # # update the database to parse existing = True
-        update_parse_existing(str(ids['_id']))
-        # get all the existing urls and updating them
-        return jsonify({"news_source_ids": ids["news_source_ids"], 
+            for document in cursor:
+
+              if document['uuid'] in uuids:
+
+                try:
+
+                  HEADERS = {'user-agent': ua.random,
+                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+                  
+                  config = Config()
+                  config.headers = HEADERS
+                  config.request_timeout = 40
+                  
+                  article = Article(document['Web link of news'], config=config)
+                  article.download()
+                  article.parse()
+
+                  soup = BeautifulSoup(article.html, 'html.parser')
+                  text = soup_text(soup, document['Source Name'])
+
+                  if not text:
+                    text = article.title + os.linesep + article.text
+
+                  text2 = text.split('\n')
+                  print('length of article:', len(text2))
+
+                  document['Person Name mentioned in the news'] = ''
+                  document['Organization Name mentioned in the news'] = ''
+                  document['City/ State mentioned under the news'] = ''
+
+                  for i in range(len(text2)):
+
+                    doc = nlp_Name(text2[i])
+                    for count,ent in enumerate(doc.ents):
+
+                      if ent.label_ == 'PERSON':
+                        document['Person Name mentioned in the news'] += ent.text + ', '
+
+                      elif ent.label_ == 'ORG':
+                        document['Organization Name mentioned in the news'] += ent.text + ', '
+
+                      elif ent.label_ == 'GPE':
+                        document['City/ State mentioned under the news'] += ent.text + ', '
+
+                      elif ent.label_ == 'LOC':
+                        document['City/ State mentioned under the news'] += ent.text + ', '
+
+                      elif ent.label_ == 'FAC':
+                        document['City/ State mentioned under the news'] += ent.text + ', '
+
+                      else:
+                        continue
+                  
+                  document['Organization Name mentioned in the news'] = document['Organization Name mentioned in the news'].split(',')
+                  document['Organization Name mentioned in the news'] = [x.strip() for x in document['Organization Name mentioned in the news'] if x.strip()]
+                  document['Organization Name mentioned in the news'] = list(set(document['Organization Name mentioned in the news']))
+                  document['Person Name mentioned in the news'] = document['Person Name mentioned in the news'].split(',') + document['Organization Name mentioned in the news']
+                  document['Person Name mentioned in the news'] = [x.strip() for x in document['Person Name mentioned in the news'] if x.strip()]
+                  document['Person Name mentioned in the news'] = list(set(document['Person Name mentioned in the news']))
+                  document['Person Name mentioned in the news'] = [ i for i in document['Person Name mentioned in the news'] if not any( [ i in a for a in document['Person Name mentioned in the news'] if a != i]   )]
+                  person_dict = {k.lower():k for k in document['Person Name mentioned in the news']}
+                  document['Person Name mentioned in the news'] = list(person_dict.values())
+                  document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if i not in fps['fp_name']]
+                  document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if "covid" not in i.lower()]
+
+                  for name in document['Person Name mentioned in the news']:
+
+                    if name.lower() in cities['cities']:
+
+                      document['Person Name mentioned in the news'].remove(name)
+                      document['City/ State mentioned under the news'] += name + ', '
+
+                  document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
+                  document['Organization Name mentioned in the news'] = ', '.join(document['Organization Name mentioned in the news'])    
+                  document['City/ State mentioned under the news'] = document['City/ State mentioned under the news'].split(',')
+                  document['City/ State mentioned under the news'] = [x.strip() for x in document['City/ State mentioned under the news'] if x.strip()]
+                  document['City/ State mentioned under the news'] = list(set(document['City/ State mentioned under the news']))
+                  document['City/ State mentioned under the news'] = [ i for i in document['City/ State mentioned under the news'] if not any( [ i in a for a in document['City/ State mentioned under the news'] if a != i]   )]
+                  city_dict = {k.lower():k for k in document['City/ State mentioned under the news']}
+                  document['City/ State mentioned under the news'] = list(city_dict.values())
+                  document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if i not in fps['fp_city']]
+                  document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if "covid" not in i.lower()]
+
+                  for name in document['City/ State mentioned under the news']:
+
+                    if name.lower() in names['names']:
+
+                      document['City/ State mentioned under the news'].remove(name)
+                      document['Person Name mentioned in the news'] += ', ' + name
+
+                  document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
+                  document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                  collection_batches.save(document)
+
+                  return jsonify({"news_source_ids": ids["news_source_ids"], 
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
-                    "search_results": ['Updating all the urls in the database']})
+                    "search_results": "successfully updated:%s" % document['uuid']})
+
+                except Exception as e:
+
+                  return jsonify({"news_source_ids": ids["news_source_ids"], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : ids['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": 'parse_existing exception:%s' % str(e)})
 
 
       elif mode == 'realtime':        
