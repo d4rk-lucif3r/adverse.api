@@ -955,6 +955,10 @@ def _incre_mode(batch_id):
                     # document['City/ State mentioned under the news'] = lowercase_check(document['City/ State mentioned under the news'])
                     # document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
                     document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+                    if not document['Article Date']:
+                        continue
+
                     collection_batches.save(document)
 
 
@@ -1340,6 +1344,10 @@ def _incre_mode(batch_id):
           # print('Names intersection crosses threshold')
           # print('skipping:', _dict['Web link of news'])
           # continue
+        elif not _dict['Article Date']:
+          print('Article Date not found')
+          print('skipping:', _dict['Web link of news'])
+          continue
         else:
           collection_batches.insert_one(_dict)
     else:

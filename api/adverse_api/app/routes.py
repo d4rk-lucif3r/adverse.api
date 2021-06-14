@@ -144,6 +144,9 @@ def adverseapi():
           if document['Source Name'] == "www.ft.com":
             continue
 
+          if not document['Article Date']:
+            continue
+
           document['Article_Date'] = document.pop('Article Date')
           document['City_of_News_Paper'] = document.pop('City of News Paper')
           document['City_State_mentioned_under_the_news'] = document.pop('City/ State mentioned under the news')
@@ -244,6 +247,9 @@ def adverseapi():
 
           for document in cursor:
             if document['Source Name'] == "www.ft.com":
+              continue
+
+            if not document['Article Date']:
               continue
 
             # print(document)
