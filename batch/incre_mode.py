@@ -73,6 +73,9 @@ def get_google_rss_feed():
         google_rss_feed.append(_url)
 
     google_rss_feed.append('https://news.google.com/news/rss')
+    google_rss_feed.append('https://news.google.com/rss/topics/CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFUxZG5JU0FtVnVLQUFQAQ?hl=en-IN&gl=IN&ceid=IN:en')
+    google_rss_feed.append('https://news.google.com/rss/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFV4ZW5aNU9SSUNaVzRvQUFQAQ?hl=en-IN&gl=IN&ceid=IN:en')
+    google_rss_feed.append('https://news.google.com/rss/topics/CAAqIQgKIhtDQkFTRGdvSUwyMHZNR1JxWjNRU0FtVnVLQUFQAQ?hl=en-IN&gl=IN&ceid=IN:en')
 
     return google_rss_feed
 
@@ -583,7 +586,10 @@ def ids2rss(source_news_ids):
     'e43b544e-577b-4ed0-adb0-4661bda4c487': {'National': 'https://www.asianage.com/rss_feed/'},
     'e5a8f17c-58c6-4087-a5c0-2ab681446611': 'http://rss.cnn.com/rss/edition.rss',
     'eeff09cb-6fdb-45f1-a206-32a55320d598': {'National': 'https://www.deccanchronicle.com/rss_feed/'},
-    '9bb25aa5-2536-4c0e-b897-c957b8de61d0': {'Amritsar': 'https://www.tribuneindia.com/rss/feed?catId=17', 'Bathinda': 'https://www.tribuneindia.com/rss/feed?catId=18', 'Chandigarh': 'https://www.tribuneindia.com/rss/feed?catId=20', 'Delhi': 'https://www.tribuneindia.com/rss/feed?catId=24', 'Jalandhar': 'https://www.tribuneindia.com/rss/feed?catId=34', 'Ludhiana': 'https://www.tribuneindia.com/rss/feed?catId=40', 'Patiala': 'https://www.tribuneindia.com/rss/feed?catId=213'}}
+    '9bb25aa5-2536-4c0e-b897-c957b8de61d0': {'Amritsar': 'https://www.tribuneindia.com/rss/feed?catId=17', 'Bathinda': 'https://www.tribuneindia.com/rss/feed?catId=18', 'Chandigarh': 'https://www.tribuneindia.com/rss/feed?catId=20', 'Delhi': 'https://www.tribuneindia.com/rss/feed?catId=24', 'Jalandhar': 'https://www.tribuneindia.com/rss/feed?catId=34', 'Ludhiana': 'https://www.tribuneindia.com/rss/feed?catId=40', 'Patiala': 'https://www.tribuneindia.com/rss/feed?catId=213'},
+    'ffgg09cb-6gef-45g1-b206-32b55320e598': {'Jammu and Kashmir': 'https://prod-qt-images.s3.amazonaws.com/production/greaterkashmir/feed.xml'},
+    'e6a9f28c-69c7-5198-a6c1-3ab792557722': {'Jammu and Kashmir': 'https://web.statetimes.in/feed/'},
+    'f5b8g17d-58d6-4087-b5d0-2bc681446611': {'Jammu and Kashmir': 'https://www.dailyexcelsior.com/feed/'}}
 
     for news_id in source_news_ids:
         news_id = news_id.strip()
