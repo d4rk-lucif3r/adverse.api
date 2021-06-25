@@ -189,3 +189,4 @@
 {"_id":{"$oid":"60d3305002326e6cfd7c059e"},"RunDate":"2021-06-23 15:15:08","RunStartTime":1.6244532002681916E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6244613083955853E+09,"RunDuration":8108.127393722534,"news_keywords_id":"60d2d492b05647410f467f1c"}
 {"_id":{"$oid":"60d481d002326e6cfd7c069a"},"RunDate":"2021-06-24 14:59:21","RunStartTime":1.624539600687044E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6245467611775703E+09,"RunDuration":7160.490526437759,"news_keywords_id":"60d36ce169d0ff03567ea0e4"}
 {"_id":{"$oid":"60d4bb93ed7488d95c8b455e"},"RunDate":"2021-06-24 17:06:27","RunStartTime":1.624554387506459E+09}
+{"_id":{"$oid":"60d5d35089655c29607a6a35"},"RunDate":"2021-06-25 15:17:32","RunStartTime":1.6246260007854438E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6246342523345284E+09,"RunDuration":8251.549084663391,"news_keywords_id":"60d5d136def211a2e7f3af7f"}

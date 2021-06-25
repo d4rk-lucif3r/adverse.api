@@ -17,7 +17,80 @@ import re
 from GoogleNews import GoogleNews
 import urllib.request
 from fake_useragent import UserAgent
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import LanguageTranslatorV3
+from googletrans import Translator
+from google_trans_new import google_translator as google_translator2
 
+translator2 = google_translator2()
+translator = Translator()
+
+def detect_lang(text):
+    if text.strip():
+        KEY = 'IE8hVfhy0XCdw2gFGKQous7etnspEN66OTWsnB_bEhe2'
+        SERVICE_URL = 'https://api.eu-gb.language-translator.watson.cloud.ibm.com/instances/1c656c34-6170-4a20-be18-57f030abacf0'
+
+        authenticator = IAMAuthenticator(KEY)
+        language_translator = LanguageTranslatorV3(
+            version='2018-05-01',
+            authenticator=authenticator
+            )
+        
+        language_translator.set_service_url(SERVICE_URL)
+        lang = language_translator.identify(text).get_result()
+
+        return lang['languages'][0]['language']
+
+def CityOfNewspaper(url):
+
+    city2idx = {
+    'www.tribuneindia.com':4,
+    'mumbaimirror.indiatimes.com':3,
+    'timesofindia.indiatimes.com':4,
+    'www.ndtv.com':4,
+    }
+
+    fp_cities = [
+    'Nation',
+    'World',
+    'Diaspora',
+    'Editorials',
+    'Comment',
+    'Entertainment',
+    'Sciencetechnology',
+    'Science',
+    'Technology',
+    'Coronavirus',
+    'Us',
+    'Uk',
+    'City',
+    'Europe',
+    'International',
+    'Hindi',
+    'Pakistan',
+    'News',
+    'China',
+    'Lifestyle',
+    'Malayalam',
+    ]
+
+    DefaultCities = [
+    'www.deccanchronicle.com',
+    'www.asianage.com',
+    'economictimes.indiatimes.com',
+    'www.livemint.com',
+    ]
+
+    if url.split('/')[2] not in list(city2idx.keys()):
+        return 'National'
+
+    idx = city2idx[url.split('/')[2]]
+    city = url.split('/')[idx].title()
+
+    print('city:', city)
+    if city in fp_cities or any(not c.isalnum() for c in city):
+        return 'National'
+    return city
 
 def get_newsfeeds(feed_url):
 
@@ -589,7 +662,11 @@ def ids2rss(source_news_ids):
     '9bb25aa5-2536-4c0e-b897-c957b8de61d0': {'Amritsar': 'https://www.tribuneindia.com/rss/feed?catId=17', 'Bathinda': 'https://www.tribuneindia.com/rss/feed?catId=18', 'Chandigarh': 'https://www.tribuneindia.com/rss/feed?catId=20', 'Delhi': 'https://www.tribuneindia.com/rss/feed?catId=24', 'Jalandhar': 'https://www.tribuneindia.com/rss/feed?catId=34', 'Ludhiana': 'https://www.tribuneindia.com/rss/feed?catId=40', 'Patiala': 'https://www.tribuneindia.com/rss/feed?catId=213'},
     'ffgg09cb-6gef-45g1-b206-32b55320e598': {'Jammu and Kashmir': 'https://prod-qt-images.s3.amazonaws.com/production/greaterkashmir/feed.xml'},
     'e6a9f28c-69c7-5198-a6c1-3ab792557722': {'Jammu and Kashmir': 'https://web.statetimes.in/feed/'},
-    'f5b8g17d-58d6-4087-b5d0-2bc681446611': {'Jammu and Kashmir': 'https://www.dailyexcelsior.com/feed/'}}
+    'f5b8g17d-58d6-4087-b5d0-2bc681446611': {'Jammu and Kashmir': 'https://www.dailyexcelsior.com/feed/'},
+    '8918a789-43f2-4f28-b3b2-6ae508b70c7d': {'Maharashtra': 'https://maharashtratimes.com/maharashtra/rssfeedsection/2429066.cms'},
+    'd5ca61f6-a264-4007-b691-68347cad2d3a': {'Maharashtra': 'https://www.esakal.com/stories.rss'},
+    '833f7333-e06e-4741-b15a-54eb79419b35': {'Maharashtra': 'https://www.loksatta.com/mumbai/feed/'},
+    }
 
     for news_id in source_news_ids:
         news_id = news_id.strip()
@@ -868,6 +945,17 @@ def _incre_mode(batch_id):
                     if not text:
                         text = article.title + os.linesep + article.text
 
+                    # check the language of text
+                    lang = detect_lang(text)
+
+                    print("lang:", lang)
+
+                    if lang == 'mr':
+                        translation = translator.translate(text, dest='en')
+                        print('translation:', translation.text)
+                        text = translation.text
+
+
                     text2 = text.split('\n')
 
                     # print('length of article:', len(text2))
@@ -997,10 +1085,25 @@ def _incre_mode(batch_id):
             text = article.title + os.linesep + article.text
             # print(text)
 
+          # check the language of text
+          lang = detect_lang(text)
+          # print("lang:", lang)
+
+          if lang == 'mr':
+            translation = translator.translate(text, dest='en')
+            # print('translation:', translation.text)
+            text = translation.text
+
+            lang = detect_lang(text)
+            # print("lang:", lang)
+            if lang == 'mr':
+                translate_text2 = translator2.translate(text,lang_tgt='en')  
+                # print('translation:', translate_text2)
+                text = translate_text2
+
 
           # text = soup_text(profile['sourcename'])
           
-
           # if 'economictimes.indiatimes' in profile['sourcename']:
           #   soup = BeautifulSoup(article.html, 'html.parser')
 
@@ -1207,6 +1310,10 @@ def _incre_mode(batch_id):
     
             profile['date'] = link['published'] # article.publish_date
             profile['cities'] = keys[0]
+
+            if profile['cities'] == 'National':
+                profile['cities'] = CityOfNewspaper(profile['weblink'])
+                
             profile['batch_id'] = batch_id
             profile['created_date'] = datetime.now()
             profile['org'] = profile['org'].split(',')

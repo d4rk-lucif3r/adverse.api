@@ -15,8 +15,12 @@ from newspaper.utils import BeautifulSoup
 from newspaper import Config
 import re
 from fake_useragent import UserAgent
+from googletrans import Translator
+from google_trans_new import google_translator as google_translator2
 
 
+translator2 = google_translator2()
+translator = Translator()
 ua = UserAgent()
 f1 = Faker()
 nlp_Name = spacy.load("en_core_web_trf")
@@ -212,6 +216,10 @@ def adverseapi():
           # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
           # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
 
+          if document['City_of_News_Paper'] == 'National':
+            document['City_of_News_Paper'] = CityOfNewspaper(document['Web_link_of_news'])
+
+
           search_results.append(document)
 
         search_results = list({v['Web_link_of_news']:v for v in search_results}.values())
@@ -313,6 +321,9 @@ def adverseapi():
 
             # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
             # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
+
+            if document['City_of_News_Paper'] == 'National':
+              document['City_of_News_Paper'] = CityOfNewspaper(document['Web_link_of_news'])
 
             search_results.append(document)
 
@@ -524,6 +535,25 @@ def adverseapi():
                   if not text:
                     text = article.title + os.linesep + article.text
 
+                  # check the language of text
+                  lang = detect_lang(text)
+
+                  print("lang:", lang)
+
+                  if lang == 'mr':
+                    translation = translator.translate(text, dest='en')
+                    print('translation:', translation.text)
+                    text = translation.text
+
+                    lang = detect_lang(text)
+                    print("lang:", lang)
+
+                    if lang == 'mr':
+                      translate_text2 = translator2.translate(text,lang_tgt='en')  
+                      print('translation:', translate_text2)
+                      text = translate_text2
+
+
                   text2 = text.split('\n')
                   print('length of article:', len(text2))
 
@@ -593,6 +623,10 @@ def adverseapi():
 
                   document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
                   document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                  
+                  if document['City of News Paper'] == 'National':
+                    document['City of News Paper'] = CityOfNewspaper(document['Web link of news'])
+                  
                   collection_batches.save(document)
 
                   return jsonify({"news_source_ids": ids["news_source_ids"], 
@@ -694,6 +728,25 @@ def adverseapi():
                 # text = article.title.lower() + os.linesep + article.text.lower()
 
               # print(text)
+
+              # check the language of text
+              lang = detect_lang(text)
+
+              print("lang:", lang)
+
+              if lang == 'mr':
+                translation = translator.translate(text, dest='en')
+                print('translation:', translation.text)
+                text = translation.text
+
+                lang = detect_lang(text)
+                print("lang:", lang)
+                
+                if lang == 'mr':
+                  translate_text2 = translator2.translate(text,lang_tgt='en')  
+                  print('translation:', translate_text2)
+                  text = translate_text2
+
 
               for keyword in keywords:
                 if keyword.lower() in text.lower():
@@ -836,6 +889,8 @@ def adverseapi():
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
               profile.pop('Organization_Name_mentioned_in_the_news')
+
+              profile['City_of_News_Paper'] = CityOfNewspaper(profile['Web_link_of_news'])
 
               if not profile['Article_Date']:
                 profile['Article_Date'] = ''

@@ -15,6 +15,79 @@ from pymongo import MongoClient
 import time
 import bson
 import pytz    
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import LanguageTranslatorV3
+from googletrans import Translator
+
+
+translator = Translator()
+
+def CityOfNewspaper(url):
+
+    city2idx = {
+    'www.tribuneindia.com':4,
+    'mumbaimirror.indiatimes.com':3,
+    'timesofindia.indiatimes.com':4,
+    'www.ndtv.com':4,
+    }
+
+    fp_cities = [
+    'Nation',
+    'World',
+    'Diaspora',
+    'Editorials',
+    'Comment',
+    'Entertainment',
+    'Sciencetechnology',
+    'Science',
+    'Technology',
+    'Coronavirus',
+    'Us',
+    'Uk',
+    'City',
+    'Europe',
+    'International',
+    'Hindi',
+    'Pakistan',
+    'News',
+    'China',
+    'Lifestyle',
+    'Malayalam',
+    ]
+
+    DefaultCities = [
+    'www.deccanchronicle.com',
+    'www.asianage.com',
+    'economictimes.indiatimes.com',
+    'www.livemint.com',
+    ]
+
+    if url.split('/')[2] not in list(city2idx.keys()):
+        return 'National'
+
+    idx = city2idx[url.split('/')[2]]
+    city = url.split('/')[idx].title()
+
+    print('city:', city)
+    if city in fp_cities or any(not c.isalnum() for c in city):
+        return 'National'
+    return city
+
+def detect_lang(text):
+    if text.strip():
+        KEY = 'IE8hVfhy0XCdw2gFGKQous7etnspEN66OTWsnB_bEhe2'
+        SERVICE_URL = 'https://api.eu-gb.language-translator.watson.cloud.ibm.com/instances/1c656c34-6170-4a20-be18-57f030abacf0'
+
+        authenticator = IAMAuthenticator(KEY)
+        language_translator = LanguageTranslatorV3(
+            version='2018-05-01',
+            authenticator=authenticator
+            )
+        
+        language_translator.set_service_url(SERVICE_URL)
+        lang = language_translator.identify(text).get_result()
+
+        return lang['languages'][0]['language']
 
 
 def current_ids_names():
@@ -183,6 +256,7 @@ def soup_text(soup, sourcename):
     # 'www.hindustantimes.com': {'h1': ['hdg1', 'hdg3'], 'div': ['sortDec', 'detail', 'storyDetails']},
     # 'www.dnaindia.com': {'div': ['container']},
     # 'www.business-standard.com': {'h1': ['headline'], 'h2': ['alternativeHeadline'], 'span': ['p-content']},
+    'maharashtratimes.com': {'Headlines': {'h1': {'itemprop': ['headline']}}, 'Synopsis': {'h2': ['caption text_ellipsis more'], 'div': ['undefined top-article tophighlight']}, 'Text': {'article': ['story-content']}},
     'www.greaterkashmir.com': {'Headlines': {'h1': ['story-headline-m__headline__1LzaJ story-headline-m__dark__1wPld']}, 'Text': {'div': ['arr--story-page-card-wrapper']}},
     'www.nytimes.com': {'Headlines': {'h1': ['css-19rw7kf e1h9rw200']}, 'Synopsis': {'p': ['css-w6ymp8 e1wiw3jv0']}, 'Text': {'div': ['css-53u6y8']}},
     'www.business-standard.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'h2': ['alternativeHeadline']}, 'Text': {'span': ['p-content']}},
