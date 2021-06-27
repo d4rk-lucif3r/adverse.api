@@ -162,3 +162,5 @@
 {"_id":{"$oid":"60d34ffc02326e6cfd7c0698"},"RunDate":"2021-06-23 15:15:08","RunStartTime":1.6244532002681901E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6244613083955853E+09,"RunDuration":8108.127395153046}
 {"_id":{"$oid":"60d49dc902326e6cfd7c079d"},"RunDate":"2021-06-24 14:59:21","RunStartTime":1.6245396006870432E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6245467611775703E+09,"RunDuration":7160.490527153015}
 {"_id":{"$oid":"60d5f38c89655c29607a6b5a"},"RunDate":"2021-06-25 15:17:32","RunStartTime":1.6246260007854433E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6246342523345284E+09,"RunDuration":8251.549085140228}
+{"_id":{"$oid":"60d74231f02369aafe5fc68f"},"RunDate":"2021-06-26 15:05:21","RunStartTime":1.624712400331304E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.624719921429474E+09,"RunDuration":7521.098170042038}
+{"_id":{"$oid":"60d89102f02369aafe5fc739"},"RunDate":"2021-06-27 14:53:54","RunStartTime":1.624798800290533E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6248056346264694E+09,"RunDuration":6834.335936307907}
