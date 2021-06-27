@@ -216,8 +216,8 @@ def adverseapi():
           # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid, ', '')
           # document['City_State_mentioned_under_the_news'] = document['City_State_mentioned_under_the_news'].replace('Covid', '')
 
-          if document['City_of_News_Paper'] == 'National':
-            document['City_of_News_Paper'] = CityOfNewspaper(document['Web_link_of_news'])
+          # if document['City_of_News_Paper'] == 'National':
+            # document['City_of_News_Paper'] = CityOfNewspaper(document['Web_link_of_news'])
 
 
           search_results.append(document)

@@ -256,6 +256,7 @@ def soup_text(soup, sourcename):
     # 'www.hindustantimes.com': {'h1': ['hdg1', 'hdg3'], 'div': ['sortDec', 'detail', 'storyDetails']},
     # 'www.dnaindia.com': {'div': ['container']},
     # 'www.business-standard.com': {'h1': ['headline'], 'h2': ['alternativeHeadline'], 'span': ['p-content']},
+    'www.esakal.com': {'Headlines': {'h1': ['news-title']}, 'Text': {'div': ['news-description selectionShareable']}},
     'maharashtratimes.com': {'Headlines': {'h1': {'itemprop': ['headline']}}, 'Synopsis': {'h2': ['caption text_ellipsis more'], 'div': ['undefined top-article tophighlight']}, 'Text': {'article': ['story-content']}},
     'www.greaterkashmir.com': {'Headlines': {'h1': ['story-headline-m__headline__1LzaJ story-headline-m__dark__1wPld']}, 'Text': {'div': ['arr--story-page-card-wrapper']}},
     'www.nytimes.com': {'Headlines': {'h1': ['css-19rw7kf e1h9rw200']}, 'Synopsis': {'p': ['css-w6ymp8 e1wiw3jv0']}, 'Text': {'div': ['css-53u6y8']}},
