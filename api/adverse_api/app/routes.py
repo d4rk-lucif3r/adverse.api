@@ -653,7 +653,7 @@ def adverseapi():
           keywords = [x.strip() for x in keywords if x.strip()]
           urltobesearched = _request['urltobesearched']
           if keywords and urltobesearched:
-            profile = {'Person_Name_mentioned_in_the_news': '', 'Organization_Name_mentioned_in_the_news': '', 'City_State_mentioned_under_the_news': '', 'Key_word_Used_foruuidentify_the_article': '', 'HDFC_Bank_Name_under_News_Article': 'No', 'Article_Date': '', 'Source_Name': '', 'Web_link_of_news': '', 'created_date': '', 'City_of_News_Paper': ''}
+            profile = {'Person_Name_mentioned_in_the_news': '', 'Organization_Name_mentioned_in_the_news': '', 'City_State_mentioned_under_the_news': '', 'Key_word_Used_foruuidentify_the_article': '', 'HDFC_Bank_Name_under_News_Article': 'No', 'Article_Date': '', 'Source_Name': '', 'Web_link_of_news': '', 'created_date': '', 'City_of_News_Paper': '', 'exclude': ''}
             # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
             USER_AGENT = ua.random
            #  HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
@@ -747,6 +747,36 @@ def adverseapi():
                   print('translation:', translate_text2)
                   text = translate_text2
 
+              if 'exclude' in list(_request.keys()):
+                exclude = _request['exclude'].split(',')
+                exclude = [x.strip() for x in exclude if x.strip()]
+                for _exclude in exclude:
+                  if _exclude.lower() in text.lower():
+                    if _exclude not in profile['exclude']:
+                      profile['exclude'] += _exclude + ', '
+                    else:
+                      continue
+
+                  elif len(_exclude.split(' ')) > 1:
+                    found = []
+                    exclude_ = _exclude.split(' ')
+                    for __exclude in exclude_:
+                      if __exclude.lower() in text.lower():
+                        found.append(__exclude)
+                      else:
+                        continue
+
+                    if len(found) == len(exclude_):
+                      profile['exclude'] += _exclude + ', '
+
+                if profile['exclude']:
+                  return jsonify({"news_source_ids": ids["news_source_ids"], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "exclude" : _request['exclude'], 
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Excluded keywords found']})
 
               for keyword in keywords:
                 if keyword.lower() in text.lower():

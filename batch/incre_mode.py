@@ -87,7 +87,7 @@ def CityOfNewspaper(url):
     idx = city2idx[url.split('/')[2]]
     city = url.split('/')[idx].title()
 
-    print('city:', city)
+    # print('city:', city)
     if city in fp_cities or any(not c.isalnum() for c in city):
         return 'National'
     return city
