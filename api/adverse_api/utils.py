@@ -351,11 +351,22 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city='', cities='',
     collection_batches = db['news_ids']
     dbs['keywords'] = keywords
     dbs['news_source_ids'] = news_source_ids
-    if fp_name and fp_city and cities:
+    if fp_name and fp_city and names and cities:
         dbs['fp_name'] = fp_name
         dbs['fp_city'] = fp_city
         update_fp(fp_name, fp_city)
         update_current_cities(cities)
+        update_current_names(names)
+    elif fp_name and fp_city and cities:
+        dbs['fp_name'] = fp_name
+        dbs['fp_city'] = fp_city
+        update_fp(fp_name, fp_city)
+        update_current_cities(cities)
+    elif fp_name and fp_city and names:
+        dbs['fp_name'] = fp_name
+        dbs['fp_city'] = fp_city
+        update_fp(fp_name, fp_city)
+        update_current_names(names)
     elif fp_name and fp_city:
         dbs['fp_name'] = fp_name
         dbs['fp_city'] = fp_city

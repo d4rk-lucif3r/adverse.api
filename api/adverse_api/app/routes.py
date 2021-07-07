@@ -344,7 +344,7 @@ def adverseapi():
         print(_request.keys())
         print(_request.values())
 
-        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys):
+        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys) and ('names' in _keys):
         # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
           print('this is request for name, city, keywords, news_source_id and added_cities')
           _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -353,8 +353,54 @@ def adverseapi():
           _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           _request['cities'] = _request['cities'].split(',') # + ['Covid']
           _request['cities'] = ','.join(list(set(_request['cities'])))
+          _request['names'] = _request['names'].split(',') # + ['Covid']
+          _request['names'] = ','.join(list(set(_request['names'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"], names=_request['names'])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+          # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys):
+        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          print('this is request for city, keywords, news_source_id and added_cities')
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          _request['cities'] = _request['cities'].split(',') # + ['Covid']
+          _request['cities'] = ','.join(list(set(_request['cities'])))
           # add news keywords and news source ids to database
           update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+          # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : _request['keywords'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('names' in _keys):
+        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          print('this is request for name, keywords, news_source_id and added_cities')
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          _request['names'] = _request['names'].split(',') # + ['Covid']
+          _request['names'] = ','.join(list(set(_request['names'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], fp_name=_request['fp_name'], fp_city=_request["fp_city"], names=_request['names'])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
           # print(_request)
