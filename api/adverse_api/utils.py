@@ -305,7 +305,10 @@ def soup_text(soup, sourcename):
                                 else:
                                     continue
 
-        text_ = Headlines + Synopsis + Text
+        Text = ' '.join(Text)
+        Text = [Text]
+
+        text_ = Headlines + ['\n'] + Synopsis + ['\n'] + Text
                             # text_.append(strings)
             # text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
             # text_ += [tag.get_text() for tag in soup.find_all(tag, {"class" : regex})]
@@ -316,7 +319,8 @@ def soup_text(soup, sourcename):
     if text_:
         print(text_)
         # return '\n'.join(text_)
-        return ' '.join(text_)
+        # return ' '.join(text_)
+        return ''.join(text_)
     else:
         print('text not found')
         return None
