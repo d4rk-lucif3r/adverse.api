@@ -190,3 +190,4 @@
 {"_id":{"$oid":"60f837ee3f08a0db9f101e50"},"RunDate":"2021-07-21 15:06:22","RunStartTime":1.6268724009873717E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6268799829473262E+09,"RunDuration":7581.959954500198}
 {"_id":{"$oid":"60f987433f08a0db9f101efb"},"RunDate":"2021-07-22 14:57:07","RunStartTime":1.626958800066847E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6269658278839016E+09,"RunDuration":7027.817054510117}
 {"_id":{"$oid":"60fad9203f08a0db9f101fbe"},"RunDate":"2021-07-23 14:58:40","RunStartTime":1.6270452006437185E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6270523206651719E+09,"RunDuration":7120.021453380585}
+{"_id":{"$oid":"60fc277b3f08a0db9f102062"},"RunDate":"2021-07-24 14:45:15","RunStartTime":1.6271316001611543E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.627137915933471E+09,"RunDuration":6315.77231669426}
