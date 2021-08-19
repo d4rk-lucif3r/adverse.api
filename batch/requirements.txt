@@ -18,10 +18,10 @@ cssselect==1.1.0
 cymem==2.0.3
 dateparser==1.0.0
 en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0-py3-none-any.whl
-en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.0.0/en_core_web_trf-3.0.0-py3-none-any.whl
+en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.1.0/en_core_web_trf-3.1.0-py3-none-any.whl
 fake-headers==1.0.2
 fake-useragent==0.1.11
-Faker==6.5.0
+Faker==8.11.0
 feedfinder2==0.0.4
 feedparser==6.0.2
 filelock==3.0.12
@@ -31,6 +31,7 @@ gast==0.3.3
 google-auth==1.21.2
 google-auth-oauthlib==0.4.1
 google-pasta==0.2.0
+google-trans-new==1.1.9
 GoogleNews==1.5.7
 googletrans==3.1.0a0
 grpcio==1.32.0
@@ -80,7 +81,7 @@ protobuf==3.13.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
-pydantic==1.7.3
+pydantic==1.8.2
 PyDispatcher==2.0.5
 PyHamcrest==2.0.2
 PyJWT==2.1.0
@@ -107,10 +108,10 @@ six==1.15.0
 smart-open==3.0.0
 sniffio==1.2.0
 soupsieve==2.0.1
-spacy==3.0.6
+spacy==3.1.1
 spacy-alignments==0.7.2
-spacy-legacy==3.0.5
-spacy-transformers==1.0.1
+spacy-legacy==3.0.8
+spacy-transformers==1.0.4
 srsly==2.4.1
 stanza==1.2
 tensorboard==2.4.1
@@ -119,7 +120,7 @@ tensorflow==2.4.1
 tensorflow-estimator==2.4.0
 termcolor==1.1.0
 text-unidecode==1.3
-thinc==8.0.3
+thinc==8.0.8
 tinysegmenter==0.3
 tldextract==3.1.0
 tokenizers==0.9.4

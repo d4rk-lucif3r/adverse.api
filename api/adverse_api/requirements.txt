@@ -1,14 +1,14 @@
 beautifulsoup4==4.9.3
 blis==0.7.4
-catalogue==2.0.1
+catalogue==2.0.5
 certifi==2020.12.5
 chardet==3.0.4
 click==7.1.2
 cssselect==1.1.0
 cymem==2.0.5
 elasticsearch==7.10.1
-en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0-py3-none-any.whl
-en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.0.0/en_core_web_trf-3.0.0-py3-none-any.whl
+en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.1.0/en_core_web_md-3.1.0-py3-none-any.whl
+en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.1.0/en_core_web_trf-3.1.0-py3-none-any.whl
 fake-useragent==0.1.11
 Faker==8.11.0
 feedfinder2==0.0.4
@@ -46,7 +46,7 @@ Pillow==8.1.2
 pkg-resources==0.0.0
 preshed==3.0.5
 protobuf==3.15.8
-pydantic==1.7.3
+pydantic==1.8.2
 PyJWT==2.1.0
 pymongo==3.11.2
 pyparsing==2.4.7
@@ -64,14 +64,14 @@ six==1.15.0
 smart-open==3.0.0
 sniffio==1.2.0
 soupsieve==2.2
-spacy==3.0.3
+spacy==3.1.1
 spacy-alignments==0.7.2
-spacy-legacy==3.0.1
-spacy-transformers==1.0.1
-srsly==2.4.0
+spacy-legacy==3.0.8
+spacy-transformers==1.0.4
+srsly==2.4.1
 stanza==1.2
 text-unidecode==1.3
-thinc==8.0.1
+thinc==8.0.8
 tinysegmenter==0.3
 tldextract==3.1.0
 tokenizers==0.9.4
