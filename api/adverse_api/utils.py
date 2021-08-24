@@ -267,7 +267,7 @@ def soup_text(soup, sourcename):
     'www.bbc.co.uk': {'Headlines': {'h1': ['ssrcss-1pl2zfy-StyledHeading e1fj1fc10', 'ssrcss-1pl2zfy-StyledHeading']}, 'Synopsis': {'b': ['ssrcss-14iz86j-BoldText e5tfeyi0', 'ssrcss-hmf8ql-BoldText e5tfeyi3']}, 'Text': {'div': ['ssrcss-uf6wea-RichTextComponentWrapper e1xue1i83', 'ssrcss-18snukc-RichTextContainer e5tfeyi1', 'ssrcss-5h7eao-ArticleWrapper', 'ssrcss-5h7eao-ArticleWrapper e1nh2i2l6', 'ssrcss-14iz86j-BoldText']}},
     'economictimes.indiatimes.com': {'Headlines': {'h1': ['artTitle font_faus']}, 'Synopsis': {'h2': ['summary', 'artSyn tac font_mon']}, 'Text': {'div': ['.*artText.*', 'pageContent flt', '.*content1.*', 'primeContent col s_col font_faus artText paywall']}},
     # 'www.thehindu.com': {'div': ['title', 'paywall']},
-    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498', '.*_1Y-96.*']}, 'Text': {'div': ['ga-headlines', '.*Normal.*', '.*_3YYSt.*']}},
+    'timesofindia.indiatimes.com': {'Headlines': {'h1': ['_23498', '.*_1Y-96.*'], 'div': ['pu1zi']}, 'Synopsis': {'h2': ['Normal media-summary']}, 'Text': {'div': ['ga-headlines', '.*Normal.*', '.*_3YYSt.*', '_2ndvO']}},
     'bangaloremirror.indiatimes.com': {'Headlines': {'div': ['heading2']}, 'Text': {'div': ['.*Normal.*', 'ga-headlines']}},
     'edition.cnn.com': {'Headlines': {'h1': ['pg-headline']}, 'Text':  {'div': ['pg-headline', 'l-container', 'zn-body__paragraph']}},
     'www.deccanchronicle.com': {'Headlines': {'h1': ['headline']}, 'Synopsis': {'div': ['strap']}, 'Text': {'div': ['story-body']}},
