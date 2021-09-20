@@ -22,6 +22,41 @@ from googletrans import Translator
 
 translator = Translator()
 
+source2name = {'www.hindustantimes.com' : 'Hindustan Times',
+               'indianexpress.com' : 'The Indian Express',
+               'www.thehindu.com' : 'The Hindu',
+               'www.asianage.com' : 'Asian Age',
+               'timesofindia.indiatimes.com' : 'The Times Of India',
+               'www.tribuneindia.com' : 'The Tribune',
+               'www.cnn.com' : 'CNN',
+               'www.ndtv.com' : 'NDTV',
+               'www.theguardian.com' : 'The Guardian',
+               'www.business-standard.com' : 'Business Standard',
+               'www.bbc.co.uk' : 'BBC',
+               'www.livemint.com' : 'LiveMint',
+               'www.deccanchronicle.com' : 'Deccan Chronicle',
+               'www.wsj.com' : 'The Wall Street Journal',
+               'www.abc.net.au' : 'ABC News',
+               'economictimes.indiatimes.com' : 'The Economic Times',
+               'www.nytimes.com' : 'The New York Times',
+               'mumbaimirror.indiatimes.com' : 'Mumbai Mirror',
+               'www.economist.com' : 'The Economist',
+               'asia.nikkei.com' : 'Nikkei',
+               'www.dnaindia.com' : 'DNA',
+               'www.bbc.com' : 'BBC',
+               'www.deccanherald.com' : 'Deccan Herald',
+               'www.reuters.com' : 'Reuters',
+               'edition.cnn.com' : 'Hindustan Times',
+               'cnn.it' : 'CNN',
+               'bangaloremirror.indiatimes.com' : 'Bangalore Mirror',
+               'www.greaterkashmir.com' : 'Greater Kashmir',
+               'web.statetimes.in' : 'State Times',
+               'www.dailyexcelsior.com' : 'Daily Excelsior',
+               'maharashtratimes.com' : 'Maharashtra Times',
+               'www.esakal.com' : 'Sakal',
+               'www.loksatta.com' : 'Loksatta',
+              }
+
 def CityOfNewspaper(url):
 
     city2idx = {
@@ -344,7 +379,7 @@ def get_batch_ids():
     dbs = [database for database in cursor]
     return dbs
 
-def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city='', cities='', names=''):
+def update_ids_dbs(keywords, news_source_ids, exclude='', fp_name='', fp_city='', cities='', names=''):
     '''
     function to update sources ids and keywords into database
     '''
@@ -355,35 +390,22 @@ def update_ids_dbs(keywords, news_source_ids, fp_name='', fp_city='', cities='',
     collection_batches = db['news_ids']
     dbs['keywords'] = keywords
     dbs['news_source_ids'] = news_source_ids
-    if fp_name and fp_city and names and cities:
+
+    if exclude:
+        dbs['exclude'] = exclude
+
+    if fp_name:
         dbs['fp_name'] = fp_name
+        update_fp(fp_name=fp_name)
+
+    if fp_city:
         dbs['fp_city'] = fp_city
-        update_fp(fp_name, fp_city)
+        update_fp(fp_city=fp_city)
+
+    if cities:
         update_current_cities(cities)
-        update_current_names(names)
-    elif fp_name and fp_city and cities:
-        dbs['fp_name'] = fp_name
-        dbs['fp_city'] = fp_city
-        update_fp(fp_name, fp_city)
-        update_current_cities(cities)
-    elif fp_name and fp_city and names:
-        dbs['fp_name'] = fp_name
-        dbs['fp_city'] = fp_city
-        update_fp(fp_name, fp_city)
-        update_current_names(names)
-    elif fp_name and fp_city:
-        dbs['fp_name'] = fp_name
-        dbs['fp_city'] = fp_city
-        update_fp(fp_name, fp_city)
-    elif fp_city:
-        dbs['fp_city'] = fp_city
-        update_fp(fp_city)
-    elif fp_name:
-        dbs['fp_name'] = fp_name
-        update_fp(fp_name)
-    elif cities:
-        update_current_cities(cities)
-    elif names:
+
+    if names:
         update_current_names(names)
 
     tz_NY = pytz.timezone('Asia/Kolkata')
