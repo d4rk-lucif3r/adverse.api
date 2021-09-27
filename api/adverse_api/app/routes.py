@@ -88,6 +88,10 @@ def adverseapi():
 
     dbs = get_batch_ids()
     ids = current_ids_dbs()
+
+    if 'exclude' not in ids.keys():
+      ids['exclude'] = ''
+      
     fps = current_ids_fps()
     cities = current_ids_cities()
     names = current_ids_names()
@@ -146,6 +150,9 @@ def adverseapi():
 
           try:
             if document['Source Name'] == "www.ft.com":
+              continue
+
+            if document['City of News Paper'] == "International":
               continue
 
             if not document['Article Date']:
@@ -219,6 +226,9 @@ def adverseapi():
                 continue
 
               if not document['Article Date']:
+                continue
+
+              if document['City of News Paper'] == "International":
                 continue
 
               document['Article_Date'] = document.pop('Article Date')
@@ -398,7 +408,7 @@ def adverseapi():
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) ('fp_city' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_city' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_city']:
           print("this request is for keywords, news_source_id and fp_city")
           # _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']

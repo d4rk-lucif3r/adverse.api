@@ -169,7 +169,7 @@ def get_google_articles():
 
     return google_articles
 
-def restricted_sources():
+def restricted_sources(restricted_source):
 
     articles_list = []
 
@@ -202,35 +202,35 @@ def restricted_sources():
     'www.deccanchronicle.com' : 'National',
     'www.tribuneindia.com' : 'National' }
 
-    restricted_source = [ 
-    'www.deccanherald.com',
-    'www.reuters.com',
-    'www.nytimes.com',
-    'www.hindustantimes.com',
-    'www.dnaindia.com',
-    'www.allindianewspapers.com',
-    'www.business-standard.com',
-    'asia.nikkei.com',
-    'www.abc.net.au',
-    'www.economist.com',
-    'www.ndtv.com',
-    'www.livemint.com',
-    'indianexpress.com',
-    'www.bbc.co.uk',
-    'www.bbc.com',
-    'economictimes.indiatimes.com',
-    'www.theguardian.com',
-    'www.thehindu.com',
-    'timesofindia.indiatimes.com',
-    'mumbaimirror.indiatimes.com',
-    'www.wsj.com',
-    'www.asianage.com',
-    'www.cnn.com',
-    'edition.cnn.com',
-    'cnn.it',
-    'www.deccanchronicle.com',
-    'www.tribuneindia.com' 
-    ]
+    # restricted_source = [ 
+    # 'www.deccanherald.com',
+    # 'www.reuters.com',
+    # 'www.nytimes.com',
+    # 'www.hindustantimes.com',
+    # 'www.dnaindia.com',
+    # 'www.allindianewspapers.com',
+    # 'www.business-standard.com',
+    # 'asia.nikkei.com',
+    # 'www.abc.net.au',
+    # 'www.economist.com',
+    # 'www.ndtv.com',
+    # 'www.livemint.com',
+    # 'indianexpress.com',
+    # 'www.bbc.co.uk',
+    # 'www.bbc.com',
+    # 'economictimes.indiatimes.com',
+    # 'www.theguardian.com',
+    # 'www.thehindu.com',
+    # 'timesofindia.indiatimes.com',
+    # 'mumbaimirror.indiatimes.com',
+    # 'www.wsj.com',
+    # 'www.asianage.com',
+    # 'www.cnn.com',
+    # 'edition.cnn.com',
+    # 'cnn.it',
+    # 'www.deccanchronicle.com',
+    # 'www.tribuneindia.com' 
+    # ]
 
     all_articles = get_google_articles()
     all_articles2 = google_news_articles()
@@ -695,6 +695,7 @@ def ids2rss(source_news_ids):
 def rss2news(rss):
 
     news_link = []
+    restricted_source = []
 
     for rss_link in rss:
 
@@ -719,6 +720,7 @@ def rss2news(rss):
                         if date >= week:
 
                             link_dict[k] = news['link']
+                            restricted_source.append(news['link'].split('/')[2])
                             link_dict['published'] = news['published']
                             news_link.append(link_dict)
 
@@ -738,7 +740,9 @@ def rss2news(rss):
 
                 print("feedparser error:", e)
 
-    return news_link
+    restricted_source = list(set(restricted_source))
+
+    return news_link, restricted_source
 
 
 def _incre_mode(batch_id):
@@ -816,11 +820,11 @@ def _incre_mode(batch_id):
     
     print('rsses are:', rss)
 
-    news_link = rss2news(rss)
+    news_link, restricted_source = rss2news(rss)
     print('total news articles from rss are:', len(news_link))
     # print(news_link)
 
-    news_link2 = restricted_sources()
+    news_link2 = restricted_sources(restricted_source)
     print('length of google news-link are:', len(news_link2))
 
     # print('google news links are:', news_link2)
