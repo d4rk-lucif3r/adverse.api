@@ -492,15 +492,14 @@ def adverseapi():
             for document in cursor:
 
               if document['uuid'] in uuids:
+                USER_AGENT = ua.random
+                HEADERS = {'user-agent': USER_AGENT,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+                config = Config()
+                config.headers = HEADERS
+                config.request_timeout = 40
 
                 try:
-
-                  HEADERS = {'user-agent': ua.random,
-                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
-                  
-                  config = Config()
-                  config.headers = HEADERS
-                  config.request_timeout = 40
                   
                   article = Article(document['Web link of news'], config=config)
                   article.download()
@@ -530,75 +529,79 @@ def adverseapi():
                       print('translation:', translate_text2)
                       text = translate_text2
 
-
                   text2 = text.split('\n')
-                  print('length of article:', len(text2))
 
-                  document['Person Name mentioned in the news'] = ''
-                  document['Organization Name mentioned in the news'] = ''
-                  document['City/ State mentioned under the news'] = ''
+                  person = ""
+                  org = ""
+                  city = ""
+
+                  print('length of article:', len(text2))
 
                   for i in range(len(text2)):
 
                     doc = nlp_Name(text2[i])
-                    for count,ent in enumerate(doc.ents):
 
+                    # iterate through each entity present
+                    for ent in doc.ents:
+
+                      # save data in profile
+                      # find persons in text
                       if ent.label_ == 'PERSON':
-                        document['Person Name mentioned in the news'] += ent.text + ', '
+                        person += ent.text + ', '
 
+                      # find persons in text
                       elif ent.label_ == 'ORG':
-                        document['Organization Name mentioned in the news'] += ent.text + ', '
+                        org += ent.text + ', '
 
+                      # find persons in text
                       elif ent.label_ == 'GPE':
-                        document['City/ State mentioned under the news'] += ent.text + ', '
+                        city += ent.text + ', '
 
+                      # find persons in text
                       elif ent.label_ == 'LOC':
-                        document['City/ State mentioned under the news'] += ent.text + ', '
+                        city += ent.text + ', '
 
+                      # find persons in text
                       elif ent.label_ == 'FAC':
-                        document['City/ State mentioned under the news'] += ent.text + ', '
+                        city += ent.text + ', '
 
                       else:
                         continue
-                  
-                  document['Organization Name mentioned in the news'] = document['Organization Name mentioned in the news'].split(',')
-                  document['Organization Name mentioned in the news'] = [x.strip() for x in document['Organization Name mentioned in the news'] if x.strip()]
-                  document['Organization Name mentioned in the news'] = list(set(document['Organization Name mentioned in the news']))
-                  document['Person Name mentioned in the news'] = document['Person Name mentioned in the news'].split(',') + document['Organization Name mentioned in the news']
-                  document['Person Name mentioned in the news'] = [x.strip() for x in document['Person Name mentioned in the news'] if x.strip()]
-                  document['Person Name mentioned in the news'] = list(set(document['Person Name mentioned in the news']))
-                  document['Person Name mentioned in the news'] = [ i for i in document['Person Name mentioned in the news'] if not any( [ i in a for a in document['Person Name mentioned in the news'] if a != i]   )]
-                  person_dict = {k.lower():k for k in document['Person Name mentioned in the news']}
-                  document['Person Name mentioned in the news'] = list(person_dict.values())
-                  document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if i not in fps['fp_name']]
-                  document['Person Name mentioned in the news'] = [i for i in document['Person Name mentioned in the news'] if "covid" not in i.lower()]
 
-                  for name in document['Person Name mentioned in the news']:
+                  org = org.split(',')
+                  org = [x.strip() for x in org if x.strip()]
+                  org = list(set(org))
+                  person = person.split(',') + org
+                  person = [x.strip() for x in person if x.strip()]
+                  person = list(set(person))
+                  person = [ i for i in person if not any( [ i in a for a in person if a != i]   )]
+                  person_dict = {k.lower():k for k in person}
+                  person = list(person_dict.values())
+                  person = [i for i in person if i not in fps['fp_name']]
+                  person = [i for i in person if "covid" not in i.lower()]
 
+                  for name in person:
                     if name.lower() in cities['cities']:
+                      person.remove(name)
+                      city += name + ', '
 
-                      document['Person Name mentioned in the news'].remove(name)
-                      document['City/ State mentioned under the news'] += name + ', '
+                  person = ', '.join(person)    
+                  org = ', '.join(org)    
+                  city = city.split(',')
+                  city = [x.strip() for x in city if x.strip()]
+                  city = list(set(city))
+                  city = [ i for i in city if not any( [ i in a for a in city if a != i]   )]
+                  city_dict = {k.lower():k for k in city}
+                  city = list(city_dict.values())
+                  city = [i for i in city if i not in fps['fp_city']]
+                  city = [i for i in city if "covid" not in i.lower()]
 
-                  document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
-                  document['Organization Name mentioned in the news'] = ', '.join(document['Organization Name mentioned in the news'])    
-                  document['City/ State mentioned under the news'] = document['City/ State mentioned under the news'].split(',')
-                  document['City/ State mentioned under the news'] = [x.strip() for x in document['City/ State mentioned under the news'] if x.strip()]
-                  document['City/ State mentioned under the news'] = list(set(document['City/ State mentioned under the news']))
-                  document['City/ State mentioned under the news'] = [ i for i in document['City/ State mentioned under the news'] if not any( [ i in a for a in document['City/ State mentioned under the news'] if a != i]   )]
-                  city_dict = {k.lower():k for k in document['City/ State mentioned under the news']}
-                  document['City/ State mentioned under the news'] = list(city_dict.values())
-                  document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if i not in fps['fp_city']]
-                  document['City/ State mentioned under the news'] = [i for i in document['City/ State mentioned under the news'] if "covid" not in i.lower()]
-
-                  for name in document['City/ State mentioned under the news']:
-
+                  for name in city:
                     if name.lower() in names['names']:
+                      city.remove(name)
+                      person += ', ' + name
 
-                      document['City/ State mentioned under the news'].remove(name)
-                      document['Person Name mentioned in the news'] += ', ' + name
-
-                  document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
+                  city = ', '.join(city)
                   document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                   
                   if document['City of News Paper'] == 'National':
@@ -606,7 +609,11 @@ def adverseapi():
 
                   if document['Source Name']  in source2name.keys():
                     document['Source Name'] = source2name[document['Source Name']]
-                  
+
+                  document["Person Name mentioned in the news"] = person
+                  document["Organization Name mentioned in the news"] = org
+                  document["City/ State mentioned under the news"] = city
+
                   collection_batches.save(document)
 
                   return jsonify({"news_source_ids": ids["news_source_ids"], 
