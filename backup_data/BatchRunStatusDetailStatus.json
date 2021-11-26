@@ -342,3 +342,6 @@
 {"_id":{"$oid":"619b94505ac252e2abff77af"},"RunDate":"2021-11-22 14:30:55","RunStartTime":1.6375860001745317E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6375914553228285E+09,"RunDuration":5455.148296833038,"news_keywords_id":"619b4da513bef941f98badbd"}
 {"_id":{"$oid":"619ce5d05ac252e2abff7848"},"RunDate":"2021-11-23 14:41:47","RunStartTime":1.6376724002888508E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6376785074610724E+09,"RunDuration":6107.172221660614,"news_keywords_id":"619bdb3b29f57d514dc68b64"}
 {"_id":{"$oid":"619e37505ac252e2abff7904"},"RunDate":"2021-11-24 14:29:56","RunStartTime":1.6377588008197186E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6377641961735697E+09,"RunDuration":5395.353851079941,"news_keywords_id":"619d385213bef941f98bafc7"}
+{"_id":{"$oid":"619f88d0d7db08588c9a1493"},"RunDate":"2021-11-25 13:00:00","RunStartTime":1.6378452001785712E+09}
+{"_id":{"$oid":"619fbecb5b5e58e799feca11"},"RunDate":"2021-11-25 18:17:02","RunStartTime":1.6378590199322429E+09,"BatchRunStatus":"Incremental Mode Complete","RunEndTime":1.6378642227972925E+09,"RunDuration":5202.865049600601,"news_keywords_id":"619fd30da83b71292755b9e4"}
+{"_id":{"$oid":"61a0da500219d152e1c67a92"},"RunDate":"2021-11-26 13:00:00","RunStartTime":1.637931600125751E+09}
