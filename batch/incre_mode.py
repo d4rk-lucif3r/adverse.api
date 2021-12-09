@@ -1028,11 +1028,11 @@ def _incre_mode(batch_id):
                             document['City/ State mentioned under the news'] += name + ', '
 
 
-                    document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
+                    document['Person Name mentioned in the news'] = ' | '.join(document['Person Name mentioned in the news'])    
 
                     # document['Person Name mentioned in the news'] = lowercase_check(document['Person Name mentioned in the news'])
                     # document['Person Name mentioned in the news'] = ', '.join(document['Person Name mentioned in the news'])    
-                    document['Organization Name mentioned in the news'] = ', '.join(document['Organization Name mentioned in the news'])    
+                    document['Organization Name mentioned in the news'] = ' | '.join(document['Organization Name mentioned in the news'])    
                     document['City/ State mentioned under the news'] = document['City/ State mentioned under the news'].split(',')
                     document['City/ State mentioned under the news'] = [x.strip() for x in document['City/ State mentioned under the news'] if x.strip()]
                     document['City/ State mentioned under the news'] = list(set(document['City/ State mentioned under the news']))
@@ -1049,9 +1049,9 @@ def _incre_mode(batch_id):
 
                             document['City/ State mentioned under the news'].remove(name)
 
-                            document['Person Name mentioned in the news'] += ', ' + name
+                            document['Person Name mentioned in the news'] += ' | ' + name
 
-                    document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
+                    document['City/ State mentioned under the news'] = ' | '.join(document['City/ State mentioned under the news'])
 
                     # document['City/ State mentioned under the news'] = lowercase_check(document['City/ State mentioned under the news'])
                     # document['City/ State mentioned under the news'] = ', '.join(document['City/ State mentioned under the news'])
@@ -1353,8 +1353,8 @@ def _incre_mode(batch_id):
 
 
             
-            profile['name'] = ', '.join(profile['name'])    
-            profile['org'] = ', '.join(profile['org'])    
+            profile['name'] = '| '.join(profile['name'])    
+            profile['org'] = '| '.join(profile['org'])    
             profile['loc'] = profile['loc'].split(',')
             # print(profile['loc'])
             profile['loc'] = [x.strip() for x in profile['loc'] if x.strip()]
@@ -1378,7 +1378,7 @@ def _incre_mode(batch_id):
                     profile['name'] += ', ' + name
 
 
-            profile['loc'] = ', '.join(profile['loc'])
+            profile['loc'] = '| '.join(profile['loc'])
 
             # print(profile) 
              

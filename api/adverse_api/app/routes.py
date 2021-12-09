@@ -585,8 +585,8 @@ def adverseapi():
                       person.remove(name)
                       city += name + ', '
 
-                  person = ', '.join(person)    
-                  org = ', '.join(org)    
+                  person = ' | '.join(person)    
+                  org = ' | '.join(org)    
                   city = city.split(',')
                   city = [x.strip() for x in city if x.strip()]
                   city = list(set(city))
@@ -601,7 +601,7 @@ def adverseapi():
                       city.remove(name)
                       person += ', ' + name
 
-                  city = ', '.join(city)
+                  city = ' | '.join(city)
                   document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                   
                   if document['City of News Paper'] == 'National':
@@ -869,7 +869,7 @@ def adverseapi():
               # print(profile['Organization_Name_mentioned_in_the_news'])
               profile['Organization_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Organization_Name_mentioned_in_the_news'] if x.strip()]
               profile['Organization_Name_mentioned_in_the_news'] = list(set(profile['Organization_Name_mentioned_in_the_news']))
-              # profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
+              # profile['Organization_Name_mentioned_in_the_news'] = ' | '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['Person_Name_mentioned_in_the_news'] = profile['Person_Name_mentioned_in_the_news'].split(',') + profile['Organization_Name_mentioned_in_the_news']
               # print(profile['Person Name mentioned in the news'])
               profile['Person_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Person_Name_mentioned_in_the_news'] if x.strip()]
@@ -886,8 +886,8 @@ def adverseapi():
                   profile['Person_Name_mentioned_in_the_news'].remove(name)
                   profile['City_State_mentioned_under_the_news'] += name + ', '
 
-              profile['Person_Name_mentioned_in_the_news'] = ', '.join(profile['Person_Name_mentioned_in_the_news'])    
-              profile['Organization_Name_mentioned_in_the_news'] = ', '.join(profile['Organization_Name_mentioned_in_the_news'])    
+              profile['Person_Name_mentioned_in_the_news'] = ' | '.join(profile['Person_Name_mentioned_in_the_news'])    
+              profile['Organization_Name_mentioned_in_the_news'] = ' | '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['City_State_mentioned_under_the_news'] = profile['City_State_mentioned_under_the_news'].split(',')
               # print(profile['City_State_mentioned_under_the_news'])
               profile['City_State_mentioned_under_the_news'] = [x.strip() for x in profile['City_State_mentioned_under_the_news'] if x.strip()]
@@ -904,7 +904,7 @@ def adverseapi():
                   profile['City_State_mentioned_under_the_news'].remove(name)
                   profile['Person_Name_mentioned_in_the_news'] += ', ' + name
 
-              profile['City_State_mentioned_under_the_news'] = ', '.join(profile['City_State_mentioned_under_the_news'])
+              profile['City_State_mentioned_under_the_news'] = ' | '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
