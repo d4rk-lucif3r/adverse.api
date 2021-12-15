@@ -375,7 +375,7 @@ def get_batch_ids():
     client = MongoClient('localhost', 27017)
     db = client['BatchRunStatus']
     collection_batches = db['DetailStatus']
-    cursor = collection_batches.find({})
+    cursor = collection_batches.find({}).sort("_id", 1)
     dbs = [database for database in cursor]
     return dbs
 
