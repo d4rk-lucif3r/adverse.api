@@ -1375,10 +1375,10 @@ def _incre_mode(batch_id):
             for name in profile['loc']:
                 if name.lower() in names['names']:
                     profile['loc'].remove(name)
-                    profile['name'] += ', ' + name
+                    profile['name'] += ' | ' + name
 
 
-            profile['loc'] = '| '.join(profile['loc'])
+            profile['loc'] = ' | '.join(profile['loc'])
 
             # print(profile) 
              

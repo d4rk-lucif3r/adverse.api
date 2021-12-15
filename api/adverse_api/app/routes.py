@@ -583,7 +583,7 @@ def adverseapi():
                   for name in person:
                     if name.lower() in cities['cities']:
                       person.remove(name)
-                      city += name + ', '
+                      city += name + ' | '
 
                   person = ' | '.join(person)    
                   org = ' | '.join(org)    
@@ -599,7 +599,7 @@ def adverseapi():
                   for name in city:
                     if name.lower() in names['names']:
                       city.remove(name)
-                      person += ', ' + name
+                      person += ' | ' + name
 
                   city = ' | '.join(city)
                   document['updated_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -902,7 +902,7 @@ def adverseapi():
               for name in profile['City_State_mentioned_under_the_news']:
                 if name.lower() in names['names']:
                   profile['City_State_mentioned_under_the_news'].remove(name)
-                  profile['Person_Name_mentioned_in_the_news'] += ', ' + name
+                  profile['Person_Name_mentioned_in_the_news'] += ' | ' + name
 
               profile['City_State_mentioned_under_the_news'] = ' | '.join(profile['City_State_mentioned_under_the_news'])
               profile['Source_of_Info'] = 'Newspaper'
