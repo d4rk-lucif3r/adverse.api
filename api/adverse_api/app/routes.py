@@ -491,6 +491,9 @@ def adverseapi():
 
             for document in cursor:
 
+              if document['uuid'] not in uuids:
+                continue
+
               if document['uuid'] in uuids:
                 USER_AGENT = ua.random
                 HEADERS = {'user-agent': USER_AGENT,
