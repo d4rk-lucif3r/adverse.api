@@ -57,6 +57,17 @@ source2name = {'www.hindustantimes.com' : 'Hindustan Times',
                'www.loksatta.com' : 'Loksatta',
               }
 
+def StripUnique(_list):
+
+    '''
+    function to strip leading and trailing spaces
+    and return sorted unique elements
+    '''
+    _list = [__list.strip() for __list in _list if __list.strip()]
+    _list = list(set(_list))
+    _list.sort()
+    return _list
+
 def CityOfNewspaper(url):
 
     city2idx = {

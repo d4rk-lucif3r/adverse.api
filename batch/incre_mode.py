@@ -25,6 +25,17 @@ from google_trans_new import google_translator as google_translator2
 translator2 = google_translator2()
 translator = Translator()
 
+def StripUnique(_list):
+
+    '''
+    function to strip leading and trailing spaces
+    and return sorted unique elements
+    '''
+    _list = [__list.strip() for __list in _list if __list.strip()]
+    _list = list(set(_list))
+    _list.sort()
+    return _list
+
 def detect_lang(text):
     if text.strip():
         KEY = 'IE8hVfhy0XCdw2gFGKQous7etnspEN66OTWsnB_bEhe2'
@@ -499,7 +510,6 @@ def soup_text(soup, sourcename):
         # print('text not found')
         return None
 
-
 def subset_dupl(names_list, idxes):
 
     names_dict = {k:v for k in names_list for v in idxes}
@@ -543,7 +553,6 @@ def lowercase_check(x):
 
     # return list(set(x_))
 
-
 def subset(x):
     x_ = []
     for _x in x:
@@ -572,7 +581,6 @@ def subset(x):
             print('it is already a subset of')
 
     return list(set(x_))
-
 
 def check_duplicate_name(val):
     '''
@@ -604,7 +612,6 @@ def check_duplicate_name(val):
       pass
 
     return 0
-
 
 def current_ids():
     '''
@@ -744,8 +751,11 @@ def rss2news(rss):
 
     return news_link, restricted_source
 
-
 def _incre_mode(batch_id):
+
+    '''
+    function to run incremental mode to fetch daily data
+    '''
 
     ua = UserAgent()
 
@@ -781,7 +791,6 @@ def _incre_mode(batch_id):
     names['names'] = [x.lower() for x in names['names']]    # print('fp_name:', fps['fp_name'])
     # print('fp_city:', fps['fp_city'])
     # print('cities:', cities['cities'])
-
 
     # print(dbs)
     
@@ -838,6 +847,11 @@ def _incre_mode(batch_id):
     news_link += news_link2
     print('total news articles are:', len(news_link))
     # print('total news links are:', news_link)
+
+    # save to csv file:
+    df = pd.DataFrame(news_link)
+    today_date = datetime.today().strftime('%Y_%m_%d')
+    df.to_csv('TotalNewsArticles%s.csv'%(today_date), index=None)
 
     # rss_list = ['https://www.thehindu.com/news/national/feeder/default.rss', 
     #     'https://indianexpress.com/section/india/feed/',
@@ -903,23 +917,25 @@ def _incre_mode(batch_id):
     utc=pytz.UTC
     
     keywords = dbs['keywords'].split(',')
+    keywords = StripUnique(keywords)
     print('keywords are:', keywords)
-    
-    # keywords = [
-    #                 'black money'
-    #                 'money laundering', 
-    #                 'money launder', 
-    #                 'lauder the money', 
-    #                 'money-mule', 
-    #                 'money mule', 
-    #                 'Hawala', 
-    #                 'drug-trafficking', 
-    #                 'drug trafficking', 
-    #                 'terror', 
-    #                 'terror financing',
-    #                 'fraud'
-    #                 ]
 
+    if 'exclude' not in dbs.keys():
+        exclude = []
+    else:
+        exclude = dbs['exclude'].split(',')
+        exclude = StripUnique(exclude)
+
+    print('exclude words are:', exclude)
+    
+    if 'excludeorg' not in dbs.keys():
+        excludeorg = []
+    else:
+        excludeorg = dbs['excludeorg'].split(',')
+        excludeorg = StripUnique(excludeorg)
+
+    print('exclude organisation are:', excludeorg)
+    
     # last_batch = dbs[-1]
 
     if "ParseExisting" in dbs.keys():
@@ -1107,161 +1123,80 @@ def _incre_mode(batch_id):
                 translate_text2 = translator2.translate(text,lang_tgt='en')  
                 # print('translation:', translate_text2)
                 text = translate_text2
+    
+          # for keyword in keywords:
+          #   if keyword.lower() in text.lower():
+          #     if keyword not in profile['keyword']:
+          #       profile['keyword'] += keyword + ', '
+          #     else:
+          #       continue
+    
+          #   elif len(keyword.split(' ')) > 1:
+          #       found = []
+          #       _keyword = keyword.split(' ')
+          #       for __keyword in _keyword:
+          #           if __keyword.lower() in text.lower():
+          #               found.append(__keyword)
+          #           else:
+          #               continue
 
+          #       if len(found) == len(_keyword):
+          #           profile['keyword'] += keyword + ', '
 
-          # text = soup_text(profile['sourcename'])
+          # check keywords using word level matching
+          Kdoc = nlp_Name(text)
+          KORG = [ent.text for ent in Kdoc.ents if ent.label_ == 'ORG']
+          KORG = [x.strip() for x in KORG if x.strip()]
+          KORG = list(set(KORG))
+          KORG = [keyword for keyword in KORG if keyword in keywords]
+
+          if KORG:
+            # print('single keyword found:', KORG)
+            profile['keyword'] += ', '.join(KORG) + ', '
           
-          # if 'economictimes.indiatimes' in profile['sourcename']:
-          #   soup = BeautifulSoup(article.html, 'html.parser')
+          if True:
+            for keyword in keywords:
+                if keyword in KORG:
+                    continue
 
-          #   regex = re.compile('.*artText.*')
-          #   text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
-          #   if text:
-          #       text = '\n'.join(text)
-          #   else:
-          #       regex = re.compile('.*content1.*')
-          #       text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
-          #       if text:
-          #           text = '\n'.join(text)
-          #       else:
-          #           text = article.title.lower() + os.linesep + article.text.lower()
-          # elif 'timesofindia.indiatimes' in profile['sourcename']:
-          #   soup = BeautifulSoup(article.html, 'html.parser')
+                if keyword.isupper():
+                    Ktext = text.split(' ')
+                    # print('text:', Ktext)
+                    Ktext = [x.strip() for x in Ktext if x.strip()]
+                    Ktext = list(set(Ktext))
+                    Ktext = [word for word in Ktext if word == keyword]
 
-          #   regex = re.compile('.*Normal.*')
-          #   text = [tag.get_text() for tag in soup.find_all("div", {"class" : regex})]
-          #   if text:
-          #       text = '\n'.join(text)
-          #   else:
-          #       text = article.title.lower() + os.linesep + article.text.lower()
-          # else:
-          #   text = article.title.lower() + os.linesep + article.text.lower()
+                    if Ktext:
+                        # print('single keyword found:', keyword)
+                        profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
 
+                else:
+                    Ktext = text.lower().split(' ')
+                    # print('text:', Ktext)
+                    Ktext = [x.strip() for x in Ktext if x.strip()]
+                    Ktext = list(set(Ktext))
+                    Ktext = [word for word in Ktext if word.lower() == keyword.lower()]
+                    # Ktext = [keyword for keyword in Ktext if keyword in keywords]
 
+                    if Ktext:
+                        # print('single keyword found:', keyword)
+                        profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
 
+                    if len(keyword.split(' ')) > 1:
+                        _keyword = keyword.lower().split(' ')
+                        _keyword = [x.strip() for x in _keyword if x.strip()]
+                        _keyword = list(set(_keyword))
 
+                        Ktext = text.lower().split(' ')
+                        # print('text:', Ktext)
+                        Ktext = [x.strip() for x in Ktext if x.strip()]
+                        Ktext = list(set(Ktext))
+                        found = [__keyword for __keyword in _keyword if __keyword in Ktext]
+                        # print("multiple keywords found:", found)
+                        # found = list(set(_keyword) & set(Ktext))
 
-
-            # tag = soup.body
-
-            # iterate through each string
-            # for string in tag.stripped_strings:
-
-                # for keyword in keywords:
-                    # if keyword.lower() in str(string).lower():
-                        # if keyword.lower() not in profile['keyword'].lower():
-                            # profile['keyword'] += keyword + ', '
-                        # else:
-                            # continue
-
-                # if 'hdfc' in str(string).lower():
-                #     profile['hdfcpresent'] = 'YES'
-
-                # doc = nlp_Name(str(string))
-
-                # iterate through each entity present
-                # for count,ent in enumerate(doc.ents):
-
-                    # save data in profile
-                    # find persons in text
-                    # if ent.label_ == 'PERSON':
-                    #     profile['name'] += ent.text + ', '
-                        # remove name if present in false positives
-                        # if (ent.text not in profile['name']):
-                        # print(str(string))
-                        # profile['name'] += ent.text + ', '
-                        # else:
-                        # print(ent.text)
-                        # pass
-                    # find persons in text
-                    # elif ent.label_ == 'ORG':
-                    #     profile['org'] += ent.text + ', '
-
-                        # remove name if present in false positives
-                        # if (ent.text not in profile['org']):
-                        # profile['org'] += ent.text + ', '
-                        # else:
-                        # print(ent.text)
-                        # pass
-
-                        # find persons in text
-                    # elif ent.label_ == 'GPE':
-                    #     profile['loc'] += ent.text + ', '
-                        # remove name if present in false positives
-                        # if (ent.text not in profile['loc']):
-                        # profile['loc'] += ent.text + ', '
-                        # else:
-                        # print(ent.text)
-                        # pass
-                    # else:
-                    #     pass
-
-            # profile['date'] = link['published'] # article.publish_date
-            # profile['cities'] = keys[0]
-            # profile['batch_id'] = batch_id
-            # profile['created_date'] = datetime.now()
-            # profile['org'] = profile['org'].split(',')
-            # print(profile['org'])
-            # profile['org'] = [x.strip() for x in profile['org'] if x.strip()]
-            # profile['org'] = list(set(profile['org']))
-            # # profile['org'] = ', '.join(profile['org'])    
-            # profile['name'] = profile['name'].split(',') + profile['org']
-            # print(profile['name'])
-            # profile['name'] = [x.strip() for x in profile['name'] if x.strip()]
-            # profile['name'] = list(set(profile['name']))
-            # # check if any name is a subset of any other name
-            # profile['name'] = [ i for i in profile['name'] if not any( [ i in a for a in profile['name'] if a != i]   )]
-            # # profile['name'] = [ i.lower() for i in profile['name']]
-            # # profile['name'] = list(set(profile['name']))
-            # # profile['name'] = [ i.title() for i in profile['name']]
-            # # profile['name'] = subset(profile['name'])
-            # profile['name'] = lowercase_check(profile['name'])
-            # profile['name'] = ', '.join(profile['name'])    
-            # profile['org'] = ', '.join(profile['org'])    
-            # profile['loc'] = profile['loc'].split(',')
-            # print(profile['loc'])
-            # profile['loc'] = [x.strip() for x in profile['loc'] if x.strip()]
-            # profile['loc'] = list(set(profile['loc']))
-            # # check if any name is a subset of any other name
-            # profile['loc'] = [ i for i in profile['loc'] if not any( [ i in a for a in profile['loc'] if a != i]   )]
-            # # profile['loc'] = [ i.lower() for i in profile['loc']]
-            # # profile['loc'] = list(set(profile['loc']))
-            # # profile['loc'] = [ i.title() for i in profile['loc']]
-            # # profile['loc'] = subset(profile['loc'])
-            # profile['loc'] = lowercase_check(profile['loc'])
-            # profile['loc'] = ', '.join(profile['loc'])
-
-            # print(profile) 
-             
-            # _writer.writerow(profile)
-
-
-
-
-          # text = article.title.lower() + os.linesep + article.text.lower()
-          # if article.publish_date:
-            # print(article.publish_date)
-            # if parse(article.publish_date) > date:
-              # print('Date is greater:', article.publish_date)
-    
-          for keyword in keywords:
-            if keyword.lower() in text.lower():
-              if keyword not in profile['keyword']:
-                profile['keyword'] += keyword + ', '
-              else:
-                continue
-    
-            elif len(keyword.split(' ')) > 1:
-                found = []
-                _keyword = keyword.split(' ')
-                for __keyword in _keyword:
-                    if __keyword.lower() in text.lower():
-                        found.append(__keyword)
-                    else:
-                        continue
-
-                if len(found) == len(_keyword):
-                    profile['keyword'] += keyword + ', '
+                        if len(found) == len(_keyword):
+                            profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
 
           if 'hdfc' in text.lower():
             profile['hdfcpresent'] = 'YES'
@@ -1297,6 +1232,10 @@ def _incre_mode(batch_id):
 
                     # find persons in text
                     elif ent.label_ == 'ORG':
+
+                        if ent.text in excludeorg:
+                            continue
+
                         profile['org'] += ent.text + ', '
 
                     # find persons in text
@@ -1349,9 +1288,6 @@ def _incre_mode(batch_id):
                 if name.lower() in cities['cities']:
                     profile['name'].remove(name)
                     profile['loc'] += name + ', '
-
-
-
             
             profile['name'] = '| '.join(profile['name'])    
             profile['org'] = '| '.join(profile['org'])    
@@ -1376,7 +1312,6 @@ def _incre_mode(batch_id):
                 if name.lower() in names['names']:
                     profile['loc'].remove(name)
                     profile['name'] += ' | ' + name
-
 
             profile['loc'] = ' | '.join(profile['loc'])
 
@@ -1436,7 +1371,6 @@ def _incre_mode(batch_id):
     # _idx = subset_dupl(names_list, idxes)
 
     # df = df[df.index.isin(_idx)]
-
 
     # replace empty string na values
     df.replace(to_replace=np.nan, value='', inplace=True)
