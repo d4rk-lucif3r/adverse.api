@@ -211,7 +211,7 @@ def current_ids_fps():
     return dbs[-1]
 
 
-def update_fp(fp_name='', fp_city=''):
+def update_fp(fp_name='', fp_city='', excludeorg='', exclude=''):
     '''
     function to update false positives list in mongodb
     '''
@@ -258,6 +258,36 @@ def update_fp(fp_name='', fp_city=''):
             temp_name = list(set(temp_name))
             temp_name = ', '.join(temp_name)
             post['fp_name'] = temp_name
+        elif exclude:
+            pass
+
+            # if post['exclude']:
+            #     temp_name = post['exclude'].split(',')
+            #     temp_name = [x.strip() for x in temp_name if x.strip()]
+            # else:
+            #     temp_name = ''
+
+            # exclude = exclude.split(',')
+            # exclude = [x.strip() for x in exclude if x.strip()]
+            # temp_name += exclude
+            # temp_name = list(set(temp_name))
+            # temp_name = ', '.join(temp_name)
+            # post['exclude'] = temp_name
+        elif excludeorg:
+            pass
+
+            # if post['excludeorg']:
+            #     temp_name = post['excludeorg'].split(',')
+            #     temp_name = [x.strip() for x in temp_name if x.strip()]
+            # else:
+            #     temp_name = ''
+
+            # excludeorg = excludeorg.split(',')
+            # excludeorg = [x.strip() for x in excludeorg if x.strip()]
+            # temp_name += excludeorg
+            # temp_name = list(set(temp_name))
+            # temp_name = ', '.join(temp_name)
+            # post['excludeorg'] = temp_name
 
         collection_batches.save(post)
 
@@ -379,7 +409,7 @@ def get_batch_ids():
     dbs = [database for database in cursor]
     return dbs
 
-def update_ids_dbs(keywords, news_source_ids, exclude='', fp_name='', fp_city='', cities='', names=''):
+def update_ids_dbs(keywords, news_source_ids, exclude='', fp_name='', fp_city='', cities='', names='', excludeorg=''):
     '''
     function to update sources ids and keywords into database
     '''
@@ -391,8 +421,13 @@ def update_ids_dbs(keywords, news_source_ids, exclude='', fp_name='', fp_city=''
     dbs['keywords'] = keywords
     dbs['news_source_ids'] = news_source_ids
 
+    if excludeorg:
+        dbs['excludeorg'] = excludeorg
+        # update_fp(excludeorg=excludeorg)
+
     if exclude:
         dbs['exclude'] = exclude
+        # update_fp(exclude=exclude)
 
     if fp_name:
         dbs['fp_name'] = fp_name

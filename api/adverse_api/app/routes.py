@@ -92,6 +92,9 @@ def adverseapi():
     if 'exclude' not in ids.keys():
       ids['exclude'] = ''
       
+    if 'excludeorg' not in ids.keys():
+      ids['excludeorg'] = ''
+      
     fps = current_ids_fps()
     cities = current_ids_cities()
     names = current_ids_names()
@@ -192,6 +195,7 @@ def adverseapi():
             "last_updated_time": dbs[-1]["RunDate"],
             "keywords_searched" : ids['keywords'], 
             "exclude" : ids['exclude'], 
+            "excludeorg" : ids['excludeorg'], 
             "date_of_response": None,
             "mode_of_search": mode,
             "search_results": search_results})
@@ -268,6 +272,7 @@ def adverseapi():
             "last_updated_time": dbs[-1]["RunDate"],
             "keywords_searched" : ids['keywords'], 
             "exclude" : ids['exclude'], 
+            "excludeorg" : ids['excludeorg'], 
             "date_of_response": _request["date"],
             "mode_of_search": _request["mode"],
             "search_results": search_results})
@@ -277,9 +282,9 @@ def adverseapi():
         print(_request.keys())
         print(_request.values())
 
-        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys) and ('names' in _keys):
+        if ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys) and ('names' in _keys) and ('excludeorg' in _keys):
         # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
-          print('this is request for name, city, keywords, news_source_id and false positives and exclude')
+          print('this is request for name, city, keywords, news_source_id and false positives and exclude, excludeorg')
           _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
           _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
           _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
@@ -289,7 +294,7 @@ def adverseapi():
           _request['names'] = _request['names'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
           _request['names'] = ','.join(list(set(_request['names'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"], names=_request['names'])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"], names=_request['names'], excludeorg=_request["excludeorg"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
           # print(_request)
@@ -298,11 +303,36 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('cities' in _keys) and ('excludeorg' in _keys):
+        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
+          print('this is request for exclude, city, keywords, fp and news_source_id')
+          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
+          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
+          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
+          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
+          # _request['cities'] = _request['cities'].split(',') # + ['Covid']
+          # _request['cities'] = ','.join(list(set(_request['cities'])))
+          # add news keywords and news source ids to database
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"], excludeorg=_request["excludeorg"])
+          # keywords = _request['keywords'].split(',')
+          # news_source_id = _request['news_source_ids'].split(',')
+          # print(_request)
+
+          return jsonify({"news_source_ids": _request['news_source_ids'], 
+                    "last_updated_time": dbs[-1]["RunDate"],
+                    "keywords_updated" : ids['keywords'], 
+                    "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
+                    "date_of_response": None,
+                    "mode_of_search": mode,
+                    "search_results": ['Updated successfully']})
+
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys) and ('excludeorg' in _keys):
         # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
           print('this is request for name, city, keywords and news_source_id')
           _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -312,7 +342,7 @@ def adverseapi():
           # _request['cities'] = _request['cities'].split(',') # + ['Covid']
           # _request['cities'] = ','.join(list(set(_request['cities'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"], cities=_request["cities"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"], excludeorg=_request["excludeorg"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
           # print(_request)
@@ -321,34 +351,12 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('fp_city' in _keys):
-        # if _request['keywords'] and _request['news_source_ids'] and _request['fp_name'] and _request["fp_city"]:
-          print('this is request for name, city, keywords and news_source_id')
-          _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
-          _request['fp_name'] = ','.join(list(set(_request['fp_name'])))
-          _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
-          _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
-          # _request['cities'] = _request['cities'].split(',') # + ['Covid']
-          # _request['cities'] = ','.join(list(set(_request['cities'])))
-          # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], fp_city=_request["fp_city"])
-          # keywords = _request['keywords'].split(',')
-          # news_source_id = _request['news_source_ids'].split(',')
-          # print(_request)
-
-          return jsonify({"news_source_ids": _request['news_source_ids'], 
-                    "last_updated_time": dbs[-1]["RunDate"],
-                    "keywords_updated" : ids['keywords'], 
-                    "exclude" : ids['exclude'], 
-                    "date_of_response": None,
-                    "mode_of_search": mode,
-                    "search_results": ['Updated successfully']})
-
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('cities' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('cities' in _keys) and ('excludeorg' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
           print("this request is for cities")
           _request['cities'] = _request['cities'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -356,7 +364,7 @@ def adverseapi():
           # _request['fp_city'] = ['Covid']
           # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], cities=_request['cities']) # , _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], cities=_request['cities'], excludeorg=_request["excludeorg"]) # , _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -364,11 +372,12 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('names' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('names' in _keys) and ('excludeorg' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
           print("this request is for names")
           _request['names'] = _request['names'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -376,7 +385,7 @@ def adverseapi():
           # _request['fp_city'] = ['Covid']
           # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], names=_request['names']) # , _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], names=_request['names'], excludeorg=_request["excludeorg"]) # , _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -384,11 +393,12 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_name' in _keys) and ('excludeorg' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_name']:
           print("this request is for keywords, news_source_id and name")
           _request['fp_name'] = _request['fp_name'].split(',') # + ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -396,7 +406,7 @@ def adverseapi():
           # _request['fp_city'] = ['Covid']
           # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name']) # , _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_name=_request['fp_name'], excludeorg=_request["excludeorg"]) # , _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -404,11 +414,12 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_city' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('fp_city' in _keys) and ('excludeorg' in _keys):
         # elif _request['keywords'] and _request['news_source_ids'] and _request['fp_city']:
           print("this request is for keywords, news_source_id and fp_city")
           # _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -416,7 +427,7 @@ def adverseapi():
           _request['fp_city'] = _request['fp_city'].split(',') # + ['Covid']
           _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_city=_request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], fp_city=_request["fp_city"], excludeorg=_request["excludeorg"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -424,23 +435,25 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('exclude' in _keys) and ('excludeorg' in _keys):
           print("this request is for keywords, news_source_id and exclude")
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], exclude=_request["exclude"], excludeorg=_request["excludeorg"])
 
           return jsonify({"news_source_ids": _request['news_source_ids'], 
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
 
-        elif ('keywords' in _keys) and ('news_source_ids' in _keys):
+        elif ('keywords' in _keys) and ('news_source_ids' in _keys) and ('excludeorg' in _keys):
         # elif _request['keywords'] and _request['news_source_ids']:
           print("this is request is for keywords and news_source_ids")
           # _request['fp_name'] = ['AGRA', 'Union', 'Budget', 'Centre', 'Getty Images', 'AFP/Getty']
@@ -448,7 +461,7 @@ def adverseapi():
           # _request['fp_city'] = ['Covid']
           # _request['fp_city'] = ','.join(list(set(_request['fp_city'])))
           # add news keywords and news source ids to database
-          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids']) # , _request['fp_name'], _request["fp_city"])
+          update_ids_dbs(keywords=_request['keywords'], news_source_ids=_request['news_source_ids'], excludeorg=_request["excludeorg"]) # , _request['fp_name'], _request["fp_city"])
           # keywords = _request['keywords'].split(',')
           # news_source_id = _request['news_source_ids'].split(',')
 
@@ -456,6 +469,7 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Updated successfully']})
@@ -475,6 +489,7 @@ def adverseapi():
               "last_updated_time": dbs[-1]["RunDate"],
               "keywords_updated" : ids['keywords'],
               "exclude" : ids['exclude'],
+              "excludeorg" : ids['excludeorg'], 
               "date_of_response": None,
               "mode_of_search": mode,
               "search_results": ['Updating all the urls in the database']})
@@ -623,6 +638,7 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": "successfully updated:%s" % document['uuid']})
@@ -633,6 +649,7 @@ def adverseapi():
                     "last_updated_time": dbs[-1]["RunDate"],
                     "keywords_updated" : ids['keywords'], 
                     "exclude" : ids['exclude'], 
+                    "excludeorg" : ids['excludeorg'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": 'parse_existing exception:%s' % str(e)})
@@ -765,40 +782,111 @@ def adverseapi():
                   return jsonify({"news_source_ids": ids["news_source_ids"], 
                     "last_updated_time": dbs[-1]["RunDate"],
                     "exclude" : _request['exclude'], 
+                    "excludeorg" : _request['excludeorg'], 
                     "keywords_updated" : _request['keywords'], 
                     "date_of_response": None,
                     "mode_of_search": mode,
                     "search_results": ['Excluded keywords found']})
 
-              for keyword in keywords:
-                if keyword.lower() in text.lower():
-                  if keyword not in profile['Key_word_Used_foruuidentify_the_article']:
-                    profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
-                  else:
+              # for keyword in keywords:
+              #   if keyword.lower() in text.lower():
+              #     if keyword not in profile['Key_word_Used_foruuidentify_the_article']:
+              #       profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+              #     else:
+              #       continue
+
+              #   elif len(keyword.split(' ')) > 1:
+              #     found = []
+              #     _keyword = keyword.split(' ')
+              #     for __keyword in _keyword:
+              #       if __keyword.lower() in text.lower():
+              #         found.append(__keyword)
+              #       else:
+              #         continue
+
+              #     if len(found) == len(_keyword):
+              #       profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+
+              # if not profile['Key_word_Used_foruuidentify_the_article']:
+              #   return jsonify({"news_source_ids": ids["news_source_ids"], 
+              #     "last_updated_time": dbs[-1]["RunDate"],
+              #     "keywords_updated" : ids['keywords'], 
+              #     "exclude" : _request['exclude'], 
+              #     "date_of_response": None,
+              #     "mode_of_search": mode,
+              #     "search_results": []})
+
+              Kdoc = nlp_Name(text)
+              KORG = [ent.text for ent in Kdoc.ents if ent.label_ == 'ORG']
+              KORG = [x.strip() for x in KORG if x.strip()]
+              KORG = list(set(KORG))
+              KORG = [keyword for keyword in KORG if keyword in keywords]
+
+              if KORG:
+                # print('single keyword found:', KORG)
+                profile['Key_word_Used_foruuidentify_the_article'] += ', '.join(KORG) + ', '
+
+              if True:
+                for keyword in keywords:
+
+                  if keyword in KORG:
                     continue
 
-                elif len(keyword.split(' ')) > 1:
-                  found = []
-                  _keyword = keyword.split(' ')
-                  for __keyword in _keyword:
-                    if __keyword.lower() in text.lower():
-                      found.append(__keyword)
-                    else:
-                      continue
+                  if keyword.isupper():
+                    Ktext = text.split(' ')
+                    # print('text:', Ktext)
+                    Ktext = [x.strip() for x in Ktext if x.strip()]
+                    Ktext = list(set(Ktext))
+                    Ktext = [word for word in Ktext if word == keyword]
 
-                  if len(found) == len(_keyword):
-                    profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+                    if Ktext:
+                      # print('single keyword found:', keyword)
+                      profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
+                  
+                  else:
+                    Ktext = text.lower().split(' ')
+                    # print('text:', Ktext)
+                    Ktext = [x.strip() for x in Ktext if x.strip()]
+                    Ktext = list(set(Ktext))
+                    Ktext = [word for word in Ktext if word.lower() == keyword.lower()]
+                    # Ktext = [keyword for keyword in Ktext if keyword in keywords]
+                    
+                    if Ktext:
+                      # print('single keyword found:', keyword)
+                      profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
+
+                    if len(keyword.split(' ')) > 1:
+                      _keyword = keyword.lower().split(' ')
+                      _keyword = [x.strip() for x in _keyword if x.strip()]
+                      _keyword = list(set(_keyword))
+
+                      Ktext = text.lower().split(' ')
+                      # print('text:', Ktext)
+                      Ktext = [x.strip() for x in Ktext if x.strip()]
+                      Ktext = list(set(Ktext))
+                      found = [__keyword for __keyword in _keyword if __keyword in Ktext]
+                      # print("multiple keywords found:", found)
+                      # found = list(set(_keyword) & set(Ktext))
+
+                      if len(found) == len(_keyword):
+                        profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
 
               if not profile['Key_word_Used_foruuidentify_the_article']:
+
+                # print('---- Keyword not Found: %s ----'%(_request['keywords']))
+
                 return jsonify({"news_source_ids": ids["news_source_ids"], 
                   "last_updated_time": dbs[-1]["RunDate"],
                   "keywords_updated" : ids['keywords'], 
                   "exclude" : _request['exclude'], 
+                  "excludeorg" : _request['excludeorg'], 
                   "date_of_response": None,
                   "mode_of_search": mode,
                   "search_results": []})
 
-
+              if 'excludeorg' in list(_request.keys()):
+                excludeorg = _request['excludeorg'].split(',')
+                excludeorg = [x.strip() for x in excludeorg if x.strip()]
 
               if 'hdfc' in text.lower():
                 profile['HDFC_Bank_Name_under_News_Article'] = 'YES'
@@ -830,6 +918,11 @@ def adverseapi():
 
                   # find persons in text
                   elif ent.label_ == 'ORG':
+
+                    if 'excludeorg' in list(_request.keys()):
+                      if ent.text in excludeorg:
+                        continue
+
                     profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
 
                   # find persons in text
@@ -911,7 +1004,7 @@ def adverseapi():
               profile['Source_of_Info'] = 'Newspaper'
               profile['Key_word_Used_foruuidentify_the_article'] = fnc_(profile['Key_word_Used_foruuidentify_the_article'])
               profile['uuid'] = f1.uuid4()
-              profile.pop('Organization_Name_mentioned_in_the_news')
+              # profile.pop('Organization_Name_mentioned_in_the_news')
 
               profile['City_of_News_Paper'] = CityOfNewspaper(profile['Web_link_of_news'])
 
@@ -926,6 +1019,7 @@ def adverseapi():
                 "last_updated_time": dbs[-1]["RunDate"],
                 "keywords_updated" : ids['keywords'], 
                 "exclude" : _request['exclude'], 
+                "excludeorg" : _request['excludeorg'], 
                 "date_of_response": None,
                 "mode_of_search": mode,
                 "search_results": [profile]})
@@ -936,6 +1030,7 @@ def adverseapi():
                   "last_updated_time": dbs[-1]["RunDate"],
                   "keywords_updated" : ids['keywords'], 
                   "exclude" : _request['exclude'], 
+                  "excludeorg" : _request['excludeorg'], 
                   "date_of_response": None,
                   "mode_of_search": mode,
                   "search_results": ["Please check urltobesearched"]})
@@ -947,6 +1042,7 @@ def adverseapi():
               "last_updated_time": dbs[-1]["RunDate"],
               "keywords_updated" : ids['keywords'], 
               "exclude" : ids['exclude'], 
+              "excludeorg" : ids['excludeorg'], 
               "date_of_response": None,
               "mode_of_search": mode,
               "search_results": ['Please correct keywords and urltobesearched']})
@@ -956,6 +1052,7 @@ def adverseapi():
               "last_updated_time": dbs[-1]["RunDate"],
               "keywords_updated" : ids['keywords'], 
               "exclude" : ids['exclude'], 
+              "excludeorg" : ids['excludeorg'], 
               "date_of_response": None,
               "mode_of_search": mode,
               "search_results": ['Please correct keywords and urltobesearched']})
