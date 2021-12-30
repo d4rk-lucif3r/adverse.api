@@ -211,7 +211,7 @@ for document in cursor:
         week = week.strftime("%Y-%m-%d %H:%M:%S")
         date = parse(document["created_date"].split('+')[0])
         date = date.strftime("%Y-%m-%d %H:%M:%S")
-
+        
         if date >= week and document["Key word Used for identify the article"]:
                 print('found document:', date)
                 # text = GetText(document["Web link of news"])
@@ -221,10 +221,13 @@ for document in cursor:
                         # continue
 
                 document['Person Name mentioned in the news'] = SplitStripUnique(document['Person Name mentioned in the news'], delimiter='|')
-                document['Organization Name mentioned in the news'] = SplitStripUnique(['Organization Name mentioned in the news'], delimiter='|')
+                document['Organization Name mentioned in the news'] = SplitStripUnique(document['Organization Name mentioned in the news'], delimiter='|')
 
                 # check if org in excludeorg
                 document['Person Name mentioned in the news'] = [x for x in document['Person Name mentioned in the news'] if x not in excludeorg]
                 document['Organization Name mentioned in the news'] = [x for x in document['Organization Name mentioned in the news'] if x not in excludeorg]
+
+                document['Person Name mentioned in the news'] = ' | '.join(document['Person Name mentioned in the news'])
+                document['Organization Name mentioned in the news'] = ' | '.join(document['Organization Name mentioned in the news'])                
 
                 collection_batches.save(document)

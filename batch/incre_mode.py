@@ -25,12 +25,50 @@ from google_trans_new import google_translator as google_translator2
 translator2 = google_translator2()
 translator = Translator()
 
-def StripUnique(_list):
+def GenerateRandomHeaderConfig():
 
     '''
-    function to strip leading and trailing spaces
+    function to generate random user header
+    '''
+    ua = UserAgent()
+
+    # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
+    USER_AGENT = ua.random
+    HEADERS = {'user-agent': USER_AGENT,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+    # HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
+    # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+
+    config = Config()
+    # config.browser_user_agent = USER_AGENT
+    config.headers = HEADERS
+    config.request_timeout = 40
+
+    return config
+
+def CurrentIds():
+
+    '''
+    function to return current 
+    false positives
+    batch run
+    names and cities list
+    '''
+
+    dbs = current_ids()
+    fps = current_ids_fps()
+    cities = current_ids_cities()
+    names = current_ids_names()
+
+    return dbs, fps, cities, names
+
+def SplitStripUnique(_string):
+
+    '''
+    function to split(,) strip leading and trailing spaces
     and return sorted unique elements
     '''
+    _list = _string.split(',')
     _list = [__list.strip() for __list in _list if __list.strip()]
     _list = list(set(_list))
     _list.sort()
@@ -757,76 +795,27 @@ def _incre_mode(batch_id):
     function to run incremental mode to fetch daily data
     '''
 
-    ua = UserAgent()
+    # create random header for a new article.
+    config = GenerateRandomHeaderConfig()
 
-    # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
-    USER_AGENT = ua.random
-    HEADERS = {'user-agent': USER_AGENT,
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
-    # HEADERS = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0',
-    # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
-    
-    config = Config()
-    # config.browser_user_agent = USER_AGENT
-    config.headers = HEADERS
-    config.request_timeout = 40        
-    
-    dbs = current_ids()
-    fps = current_ids_fps()
-    cities = current_ids_cities()
-    names = current_ids_names()
-    fps['fp_name'] = fps['fp_name'].split(',')
-    fps['fp_name'] = [x.strip() for x in fps['fp_name'] if x.strip()]
-    fps['fp_name'] = list(set(fps['fp_name']))
-    fps['fp_city'] = fps['fp_city'].split(',')
-    fps['fp_city'] = [x.strip() for x in fps['fp_city'] if x.strip()]
-    fps['fp_city'] = list(set(fps['fp_city']))
-    cities['cities'] = cities['cities'].split(',')
-    cities['cities'] = [x.strip() for x in cities['cities'] if x.strip()]
-    cities['cities'] = list(set(cities['cities']))
+    # get current database ids
+    dbs, fps, cities, names = CurrentIds()
+
+    # split, strip and unique values
+    fps['fp_name'] = SplitStripUnique(fps['fp_name'])
+    fps['fp_city'] = SplitStripUnique(fps['fp_city'])
+    cities['cities'] = SplitStripUnique(cities['cities'])
+    names['names'] = SplitStripUnique(names['names'])
+
+    # case insensitive
     cities['cities'] = [x.lower() for x in cities['cities']]
-    names['names'] = names['names'].split(',')
-    names['names'] = [x.strip() for x in names['names'] if x.strip()]
-    names['names'] = list(set(names['names']))
-    names['names'] = [x.lower() for x in names['names']]    # print('fp_name:', fps['fp_name'])
-    # print('fp_city:', fps['fp_city'])
-    # print('cities:', cities['cities'])
-
-    # print(dbs)
+    
+    names['names'] = [x.lower() for x in names['names']]
     
     source_news_ids = dbs["news_source_ids"].split(',')
 
     rss = ids2rss(source_news_ids)
-    
-    # dictionary = {'2cdd8f28-01f5-4d18-b438-742f04fe3140': 'https://prod-qt-images.s3.amazonaws.com/production/bloombergquint/feed.xml',
-    #     '3d4a70cb-fe3f-459e-8cb1-43bc04f759c6': {'Bengaluru': 'https://www.hindustantimes.com/feeds/rss/cities/bengaluru-news/rssfeed.xml', 'Bhopal': 'https://www.hindustantimes.com/feeds/rss/cities/bhopal-news/rssfeed.xml', 'Chandigarh': 'https://www.hindustantimes.com/feeds/rss/cities/chandigarh-news/rssfeed.xml', 'Dehradun': 'https://www.hindustantimes.com/feeds/rss/cities/dehradun-news/rssfeed.xml', 'Delhi': 'https://www.hindustantimes.com/feeds/rss/cities/delhi-news/rssfeed.xml', 'Gurugram': 'https://www.hindustantimes.com/feeds/rss/cities/gurugram-news/rssfeed.xml', 'Indore': 'https://www.hindustantimes.com/feeds/rss/cities/indore-news/rssfeed.xml', 'Jaipur': 'https://www.hindustantimes.com/feeds/rss/cities/jaipur-news/rssfeed.xml', 'Kolkata': 'https://www.hindustantimes.com/feeds/rss/cities/kolkata-news/rssfeed.xml', 'Lucknow': 'https://www.hindustantimes.com/feeds/rss/cities/lucknow-news/rssfeed.xml', 'Mumbai': 'https://www.hindustantimes.com/feeds/rss/cities/mumbai-news/rssfeed.xml', 'Noida' : 'https://www.hindustantimes.com/feeds/rss/cities/noida-news/rssfeed.xml', 'Patna': 'https://www.hindustantimes.com/feeds/rss/cities/patna-news/rssfeed.xml', 'Pune': 'https://www.hindustantimes.com/feeds/rss/cities/pune-news/rssfeed.xml', 'Ranchi': 'https://www.hindustantimes.com/feeds/rss/cities/ranchi-news/rssfeed.xml'},
-    #     '4dfab6d8-8246-469b-9e19-7ddbb55d806d': {'Mumbai': 'https://www.dnaindia.com/feeds/mumbai.xml', 'Delhi': 'https://www.dnaindia.com/feeds/delhi.xml', 'Bangalore': 'https://www.dnaindia.com/feeds/bangalore.xml', 'Pune' : 'https://www.dnaindia.com/feeds/pune.xml', 'Ahmedabad' : 'https://www.dnaindia.com/feeds/ahmedabad.xml'},
-    #     '52d0de86-1525-417d-b8fd-2158f1256c38': 'http://www.allindianewspapers.com/Feeds/states.xml',
-    #     '5b32994e-2e6e-417f-ba44-77f508742349': 'https://www.business-standard.com/rss/home_page_top_stories.rss',
-    #     '65cb3dec-94a9-4274-b518-543c74e14a59': 'https://asia.nikkei.com/rss/feed/nar',
-    #     '6c676cc1-2338-4834-a0fb-9ae8a04a2bda': 'https://www.ft.com/?format=rss',
-    #     '7eba470b-1edc-4f69-840d-99cfde3a5fcb': 'http://www.abc.net.au/news/feed/2942460/rss.xml',
-    #     '890d11b8-05e7-416e-b777-7ba62f4a7045': 'https://www.economist.com/international/rss.xml',
-    #     '8cbc9eec-7255-43bf-bb72-2bce4f4764ea': 'https://feeds.feedburner.com/ndtvnews-cities-news?format=xml',
-    #     '91272662-bb73-4649-a8c2-026d112c190e': 'https://www.livemint.com/rss/news',
-    #     'a70e9599-4480-46d2-889f-652fdd58cc55': {'Delhi': 'https://indianexpress.com/section/cities/delhi/feed/', 'Lucknow' : 'https://www.indianexpress.com/section/cities/lucknow/feed/', 'Pune' : 'https://www.indianexpress.com/section/cities/pune/feed/', 'Chandigarh' : 'https://indianexpress.com/section/cities/chandigarh/feed/', 'Mumbai': 'https://indianexpress.com/section/cities/mumbai/feed/', 'Kolkata' : 'https://indianexpress.com/section/cities/kolkata/feed/', 'Ludhiana' : 'https://indianexpress.com/section/cities/ludhiana/feed/', 'Gujarat': 'https://indianexpress.com/section/india/education/feed/', 'Maharashtra' : 'https://indianexpress.com/section/india/maharashtra/feed/', 'Uttar Pradesh': 'https://indianexpress.com/section/india/uttar-pradesh/feed/', 'West Bengal': 'https://indianexpress.com/section/india/west-bengal/feed/', 'Punjab and Haryana': 'https://indianexpress.com/section/india/punjab-and-haryana/feed/'},
-    #     'a9ecac2e-a7da-4bbd-b326-103de3149ece': 'http://feeds.bbci.co.uk/news/world/rss.xml',
-    #     'ad60ab7b-906b-467d-b29e-92f200eb88fe': 'https://economictimes.indiatimes.com/rssfeedstopstories.cms',
-    #     'bef37780-c007-4b96-89f4-5198b69f2c93': 'https://www.theguardian.com/world/rss',
-    #     'c1f4a45b-aa9c-4627-980b-f69509e5c862': {'Andhra Pradesh': 'https://www.thehindu.com/news/national/andhra-pradesh/feeder/default.rss', 'Karnataka': 'https://www.thehindu.com/news/national/karnataka/feeder/default.rss', 'Kerala': 'https://www.thehindu.com/news/national/kerala/feeder/default.rss', 'Tamil Nadu': 'https://www.thehindu.com/news/national/tamil-nadu/feeder/default.rss', 'Telangana': 'https://www.thehindu.com/news/national/telangana/feeder/default.rss', 'Bengaluru': 'https://www.thehindu.com/news/cities/bangalore/feeder/default.rss', 'Chennai' : 'https://www.thehindu.com/news/cities/chennai/feeder/default.rss', 'Coimbatore': 'https://www.thehindu.com/news/cities/Coimbatore/feeder/default.rss', 'Delhi': 'https://www.thehindu.com/news/cities/Delhi/feeder/default.rss', 'Hyderabad': 'https://www.thehindu.com/news/cities/Hyderabad/feeder/default.rss', 'Kochi': 'https://www.thehindu.com/news/cities/Kochi/feeder/default.rss', 'Kolkata': 'https://www.thehindu.com/news/cities/kolkata/feeder/default.rss', 'Mumbai': 'https://www.thehindu.com/news/cities/mumbai/feeder/default.rss', 'Kozhikode': 'https://www.thehindu.com/news/cities/kozhikode/feeder/default.rss', 'Madurai': 'https://www.thehindu.com/news/cities/Madurai/feeder/default.rss', 'Mangaluru': 'https://www.thehindu.com/news/cities/Mangalore/feeder/default.rss', 'Puducherry': 'https://www.thehindu.com/news/cities/puducherry/feeder/default.rss', 'Thiruvananthapuram': 'https://www.thehindu.com/news/cities/Thiruvananthapuram/feeder/default.rss', 'Tiruchirapalli': 'https://www.thehindu.com/news/cities/Tiruchirapalli/feeder/default.rss', 'Vijayawada': 'https://www.thehindu.com/news/cities/Vijayawada/feeder/default.rss', 'Visakhapatnam': 'https://www.thehindu.com/news/cities/Visakhapatnam/feeder/default.rss'},
-    #     'ca3c6507-8c4a-4269-a384-8de06f43bc4f': 'https://timesofindia.indiatimes.com/rssfeeds/-2128932452.cms',
-    #     'd33446c7-a37b-4c5b-ba7a-275cc9583c05': 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
-    #     'e43b544e-577b-4ed0-adb0-4661bda4c487': 'https://www.asianage.com/rss_feed/',
-    #     'e5a8f17c-58c6-4087-a5c0-2ab681446611': 'http://rss.cnn.com/rss/edition.rss',
-    #     'eeff09cb-6fdb-45f1-a206-32a55320d598': 'https://www.deccanchronicle.com/rss_feed/'}
-    
-    # for news_id in source_news_ids:
-    #   news_id = news_id.strip()
-    #   if news_id in dictionary.keys():
-    #     rss_list.append(dictionary[news_id])
-    #   else:
-    #     print('news_id not found')
-    
+
     print('rsses are:', rss)
 
     news_link, restricted_source = rss2news(rss)
@@ -851,61 +840,7 @@ def _incre_mode(batch_id):
     # save to csv file:
     df = pd.DataFrame(news_link)
     today_date = datetime.today().strftime('%Y_%m_%d')
-    df.to_csv('TotalNewsArticles%s.csv'%(today_date), index=None)
-
-    # rss_list = ['https://www.thehindu.com/news/national/feeder/default.rss', 
-    #     'https://indianexpress.com/section/india/feed/',
-    #     'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',
-    #     'https://economictimes.indiatimes.com/rssfeedstopstories.cms',
-    #     'http://www.allindianewspapers.com/Feeds/nation.xml',
-    #     'https://www.dnaindia.com/feeds/india.xml',
-    #     'https://www.deccanchronicle.com/rss_feed/',
-    #     'https://www.asianage.com/rss_feed/',
-    #     'https://timesofindia.indiatimes.com/rssfeeds/1221656.cms',
-    #     'https://www.business-standard.com/rss/home_page_top_stories.rss',
-    #     'http://feeds.feedburner.com/ndtvnews-top-stories?format=xml',
-    #     'https://www.livemint.com/rss/news',
-    #     'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
-    #     'https://asia.nikkei.com/rss/feed/nar',
-    #     'https://www.ft.com/?format=rss',
-    #     'https://www.economist.com/international/rss.xml',
-    #     'http://www.abc.net.au/news/feed/2942460/rss.xml',
-    #     'http://feeds.bbci.co.uk/news/world/rss.xml',
-    #     'https://www.theguardian.com/world/rss',
-    #     'https://prod-qt-images.s3.amazonaws.com/production/bloombergquint/feed.xml',
-    #     'http://rss.cnn.com/rss/edition.rss']
-
-    # cities = {}
-    # news_link = []
-    
-    # for rss in rss_list:
-        # if type(rss)==dict:
-            # for key, values in rss.items():
-                # cities[key] = value
-                # news_link.append(cities)
-        # else:
-            # cities['Nation'] = rss
-            # news_link.append(cities)
-
-    # cities_list = []
-
-    # for new_link in news_link:
-        # for k,v in new_link.items():
-            # article_dict = {}
-            # article_link = []
-            # NewsFeed = feedparser.parse(v)
-            # for news in NewsFeed.entries:
-                # article_link.append(news['link'])
-            # article_dict[k] = article_link
-        # cities_list.append(article_dict)
-
-
-
-# NewsFeed = feedparser.parse(rss)
-      # for news in NewsFeed.entries:
-        # news_link.append(news['link'])
-              # print(news['link'], news['published'])
-    
+    df.to_csv('TotalNewsArticles%s.csv'%(today_date), index=None)    
     
     csv_file = "incre_mode.csv"
     csv_columns = ['name', 'org', 'loc', 'keyword', 'hdfcpresent', 'date', 'sourcename', 'weblink', 'batch_id', 'created_date', 'cities']
@@ -916,23 +851,20 @@ def _incre_mode(batch_id):
     
     utc=pytz.UTC
     
-    keywords = dbs['keywords'].split(',')
-    keywords = StripUnique(keywords)
+    keywords = SplitStripUnique(dbs['keywords'])
     print('keywords are:', keywords)
 
     if 'exclude' not in dbs.keys():
         exclude = []
     else:
-        exclude = dbs['exclude'].split(',')
-        exclude = StripUnique(exclude)
+        exclude = SplitStripUnique(dbs['exclude'])
 
     print('exclude words are:', exclude)
     
     if 'excludeorg' not in dbs.keys():
         excludeorg = []
     else:
-        excludeorg = dbs['excludeorg'].split(',')
-        excludeorg = StripUnique(excludeorg)
+        excludeorg = SplitStripUnique(dbs['excludeorg'])
 
     print('exclude organisation are:', excludeorg)
     
@@ -1168,7 +1100,7 @@ def _incre_mode(batch_id):
 
                     if Ktext:
                         # print('single keyword found:', keyword)
-                        profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
+                        profile['keyword'] += ', '.join([keyword]) + ', '
 
                 else:
                     Ktext = text.lower().split(' ')
@@ -1180,7 +1112,7 @@ def _incre_mode(batch_id):
 
                     if Ktext:
                         # print('single keyword found:', keyword)
-                        profile['Key_word_Used_foruuidentify_the_article'] += ', '.join([keyword]) + ', '
+                        profile['keyword'] += ', '.join([keyword]) + ', '
 
                     if len(keyword.split(' ')) > 1:
                         _keyword = keyword.lower().split(' ')
@@ -1196,7 +1128,7 @@ def _incre_mode(batch_id):
                         # found = list(set(_keyword) & set(Ktext))
 
                         if len(found) == len(_keyword):
-                            profile['Key_word_Used_foruuidentify_the_article'] += keyword + ', '
+                            profile['keyword'] += keyword + ', '
 
           if 'hdfc' in text.lower():
             profile['hdfcpresent'] = 'YES'
@@ -1314,6 +1246,9 @@ def _incre_mode(batch_id):
                     profile['name'] += ' | ' + name
 
             profile['loc'] = ' | '.join(profile['loc'])
+
+            profile['keyword'] = SplitStripUnique(profile['keyword'])
+            profile['keyword'] = ', '.join(profile['keyword'])
 
             # print(profile) 
              
