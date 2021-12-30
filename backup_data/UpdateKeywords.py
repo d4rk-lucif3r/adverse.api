@@ -140,13 +140,13 @@ def current_ids():
     return dbs[-1]
 
 # function to split strip and unique
-def SplitStripUnique(_string, delimiter=','):
+def SplitStripUnique(_string):
 
     '''
     function to split(,) strip leading and trailing spaces
     and return sorted unique elements
     '''
-    _list = _string.split(delimiter)
+    _list = _string.split(',')
     _list = [__list.strip() for __list in _list if __list.strip()]
     _list = list(set(_list))
     _list.sort()
@@ -201,7 +201,7 @@ def GetText(url):
     return text
 
 dbs = current_ids()
-excludeorg = SplitStripUnique(dbs['excludeorg'])
+keywords = SplitStripUnique(dbs['keywords'])
 
 print('looking through documents..............')
 for document in cursor:
@@ -212,19 +212,66 @@ for document in cursor:
         date = parse(document["created_date"].split('+')[0])
         date = date.strftime("%Y-%m-%d %H:%M:%S")
 
-        if date >= week and document["Key word Used for identify the article"]:
+        if date >= week:
                 print('found document:', date)
-                # text = GetText(document["Web link of news"])
+                text = GetText(document["Web link of news"])
 
-                # if not text:
-                        # print('text not found: ', document["Web link of news"])
-                        # continue
+                if not text:
+                        print('text not found: ', document["Web link of news"])
+                        continue
 
-                document['Person Name mentioned in the news'] = SplitStripUnique(document['Person Name mentioned in the news'], delimiter='|')
-                document['Organization Name mentioned in the news'] = SplitStripUnique(['Organization Name mentioned in the news'], delimiter='|')
+                # keywords = document["Key word Used for identify the article"]
+                document["Key word Used for identify the article"] = ''
+                # keywords = SplitStripUnique(keywords)
 
-                # check if org in excludeorg
-                document['Person Name mentioned in the news'] = [x for x in document['Person Name mentioned in the news'] if x not in excludeorg]
-                document['Organization Name mentioned in the news'] = [x for x in document['Organization Name mentioned in the news'] if x not in excludeorg]
+                # check keywords using word level matching
+                Kdoc = nlp_Name(text)
 
+                KORG = [ent.text for ent in Kdoc.ents if ent.label_ == 'ORG']
+                KORG = [x.strip() for x in KORG if x.strip()]
+                KORG = list(set(KORG))
+                KORG = [keyword for keyword in KORG if keyword in keywords]
+
+                if KORG:
+                        document["Key word Used for identify the article"] += ', '.join(KORG) + ', '
+
+                if True:
+                        for keyword in keywords:
+                                if keyword in KORG:
+                                        continue
+                                if keyword.isupper():
+                                        Ktext = text.split(' ')
+                                        Ktext = [x.strip() for x in Ktext if x.strip()]
+                                        Ktext = list(set(Ktext))
+                                        Ktext = [word for word in Ktext if word == keyword]
+
+                                        if Ktext:
+                                                document["Key word Used for identify the article"] += ', '.join([keyword]) + ', '
+
+                                else:
+                                        Ktext = text.lower().split(' ')
+                                        # print('text:', Ktext)
+                                        Ktext = [x.strip() for x in Ktext if x.strip()]
+                                        Ktext = list(set(Ktext))
+                                        Ktext = [word for word in Ktext if word.lower() == keyword.lower()]
+
+                                        if Ktext:
+                                                document["Key word Used for identify the article"] += ', '.join([keyword]) + ', '
+
+                                        if len(keyword.split(' ')) > 1:
+                                                _keyword = keyword.lower().split(' ')
+                                                _keyword = [x.strip() for x in _keyword if x.strip()]
+                                                _keyword = list(set(_keyword))
+
+                                                Ktext = text.lower().split(' ')
+                                                Ktext = [x.strip() for x in Ktext if x.strip()]
+                                                Ktext = list(set(Ktext))
+                                                found = [__keyword for __keyword in _keyword if __keyword in Ktext]
+
+                                                if len(found) == len(_keyword):
+                                                        document["Key word Used for identify the article"] += keyword + ', '
+
+                if document["Key word Used for identify the article"]:
+                        document["Key word Used for identify the article"] = SplitStripUnique(document["Key word Used for identify the article"])
+                        document["Key word Used for identify the article"] = ','.join(document["Key word Used for identify the article"])
                 collection_batches.save(document)
