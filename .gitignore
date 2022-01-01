@@ -145,4 +145,6 @@ dmypy.json
 # nohup files
 *.out
 
+# data files
+*.csv
 # End of https://www.toptal.com/developers/gitignore/api/python

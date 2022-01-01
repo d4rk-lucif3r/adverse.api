@@ -560,32 +560,47 @@ def adverseapi():
                   city = ""
 
                   print('length of article:', len(text2))
+                  
+                  excludeorg = SplitStripUnique(ids['excludeorg'])
+
+                  _exc_org = []
 
                   for i in range(len(text2)):
 
                     doc = nlp_Name(text2[i])
 
-                    # iterate through each entity present
                     for ent in doc.ents:
 
-                      # save data in profile
-                      # find persons in text
                       if ent.label_ == 'PERSON':
                         person += ent.text + ', '
 
-                      # find persons in text
                       elif ent.label_ == 'ORG':
+
+                        if excludeorg:
+                          
+                          if ent.text in excludeorg:
+                            _exc_org.append(ent.text)
+
+                          for _org in excludeorg:
+                            if ent.text.lower() == _org.lower():
+                              _exc_org.append(ent.text)
+
+                            __org = _org.lower().split(' ')
+                            __org = StripUnique(__org)
+                            _ent_text = ent.text.lower().split(' ')
+                            _ent_text = StripUnique(_ent_text)
+
+                            if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                              _exc_org.append(ent.text)
+
                         org += ent.text + ', '
 
-                      # find persons in text
                       elif ent.label_ == 'GPE':
                         city += ent.text + ', '
 
-                      # find persons in text
                       elif ent.label_ == 'LOC':
                         city += ent.text + ', '
 
-                      # find persons in text
                       elif ent.label_ == 'FAC':
                         city += ent.text + ', '
 
@@ -595,6 +610,7 @@ def adverseapi():
                   org = org.split(',')
                   org = [x.strip() for x in org if x.strip()]
                   org = list(set(org))
+                  org = [x.strip() for x in org if x not in _exc_org]
                   person = person.split(',') + org
                   person = [x.strip() for x in person if x.strip()]
                   person = list(set(person))
@@ -911,6 +927,8 @@ def adverseapi():
 
               print('length of article:', len(text2))
 
+              _exc_org = []
+
               for i in range(len(text2)):
 
                 doc = nlp_Name(text2[i])
@@ -925,9 +943,32 @@ def adverseapi():
                   # find persons in text
                   elif ent.label_ == 'ORG':
 
+                    # check if ent.text is a subset of any excludeorg:
                     if 'excludeorg' in list(_request.keys()):
+
                       if ent.text in excludeorg:
-                        continue
+                        _exc_org.append(ent.text)
+                        # continue
+
+                      for _org in excludeorg:
+                        
+                        if ent.text.lower() == _org.lower():
+                          _exc_org.append(ent.text)
+                          # continue
+
+                        # print('org:', _org)
+                        __org = _org.lower().split(' ')
+                        __org = StripUnique(__org)
+                        _ent_text = ent.text.lower().split(' ')
+                        _ent_text = StripUnique(_ent_text)
+                        if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                          _exc_org.append(ent.text)
+                          # print('--------------- is a set: -------------')
+                          # continue
+                        # else:
+                          # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+
+                    # else:
 
                     profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
 
@@ -971,6 +1012,7 @@ def adverseapi():
               # print(profile['Organization_Name_mentioned_in_the_news'])
               profile['Organization_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Organization_Name_mentioned_in_the_news'] if x.strip()]
               profile['Organization_Name_mentioned_in_the_news'] = list(set(profile['Organization_Name_mentioned_in_the_news']))
+              profile['Organization_Name_mentioned_in_the_news'] = [x.strip() for x in profile['Organization_Name_mentioned_in_the_news'] if x not in _exc_org]
               # profile['Organization_Name_mentioned_in_the_news'] = ' | '.join(profile['Organization_Name_mentioned_in_the_news'])    
               profile['Person_Name_mentioned_in_the_news'] = profile['Person_Name_mentioned_in_the_news'].split(',') + profile['Organization_Name_mentioned_in_the_news']
               # print(profile['Person Name mentioned in the news'])

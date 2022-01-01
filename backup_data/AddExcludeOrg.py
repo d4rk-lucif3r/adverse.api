@@ -207,7 +207,7 @@ print('looking through documents..............')
 for document in cursor:
 
         # check article date
-        week = datetime.now() - timedelta(days=5)
+        week = datetime.now() - timedelta(days=7)
         week = week.strftime("%Y-%m-%d %H:%M:%S")
         date = parse(document["created_date"].split('+')[0])
         date = date.strftime("%Y-%m-%d %H:%M:%S")
@@ -224,6 +224,21 @@ for document in cursor:
                 document['Organization Name mentioned in the news'] = SplitStripUnique(document['Organization Name mentioned in the news'], delimiter='|')
 
                 # check if org in excludeorg
+                _exc_org = []
+                for ent in document['Person Name mentioned in the news']:
+                    for _org in excludeorg:
+                        
+                        if ent.lower() == _org.lower():
+                            _exc_org.append(ent)
+
+                        __org = _org.lower().split(' ')
+                        __org = StripUnique(__org)
+                        _ent_text = ent.lower().split(' ')
+                        _ent_text = StripUnique(_ent_text)
+
+                        if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                            _exc_org.append(ent.text)
+
                 document['Person Name mentioned in the news'] = [x for x in document['Person Name mentioned in the news'] if x not in excludeorg]
                 document['Organization Name mentioned in the news'] = [x for x in document['Organization Name mentioned in the news'] if x not in excludeorg]
 

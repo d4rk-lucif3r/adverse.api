@@ -68,6 +68,19 @@ def StripUnique(_list):
     _list.sort()
     return _list
 
+# function to split strip and unique
+def SplitStripUnique(_string):
+
+    '''
+    function to split(,) strip leading and trailing spaces
+    and return sorted unique elements
+    '''
+    _list = _string.split(',')
+    _list = [__list.strip() for __list in _list if __list.strip()]
+    _list = list(set(_list))
+    _list.sort()
+    return _list
+
 def CityOfNewspaper(url):
 
     city2idx = {
