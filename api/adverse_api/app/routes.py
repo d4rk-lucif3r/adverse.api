@@ -951,10 +951,25 @@ def adverseapi():
                         # continue
 
                       for _org in excludeorg:
+
+                        special_characters = "’'"
                         
                         if ent.text.lower() == _org.lower():
                           _exc_org.append(ent.text)
                           # continue
+
+                        if any(c in special_characters for c in ent.text):
+                          SpecialCharacter = [c for c in ent.text if c in special_characters]
+
+                          if len(ent.text.split(SpecialCharacter[0]))>1:
+                            for _ent in ent.text.lower().split(SpecialCharacter[0]):
+                              __org = _org.lower().split(' ')
+                              __org = StripUnique(__org)
+                              _ent_text = _ent.lower().split(' ')
+                              _ent_text = StripUnique(_ent_text)
+
+                              if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                                _exc_org.append(ent.text)
 
                         # print('org:', _org)
                         __org = _org.lower().split(' ')

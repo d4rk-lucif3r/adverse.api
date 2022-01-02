@@ -25,6 +25,17 @@ from google_trans_new import google_translator as google_translator2
 translator2 = google_translator2()
 translator = Translator()
 
+def StripUnique(_list):
+
+    '''
+    function to strip leading and trailing spaces
+    and return sorted unique elements
+    '''
+    _list = [__list.strip() for __list in _list if __list.strip()]
+    _list = list(set(_list))
+    _list.sort()
+    return _list
+
 def GenerateRandomHeaderConfig():
 
     '''
@@ -1149,6 +1160,8 @@ def _incre_mode(batch_id):
 
             # print('length of article:', len(text2))
 
+            _exc_org = []
+
             for i in range(len(text2)):
                 
                 doc = nlp_Name(text2[i])
@@ -1166,7 +1179,30 @@ def _incre_mode(batch_id):
                     elif ent.label_ == 'ORG':
 
                         if ent.text in excludeorg:
-                            continue
+                            _exc_org.append(ent.text)
+
+                        for _org in excludeorg:
+                            
+                            if ent.text.lower() == _org.lower():
+                                _exc_org.append(ent.text)
+
+                            if len(ent.text.split('’'))>1:
+                                for _ent in ent.text.lower().split('’'):
+                                    __org = _org.lower().split(' ')
+                                    __org = StripUnique(__org)
+                                    _ent_text = _ent.lower().split(' ')
+                                    _ent_text = StripUnique(_ent_text)
+
+                                    if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                                        _exc_org.append(ent.text)
+
+                            __org = _org.lower().split(' ')
+                            __org = StripUnique(__org)
+                            _ent_text = ent.text.lower().split(' ')
+                            _ent_text = StripUnique(_ent_text)
+
+                            if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                                _exc_org.append(ent.text)
 
                         profile['org'] += ent.text + ', '
 
@@ -1198,6 +1234,7 @@ def _incre_mode(batch_id):
             # print(profile['org'])
             profile['org'] = [x.strip() for x in profile['org'] if x.strip()]
             profile['org'] = list(set(profile['org']))
+            profile['org'] = [x.strip() for x in profile['org'] if x not in _exc_org]
             # profile['org'] = ', '.join(profile['org'])    
             profile['name'] = profile['name'].split(',') + profile['org']
             # print(profile['name'])
