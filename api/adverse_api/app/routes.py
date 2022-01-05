@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, jsonify, url_for, redirect
 from app import app
 from bson.json_util import dumps, loads
+from app.combined_matcher import combined_matcher
 from utils import *
 import ast
 import uuid
@@ -85,10 +86,8 @@ def adverseapi():
     _request = request.data
     _request = _request.decode("utf-8")
     _request = ast.literal_eval(_request)
-
     dbs = get_batch_ids()
     ids = current_ids_dbs()
-
     if 'exclude' not in ids.keys():
       ids['exclude'] = ''
       
@@ -930,74 +929,79 @@ def adverseapi():
               _exc_org = []
 
               for i in range(len(text2)):
-
-                doc = nlp_Name(text2[i])
+                # doc = nlp_Name(text2[i])
+                if not len(text2[i]) == 0:
+                  names_matched, orgs, locations = combined_matcher(text2[i])
 
                 # iterate through each entity present
-                for ent in doc.ents:
-                  # save data in profile
-                  # find persons in text
-                  if ent.label_ == 'PERSON':
-                    profile['Person_Name_mentioned_in_the_news'] += ent.text + ', '
+                # for ent in doc.ents:
+                #   # save data in profile
+                #   # find persons in text
+                #   if ent.label_ == 'PERSON':
+                for name in names_matched:
+                  profile['Person_Name_mentioned_in_the_news'] += name + ', '
 
                   # find persons in text
-                  elif ent.label_ == 'ORG':
+                  # elif ent.label_ == 'ORG':
+                for org in orgs:
+                  # check if ent.text is a subset of any excludeorg:
+                  if 'excludeorg' in list(_request.keys()):
 
-                    # check if ent.text is a subset of any excludeorg:
-                    if 'excludeorg' in list(_request.keys()):
+                    if org in excludeorg:
+                      _exc_org.append(org)
+                      # continue
 
-                      if ent.text in excludeorg:
-                        _exc_org.append(ent.text)
+                    for _org in excludeorg:
+
+                      special_characters = "’'"
+                      
+                      if org.lower() == _org.lower():
+                        _exc_org.append(org)
                         # continue
 
-                      for _org in excludeorg:
+                      if any(c in special_characters for c in org):
+                        SpecialCharacter = [c for c in org if c in special_characters]
 
-                        special_characters = "’'"
-                        
-                        if ent.text.lower() == _org.lower():
-                          _exc_org.append(ent.text)
-                          # continue
+                        if len(org.split(SpecialCharacter[0]))>1:
+                          for _ent in org.lower().split(SpecialCharacter[0]):
+                            __org = _org.lower().split(' ')
+                            __org = StripUnique(__org)
+                            _ent_text = _ent.lower().split(' ')
+                            _ent_text = StripUnique(_ent_text)
 
-                        if any(c in special_characters for c in ent.text):
-                          SpecialCharacter = [c for c in ent.text if c in special_characters]
+                            if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                              _exc_org.append(org)
 
-                          if len(ent.text.split(SpecialCharacter[0]))>1:
-                            for _ent in ent.text.lower().split(SpecialCharacter[0]):
-                              __org = _org.lower().split(' ')
-                              __org = StripUnique(__org)
-                              _ent_text = _ent.lower().split(' ')
-                              _ent_text = StripUnique(_ent_text)
+                      # print('org:', _org)
+                      __org = _org.lower().split(' ')
+                      __org = StripUnique(__org)
+                      _ent_text = org.lower().split(' ')
+                      _ent_text = StripUnique(_ent_text)
+                      if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
+                        _exc_org.append(org)
+                        # print('--------------- is a set: -------------')
+                        # continue
+                      # else:
+                        # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
 
-                              if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
-                                _exc_org.append(ent.text)
+                  # else:
 
-                        # print('org:', _org)
-                        __org = _org.lower().split(' ')
-                        __org = StripUnique(__org)
-                        _ent_text = ent.text.lower().split(' ')
-                        _ent_text = StripUnique(_ent_text)
-                        if set(__org) <= set(_ent_text) or set(_ent_text) <= set(__org):
-                          _exc_org.append(ent.text)
-                          # print('--------------- is a set: -------------')
-                          # continue
-                        # else:
-                          # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
-
-                    # else:
-
-                    profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+                  profile['Organization_Name_mentioned_in_the_news'] += org + ', '
 
                   # find persons in text
-                  elif ent.label_ == 'GPE':
-                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+                  # elif ent.label_ == 'GPE':
+                  for location in locations:
+                      profile['City_State_mentioned_under_the_news'] += location + ', '
 
                   # find persons in text
-                  elif ent.label_ == 'LOC':
-                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+                  # elif ent.label_ == 'LOC':
+                  for location in locations:
+                      profile['City_State_mentioned_under_the_news'] += location + ', '
 
                   # find persons in text
-                  elif ent.label_ == 'FAC':
-                    profile['City_State_mentioned_under_the_news'] += ent.text + ', '
+                  # elif ent.label_ == 'FAC':
+                  for location in locations:
+                    profile['City_State_mentioned_under_the_news'] += location + ', '
 
                   else:
                     continue
@@ -1036,7 +1040,8 @@ def adverseapi():
               profile['Person_Name_mentioned_in_the_news'] = [ i for i in profile['Person_Name_mentioned_in_the_news'] if not any( [ i in a for a in profile['Person_Name_mentioned_in_the_news'] if a != i]   )]
               person_dict = {k.lower():k for k in profile['Person_Name_mentioned_in_the_news']}
               profile['Person_Name_mentioned_in_the_news'] = list(person_dict.values())
-              profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
+              profile['Person_Name_mentioned_in_the_news'] = [
+                  i for i in profile['Person_Name_mentioned_in_the_news'] if i not in fps['fp_name']]
               profile['Person_Name_mentioned_in_the_news'] = [i for i in profile['Person_Name_mentioned_in_the_news'] if "covid" not in i.lower()]
               # profile['Person_Name_mentioned_in_the_news'] = [i.split("’")[0] for i in profile['Person_Name_mentioned_in_the_news']]
 
@@ -1057,8 +1062,8 @@ def adverseapi():
               profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if i not in fps['fp_city']]
               profile['City_State_mentioned_under_the_news'] = [i for i in profile['City_State_mentioned_under_the_news'] if "covid" not in i.lower()]
               # profile['City_State_mentioned_under_the_news'] = [i.split("’")[0] for i in profile['City_State_mentioned_under_the_news']]
-
-              for name in profile['City_State_mentioned_under_the_news']:
+              print(profile['City_State_mentioned_under_the_news'])
+              for name in profile['City_State_mentioned_under_the_news']:                
                 if name.lower() in names['names']:
                   profile['City_State_mentioned_under_the_news'].remove(name)
                   profile['Person_Name_mentioned_in_the_news'] += ' | ' + name
@@ -1089,6 +1094,8 @@ def adverseapi():
 
             except Exception as e:
                 print(e)
+                import traceback
+                traceback.print_exc()
                 return jsonify({"news_source_ids": ids["news_source_ids"], 
                   "last_updated_time": dbs[-1]["RunDate"],
                   "keywords_updated" : ids['keywords'], 
