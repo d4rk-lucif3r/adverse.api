@@ -406,7 +406,7 @@ def soup_text(soup, sourcename):
         return None
 
     if text_:
-        print(text_)
+        print('[INFO] utils text:', text_)
         # return '\n'.join(text_)
         # return ' '.join(text_)
         return ''.join(text_)

@@ -537,7 +537,7 @@ def adverseapi():
                   # check the language of text
                   lang = detect_lang(text)
 
-                  print("lang:", lang)
+                  print("[INFO] lang 1:", lang)
 
                   if lang == 'mr':
                     translation = translator.translate(text, dest='en')
@@ -545,14 +545,15 @@ def adverseapi():
                     text = translation.text
 
                     lang = detect_lang(text)
-                    print("lang:", lang)
+                    print("[INFO] translated lang:", lang)
 
                     if lang == 'mr':
                       translate_text2 = translator2.translate(text,lang_tgt='en')  
                       print('translation:', translate_text2)
                       text = translate_text2
-
-                  text2 = text.split('\n')
+                      
+                  if type(text) == str:
+                    text2 = text.split('\n')
 
                   person = ""
                   org = ""
@@ -762,7 +763,7 @@ def adverseapi():
               # check the language of text
               lang = detect_lang(text)
 
-              print("lang:", lang)
+              print("[INFO] 2 lang:", lang)
 
               if lang == 'mr':
                 translation = translator.translate(text, dest='en')
@@ -914,17 +915,17 @@ def adverseapi():
 
               profile['Web_link_of_news'] = article.url
 
-              print(text)
+              print('[INFO] Text is: ',text,'\n')
 
               # remove Getty Images
               # text = text.replace('Getty Images', '')
 
               # remove Covid
               # text = text.replace('Covid', '')
+              if type(text) == str:
+                text2 = text.split('\n')
 
-              text2 = text.split('\n')
-
-              print('length of article:', len(text2))
+              print('length of article:', len(text2), '\n')
 
               _exc_org = []
 
@@ -983,29 +984,24 @@ def adverseapi():
                         # continue
                       # else:
                         # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
-
-                  # else:
-
-                  profile['Organization_Name_mentioned_in_the_news'] += org + ', '
+                    profile['Organization_Name_mentioned_in_the_news'] += org + ', '
 
                   # find persons in text
                   # elif ent.label_ == 'GPE':
-                  for location in locations:
-                      profile['City_State_mentioned_under_the_news'] += location + ', '
-
-                  # find persons in text
-                  # elif ent.label_ == 'LOC':
-                  for location in locations:
-                      profile['City_State_mentioned_under_the_news'] += location + ', '
-
-                  # find persons in text
-                  # elif ent.label_ == 'FAC':
-                  for location in locations:
-                    profile['City_State_mentioned_under_the_news'] += location + ', '
-
                   else:
                     continue
+                for location in locations:
+                    profile['City_State_mentioned_under_the_news'] += location + ', '
 
+                # find persons in text
+                # elif ent.label_ == 'LOC':
+                for location in locations:
+                    profile['City_State_mentioned_under_the_news'] += location + ', '
+
+                # find persons in text
+                # elif ent.label_ == 'FAC':
+                for location in locations:
+                  profile['City_State_mentioned_under_the_news'] += location + ', '
                 # _loc = text2[i].split(':')
                 # _loc = [y for x in _loc for y in x.split(' ')]
                 # _loc = [x.strip() for x in _loc]

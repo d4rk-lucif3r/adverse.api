@@ -2,6 +2,7 @@ import os
 import itertools
 from black import traceback
 import locationtagger
+import spacy
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 from flair.data import Sentence
@@ -16,6 +17,7 @@ model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
 ner_bert = pipeline("ner", model=model, tokenizer=tokenizer)
 ner_stanza = stanza.Pipeline(lang='en')
 ner_flair = SequenceTagger.load("flair/ner-english-large")
+ner_spacy = spacy.load('en_core_web_trf')
 
 org_fp = ['Latest', 'Thanks']
 loc_fp = []
@@ -28,7 +30,7 @@ def combined_matcher(data):
             if type(data) is list:
                 data = ' '.join(data)
             else:
-                print(data)
+                print('[ERROR] Combined Matcher', data)
                 raise TypeError('Data must be a str only')
         names = []
         org = []
@@ -60,6 +62,7 @@ def combined_matcher(data):
         ner_flair.predict(sentence, mini_batch_size=16)
         # print('Predicting with Flair done 1\n')
         stanza_results = ner_stanza(data)
+        spacy_results = ner_spacy(data)
         # print('Predicting with Stanza done 1\n')
         # bert_results = ner_bert(data)
         for ent in stanza_results.entities:
@@ -68,7 +71,7 @@ def combined_matcher(data):
             if ent.type == 'LOC':
                 locations.append(ent.text)
         raw_locations = []
-        locations = []
+        # locations = []
 
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
@@ -79,13 +82,34 @@ def combined_matcher(data):
                 org.append(i)
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
-
+        for ent in spacy_results.ents:
+            if ent.label_ == 'GPE':
+                locations.append(ent.text)
+            if ent.label_ == 'ORG':
+                org.append(ent.text)
+            if ent.label_ == 'PER':
+                names.append(ent.text)
+            if ent.label_ == 'DATE':
+                numeric_data.append(ent.text)
+            if ent.label_ == 'TIME':
+                numeric_data.append(ent.text)
+            if ent.label_ == 'MONEY':
+                numeric_data.append(ent.text)
+            if ent.label_ == 'NUMBER':
+                numeric_data.append(ent.text)
+            if ent.label_ == 'LOC':
+                locations.append(ent.text)
+        filter_words = locations + final_numerical_data + org + numeric_data
+        # for i in range(len(filter_words)):
+        #     if filter_words[i] in str(data):
+        #         data = data.replace(filter_words[i], '').replace(',', ' , ')
         sentence = Sentence(data)
         ner_flair.predict(sentence, mini_batch_size=16)
         # print('Predicting with Flair done 2\n')
         stanza_results = ner_stanza(data)
         # print('Predicting with Stanza done 2\n')
         bert_results = ner_bert(data)
+        spacy_results = ner_spacy(data)
         # print('Predicting with BERT done 1\n')
         for ent in stanza_results.entities:
             if ent.type == 'PER':
@@ -95,6 +119,9 @@ def combined_matcher(data):
         for i, j in flair_test.items():
             if j == 'PER':
                 names.append(i)
+        for ent in spacy_results.ents:
+            if ent.label_ == 'PER':
+                names.append(ent.text)
         this_location = []
         all_locations_list_tmp = []
         for ner_dict in bert_results:
@@ -118,7 +145,6 @@ def combined_matcher(data):
 
         for i in range(len(final_location_list)):
             final_location_list[i] = final_location_list[i][0]
-
         locations = locations + final_location_list
         this_org = []
         all_orgs_list_tmp = []
@@ -185,14 +211,15 @@ def combined_matcher(data):
             if len(org[i]) < 4:
                 org[i] = ''
             if any(emt.lower() in org[i] for emt in org_fp):
-                    rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
-                    print('org removed: ', rem)
-                    org[i] = org[i].lower().replace(rem.lower(), '').strip().title()
-                    
-            if len(org[i].split()) == 1:
-                for j in range(len(org)):
-                    if org[i] in org[j]:
-                        org[i] = ''
+                rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
+                print('org removed: ', rem)
+                org[i] = org[i].lower().replace(
+                    rem.lower(), '').strip().title()
+
+            # if len(org[i].split()) == 1:
+            #     for j in range(len(org)):
+            #         if org[i] in org[j]:
+            #             org[i] = ''
         for i in range(len(names)):
             names[i] = names[i].strip().title()
             if names[i] in org:
@@ -204,13 +231,14 @@ def combined_matcher(data):
             if len(names[i]) < 4:
                 names[i] = ''
             if any(emt.lower() in names[i] for emt in name_fp):
-                    rem = [emt for emt in name_fp if(emt in str(names[i]))][0]
-                    print('name removed: ', rem)
-                    names[i] = names[i].lower().replace(rem.lower(), '').strip().title()
-            if len(names[i].split()) == 1:
-                for j in range(len(names)):
-                    if names[i] in names[j]:
-                        names[i] = ''
+                rem = [emt for emt in name_fp if(emt in str(names[i]))][0]
+                print('name removed: ', rem)
+                names[i] = names[i].lower().replace(
+                    rem.lower(), '').strip().title()
+            # if len(names[i].split()) == 1:
+            #     for j in range(len(names)):
+            #         if names[i] in names[j]:
+            #             names[i] = ''
         for i in range(len(locations)):
             locations[i] = locations[i].strip().title()
             if locations[i] in org:
@@ -222,14 +250,15 @@ def combined_matcher(data):
             if len(locations[i]) < 3:
                 locations[i] = ''
             if any(emt.lower() in locations[i] for emt in loc_fp):
-                    rem = [emt for emt in loc_fp if(
-                        emt in str(locations[i]))][0]
-                    print('loc removed: ', rem)
-                    locations[i] = locations[i].lower().replace(rem.lower(), '').strip().title()
-            if len(locations[i].split()) == 1:
-                for j in range(len(locations)):
-                    if locations[i] in locations[j]:
-                        locations[i] = ''
+                rem = [emt for emt in loc_fp if(
+                    emt in str(locations[i]))][0]
+                print('loc removed: ', rem)
+                locations[i] = locations[i].lower().replace(
+                    rem.lower(), '').strip().title()
+            # if len(locations[i].split()) == 1:
+            #     for j in range(len(locations)):
+            #         if locations[i] in locations[j]:
+            #             locations[i] = ''
 
         org = list(set(filter(None, org)))
         names = list(set(filter(None, names)))
