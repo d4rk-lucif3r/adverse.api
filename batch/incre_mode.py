@@ -21,7 +21,7 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import LanguageTranslatorV3
 from googletrans import Translator
 from google_trans_new import google_translator as google_translator2
-
+from combined_matcher import combined_matcher
 translator2 = google_translator2()
 translator = Translator()
 
@@ -327,7 +327,6 @@ def restricted_sources(restricted_source):
     #         articles_list.append(cities)
 
     return articles_list
-
 
 def google_rss_feed():
 
@@ -747,7 +746,6 @@ def ids2rss(source_news_ids):
 
     return rss
     
-
 def rss2news(rss):
 
     news_link = []
@@ -928,31 +926,29 @@ def _incre_mode(batch_id):
 
                     for i in range(len(text2)):
 
-                        doc = nlp_Name(text2[i])
+                        # doc = nlp_Name(text2[i])
+                        if not len(text2[i]) == 0:
+                            names_comb, orgs_comb, locations_comb = combined_matcher(text2[i])
 
                         # iterate through each entity present
-                        for count,ent in enumerate(doc.ents):
+                            # for count,ent in enumerate(doc.ents):
 
-                            if ent.label_ == 'PERSON':
-                                document['Person Name mentioned in the news'] += ent.text + ', '
+                                # if ent.label_ == 'PERSON':/
+                            for name in names_comb:
+                                document['Person Name mentioned in the news'] += name + ', '
 
-                            elif ent.label_ == 'ORG':
-                                document['Organization Name mentioned in the news'] += ent.text + ', '
+                            # elif ent.label_ == 'ORG':
+                            for org in orgs_comb:
+                                document['Organization Name mentioned in the news'] += org + ', '
 
-                            elif ent.label_ == 'GPE':
-                                document['City/ State mentioned under the news'] += ent.text + ', '
-
-                            # find persons in text
-                            elif ent.label_ == 'LOC':
-                                document['City/ State mentioned under the news'] += ent.text + ', '
-
-                            # find persons in text
-                            elif ent.label_ == 'FAC':
-                                document['City/ State mentioned under the news'] += ent.text + ', '
+                            # elif ent.label_ == 'GPE':
+                            for location in locations_comb:
+                                document['City/ State mentioned under the news'] += location + ', '
 
 
-                            else:
-                                continue
+
+                        else:
+                            continue
 
                         # _loc = text2[i].split(':')
 

@@ -61,6 +61,7 @@ def update_detail_status(_id, end_time, date, status, ids):
         collection_batches.save(post)
 
     return "Updated Document"
+
 def overall_status(start_time, end_time, date, status):
     '''
     function to save batch table in mongodb
