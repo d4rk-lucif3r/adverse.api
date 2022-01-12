@@ -905,7 +905,7 @@ def adverseapi():
                   "excludeorg" : _request['excludeorg'], 
                   "date_of_response": None,
                   "mode_of_search": mode,
-                  "search_results": []})
+                  "search_results": ['Please Check Keyword']})
 
               if 'excludeorg' in list(_request.keys()):
                 excludeorg = _request['excludeorg'].split(',')
@@ -1019,42 +1019,55 @@ def adverseapi():
                   # profile['City_State_mentioned_under_the_news'] += __loc[-1] + ', '
               org = profile['Organization_Name_mentioned_in_the_news'].split(
                   ',')
-              for (i, element) in enumerate(org):
-                for (j, choice) in enumerate(org[i+1:]):
-                    if fuzz.ratio(element, choice) >= 90:
-                        if element in org:
-                          org.remove(element)
-                          print('FUZZ org removed: ', element)
-                        if element not in org:
-                          if choice in org:
-                            org.remove(choice)
-                            print('FUZZ org removed: ', choice)
+              for i in range(len(org)):
+                org[i] = org[i].strip()
+              org = list(set(filter(None, org)))
+              if len(org) > 1:
+                for (i, element) in enumerate(org):
+                  for (j, choice) in enumerate(org[i+1:]):
+                      if fuzz.ratio(element, choice) >= 90:
+                          if element in org:
+                            org.remove(element)
+                            print('FUZZ org removed: ', element)
+                          if element not in org:
+                            if choice in org:
+                              org.remove(choice)
+                              print('FUZZ org removed: ', choice)
               
               per = profile['Person_Name_mentioned_in_the_news'].split(
                   ',')
-              for (i, element) in enumerate(per):
-                for (j, choice) in enumerate(per[i+1:]):
-                    if fuzz.ratio(element, choice) >= 90:
-                        if element in per:
-                          per.remove(element)
-                          print('FUZZ name removed: ', element)
-                        if element not in per:
-                          if choice in per:
-                            per.remove(choice)
-                            print('FUZZ name removed: ', choice)      
-              
+              for i in range(len(per)):
+                per[i] = per[i].strip()
+              per = list(set(filter(None, per)))
+              if len(per)>0:
+                for (i, element) in enumerate(per):
+                  for (j, choice) in enumerate(per[i+1:]):
+                      if fuzz.ratio(element, choice) >= 90:
+                          if element in per:
+                            per.remove(element)
+                            print('FUZZ name removed: ', element)
+                          if element not in per:
+                            if choice in per:
+                              per.remove(choice)
+                              print('FUZZ name removed: ', choice)      
+                
               loc = profile['City_State_mentioned_under_the_news'].split(
                   ',')
-              for (i, element) in enumerate(loc):
-                for (j, choice) in enumerate(loc[i+1:]):
-                    if fuzz.ratio(element, choice) >= 90:
-                        if element in loc:
-                          loc.remove(element)
-                          print('FUZZ loc removed: ', element)
-                        if element not in loc:
-                          if choice in loc:
-                            loc.remove(choice)
-                            print('FUZZ loc removed: ', choice)         
+              for i in range(len(loc)):
+                loc[i] = loc[i].strip()
+              loc = list(set(filter(None, loc)))
+                
+              if len(loc)>1:
+                for (i, element) in enumerate(loc):
+                  for (j, choice) in enumerate(loc[i+1:]):
+                      if fuzz.ratio(element, choice) >= 90:
+                          if element in loc:
+                            loc.remove(element)
+                            print('FUZZ loc removed: ', element)
+                          if element not in loc:
+                            if choice in loc:
+                              loc.remove(choice)
+                              print('FUZZ loc removed: ', choice)         
               
               profile['Organization_Name_mentioned_in_the_news'] = ','.join(
                   org)
