@@ -200,79 +200,82 @@ def combined_matcher(data):
         names = names + final_name_list
 
         print('Post-Processing the Predictions\n')
-        for i in range(len(org)):
-            org[i] = org[i].strip().title()
-            if org[i] in locations:
-                org[i] = ''
-            if org[i] in names:
-                org[i] = ''
-            if '##' in org[i]:
-                org[i] = ''
-            if len(org[i]) < 4:
-                org[i] = ''
-            if any(emt.lower() in org[i] for emt in org_fp):
-                rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
-                print('org removed: ', rem)
-                org[i] = org[i].lower().replace(
-                    rem.lower(), '').strip().title()
+        if len(org) > 0:
+            for i in range(len(org)):
+                org[i] = org[i].strip().title()
+                if org[i] in locations:
+                    org[i] = ''
+                if org[i] in names:
+                    org[i] = ''
+                if '##' in org[i]:
+                    org[i] = ''
+                if len(org[i]) < 4:
+                    org[i] = ''
+                if any(emt.lower() in org[i] for emt in org_fp):
+                    rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
+                    print('org removed: ', rem)
+                    org[i] = org[i].lower().replace(
+                        rem.lower(), '').strip().title()
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
                         org.remove(element)
                         print('FUZZ org removed: ', element)
-            # if len(org[i].split()) == 1:
-            #     for j in range(len(org)):
-            #         if org[i] in org[j]:
-            #             org[i] = ''
-        for i in range(len(names)):
-            names[i] = names[i].strip().title()
-            if names[i] in org:
-                names[i] = ''
-            if names[i] in locations:
-                names[i] = ''
-            if '##' in names[i]:
-                names[i] = ''
-            if len(names[i]) < 4:
-                names[i] = ''
-            if any(emt.lower() in names[i] for emt in name_fp):
-                rem = [emt for emt in name_fp if(emt in str(names[i]))][0]
-                print('name removed: ', rem)
-                names[i] = names[i].lower().replace(
-                    rem.lower(), '').strip().title()
+                # if len(org[i].split()) == 1:
+                #     for j in range(len(org)):
+                #         if org[i] in org[j]:
+                #             org[i] = ''
+        if len(names) > 0:
+            for i in range(len(names)):
+                names[i] = names[i].strip().title()
+                if names[i] in org:
+                    names[i] = ''
+                if names[i] in locations:
+                    names[i] = ''
+                if '##' in names[i]:
+                    names[i] = ''
+                if len(names[i]) < 4:
+                    names[i] = ''
+                if any(emt.lower() in names[i] for emt in name_fp):
+                    rem = [emt for emt in name_fp if(emt in str(names[i]))][0]
+                    print('name removed: ', rem)
+                    names[i] = names[i].lower().replace(
+                        rem.lower(), '').strip().title()
             for (i, element) in enumerate(names):
                 for (j, choice) in enumerate(names[i+1:]):
                     if fuzz.ratio(names, choice) >= 90:
                         names.remove(element)
                         print('FUZZ name removed: ', element)
-            # if len(names[i].split()) == 1:
-            #     for j in range(len(names)):
-            #         if names[i] in names[j]:
-            #             names[i] = ''
-        for i in range(len(locations)):
-            locations[i] = locations[i].strip().title()
-            if locations[i] in org:
-                locations[i] = ''
-            if locations[i] in names:
-                locations[i] = ''
-            if '##' in locations[i]:
-                locations[i] = ''
-            if len(locations[i]) < 3:
-                locations[i] = ''
-            if any(emt.lower() in locations[i] for emt in loc_fp):
-                rem = [emt for emt in loc_fp if(
-                    emt in str(locations[i]))][0]
-                print('loc removed: ', rem)
-                locations[i] = locations[i].lower().replace(
-                    rem.lower(), '').strip().title()
-            for (i, element) in enumerate(locations):
-                for (j, choice) in enumerate(locations[i+1:]):
-                    if fuzz.ratio(element, choice) >= 90:
-                        locations.remove(element)
-                        print('FUZZ loc removed: ', element)
-            # if len(locations[i].split()) == 1:
-            #     for j in range(len(locations)):
-            #         if locations[i] in locations[j]:
-            #             locations[i] = ''
+                # if len(names[i].split()) == 1:
+                #     for j in range(len(names)):
+                #         if names[i] in names[j]:
+                #             names[i] = ''
+        if len(locations) > 0:
+            for i in range(len(locations)):
+                locations[i] = locations[i].strip().title()
+                if locations[i] in org:
+                    locations[i] = ''
+                if locations[i] in names:
+                    locations[i] = ''
+                if '##' in locations[i]:
+                    locations[i] = ''
+                if len(locations[i]) < 3:
+                    locations[i] = ''
+                if any(emt.lower() in locations[i] for emt in loc_fp):
+                    rem = [emt for emt in loc_fp if(
+                        emt in str(locations[i]))][0]
+                    print('loc removed: ', rem)
+                    locations[i] = locations[i].lower().replace(
+                        rem.lower(), '').strip().title()
+            # for (i, element) in enumerate(locations):
+            #     for (j, choice) in enumerate(locations[i+1:]):
+            #         if fuzz.ratio(element, choice) >= 90:
+            #             locations.remove(element)
+            #             print('FUZZ loc removed: ', element)
+                # if len(locations[i].split()) == 1:
+                #     for j in range(len(locations)):
+                #         if locations[i] in locations[j]:
+                #             locations[i] = ''
 
         org = list(set(filter(None, org)))
         names = list(set(filter(None, names)))
