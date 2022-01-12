@@ -10,6 +10,8 @@ elasticsearch==7.10.1
 en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.1.0/en_core_web_md-3.1.0-py3-none-any.whl
 en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.2.0/en_core_web_trf-3.2.0-py3-none-any.whl
 fake-useragent==0.1.11
+fuzzywuzzy
+python-Levenshtein-wheels
 Faker==8.11.0
 feedfinder2==0.0.4
 feedparser==6.0.2

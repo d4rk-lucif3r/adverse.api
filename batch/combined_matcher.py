@@ -10,7 +10,7 @@ from flair.models import SequenceTagger
 import stanza
 # stanza.download('en')
 import pandas as pd
-
+from fuzzywuzzy import fuzz
 tokenizer = AutoTokenizer.from_pretrained("dslim/bert-large-NER")
 model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
 
@@ -215,7 +215,11 @@ def combined_matcher(data):
                 print('org removed: ', rem)
                 org[i] = org[i].lower().replace(
                     rem.lower(), '').strip().title()
-
+            for (i, element) in enumerate(org):
+                for (j, choice) in enumerate(org[i+1:]):
+                    if fuzz.ratio(element, choice) >= 90:
+                        org.remove(element)
+                        print('FUZZ org removed: ', element)
             # if len(org[i].split()) == 1:
             #     for j in range(len(org)):
             #         if org[i] in org[j]:
@@ -235,6 +239,11 @@ def combined_matcher(data):
                 print('name removed: ', rem)
                 names[i] = names[i].lower().replace(
                     rem.lower(), '').strip().title()
+            for (i, element) in enumerate(names):
+                for (j, choice) in enumerate(names[i+1:]):
+                    if fuzz.ratio(names, choice) >= 90:
+                        names.remove(element)
+                        print('FUZZ name removed: ', element)
             # if len(names[i].split()) == 1:
             #     for j in range(len(names)):
             #         if names[i] in names[j]:
@@ -255,6 +264,11 @@ def combined_matcher(data):
                 print('loc removed: ', rem)
                 locations[i] = locations[i].lower().replace(
                     rem.lower(), '').strip().title()
+            for (i, element) in enumerate(locations):
+                for (j, choice) in enumerate(locations[i+1:]):
+                    if fuzz.ratio(element, choice) >= 90:
+                        locations.remove(element)
+                        print('FUZZ loc removed: ', element)
             # if len(locations[i].split()) == 1:
             #     for j in range(len(locations)):
             #         if locations[i] in locations[j]:

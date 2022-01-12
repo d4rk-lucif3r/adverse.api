@@ -15,6 +15,7 @@ import os
 from newspaper.utils import BeautifulSoup
 from newspaper import Config
 import re
+from fuzzywuzzy import fuzz
 from fake_useragent import UserAgent
 from googletrans import Translator
 from google_trans_new import google_translator as google_translator2
@@ -895,7 +896,7 @@ def adverseapi():
 
               if not profile['Key_word_Used_foruuidentify_the_article']:
 
-                # print('---- Keyword not Found: %s ----'%(_request['keywords']))
+                print('---- Keyword not Found: %s ----'%(_request['keywords']))
 
                 return jsonify({"news_source_ids": ids["news_source_ids"], 
                   "last_updated_time": dbs[-1]["RunDate"],
@@ -1016,8 +1017,50 @@ def adverseapi():
                   # __loc = [x for x in __loc if x in cities['cities']]
                   # print('location found:', __loc)
                   # profile['City_State_mentioned_under_the_news'] += __loc[-1] + ', '
-
-
+              org = profile['Organization_Name_mentioned_in_the_news'].split(
+                  ',')
+              for (i, element) in enumerate(org):
+                for (j, choice) in enumerate(org[i+1:]):
+                    if fuzz.ratio(element, choice) >= 90:
+                        if element in org:
+                          org.remove(element)
+                          print('FUZZ org removed: ', element)
+                        if element not in org:
+                          if choice in org:
+                            org.remove(choice)
+                            print('FUZZ org removed: ', choice)
+              
+              per = profile['Person_Name_mentioned_in_the_news'].split(
+                  ',')
+              for (i, element) in enumerate(per):
+                for (j, choice) in enumerate(per[i+1:]):
+                    if fuzz.ratio(element, choice) >= 90:
+                        if element in per:
+                          per.remove(element)
+                          print('FUZZ name removed: ', element)
+                        if element not in per:
+                          if choice in per:
+                            per.remove(choice)
+                            print('FUZZ name removed: ', choice)      
+              
+              loc = profile['City_State_mentioned_under_the_news'].split(
+                  ',')
+              for (i, element) in enumerate(loc):
+                for (j, choice) in enumerate(loc[i+1:]):
+                    if fuzz.ratio(element, choice) >= 90:
+                        if element in loc:
+                          loc.remove(element)
+                          print('FUZZ loc removed: ', element)
+                        if element not in loc:
+                          if choice in loc:
+                            loc.remove(choice)
+                            print('FUZZ loc removed: ', choice)         
+              
+              profile['Organization_Name_mentioned_in_the_news'] = ','.join(
+                  org)
+              profile['Person_Name_mentioned_in_the_news'] = ','.join(per)
+              profile['City_State_mentioned_under_the_news'] = ','.join(loc)
+              
               profile['Article_Date'] = article.publish_date
               profile['City_of_News_Paper'] = ''
               # profile['batch_id'] = batch_id
@@ -1076,8 +1119,7 @@ def adverseapi():
                 profile['Article_Date'] = ''
 
               profile['Source_Name'] = source2name[profile['Source_Name']]
-
-              print(profile)
+              # print(profile)
 
               return jsonify({"news_source_ids": ids["news_source_ids"], 
                 "last_updated_time": dbs[-1]["RunDate"],
