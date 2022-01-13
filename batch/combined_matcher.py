@@ -21,7 +21,7 @@ ner_stanza = stanza.Pipeline(lang="en")
 ner_flair = SequenceTagger.load("flair/ner-english-large")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-org_fp = ["Latest", "Thanks", "Omicron", "Unionmic"]
+org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP"]
 loc_fp = []
 name_fp = [
     "maggi",
