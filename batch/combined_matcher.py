@@ -19,9 +19,9 @@ ner_stanza = stanza.Pipeline(lang='en')
 ner_flair = SequenceTagger.load("flair/ner-english-large")
 ner_spacy = spacy.load('en_core_web_trf')
 
-org_fp = ['Latest', 'Thanks']
+org_fp = ['Latest', 'Thanks', 'Omicron', 'Unionmic']
 loc_fp = []
-name_fp = ['maggi', 'rooh afza', 'prayagraj', 'Owner', 'thanks', ';td.', 'CO.']
+name_fp = ['maggi', 'rooh afza', 'prayagraj', 'Owner', 'thanks', ';td.', 'CO.', 'Omicron']
 
 
 def combined_matcher(data):
@@ -87,6 +87,10 @@ def combined_matcher(data):
                 locations.append(ent.text)
             if ent.label_ == 'ORG':
                 org.append(ent.text)
+            if ent.label_ == 'FAC':
+                locations.append(ent.text)
+            if ent.label_ == 'LOC':
+                locations.append(ent.text)
             if ent.label_ == 'PER':
                 names.append(ent.text)
             if ent.label_ == 'DATE':
@@ -209,13 +213,13 @@ def combined_matcher(data):
                     org[i] = ''
                 if '##' in org[i]:
                     org[i] = ''
-                if len(org[i]) < 4:
+                if len(org[i]) < 3:
                     org[i] = ''
-                if any(emt.lower() in org[i] for emt in org_fp):
+                if any(emt in org[i] for emt in org_fp):
                     rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
                     print('org removed: ', rem)
                     org[i] = org[i].lower().replace(
-                        rem.lower(), '').strip()
+                        rem.lower(), '').strip().title()
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
@@ -237,16 +241,16 @@ def combined_matcher(data):
                     names[i] = ''
                 if len(names[i]) < 4:
                     names[i] = ''
-                if any(emt.lower() in names[i] for emt in name_fp):
+                if any(emt in names[i] for emt in name_fp):
                     rem = [emt for emt in name_fp if(emt in str(names[i]))][0]
                     print('name removed: ', rem)
                     names[i] = names[i].lower().replace(
-                        rem.lower(), '').strip()
+                        rem.lower(), '').strip().title()
             for (i, element) in enumerate(names):
                 for (j, choice) in enumerate(names[i+1:]):
                     if fuzz.ratio(names, choice) >= 90:
                         if element in names:
-
+                            
                             names.remove(element)
                             print('FUZZ name removed: ', element)
                 # if len(names[i].split()) == 1:
@@ -264,12 +268,12 @@ def combined_matcher(data):
                     locations[i] = ''
                 if len(locations[i]) < 3:
                     locations[i] = ''
-                if any(emt.lower() in locations[i] for emt in loc_fp):
+                if any(emt in locations[i] for emt in loc_fp):
                     rem = [emt for emt in loc_fp if(
                         emt in str(locations[i]))][0]
                     print('loc removed: ', rem)
                     locations[i] = locations[i].lower().replace(
-                        rem.lower(), '').strip()
+                        rem.lower(), '').strip().title()
             # for (i, element) in enumerate(locations):
             #     for (j, choice) in enumerate(locations[i+1:]):
             #         if fuzz.ratio(element, choice) >= 90:
@@ -279,7 +283,6 @@ def combined_matcher(data):
                 #     for j in range(len(locations)):
                 #         if locations[i] in locations[j]:
                 #             locations[i] = ''
-
         org = list(set(filter(None, org)))
         names = list(set(filter(None, names)))
         locations = list(set(filter(None, locations)))
