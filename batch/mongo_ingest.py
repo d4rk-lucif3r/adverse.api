@@ -9,52 +9,70 @@ import pymongo
 from pymongo import MongoClient
 
 
-
 def postprocessing():
 
     f1 = Faker()
 
-    df = pd.read_csv(os.path.abspath(os.path.join(os.getcwd(),'result_database/database.csv')), dtype='unicode')
+    df = pd.read_csv(
+        os.path.abspath(os.path.join(os.getcwd(), "result_database/database.csv")),
+        dtype="unicode",
+    )
 
-    df = df.drop_duplicates(subset='Web link of news', keep="last")
+    df = df.drop_duplicates(subset="Web link of news", keep="last")
 
     df.reset_index(drop=True, inplace=True)
 
-    df['Source Name'] = ''
+    df["Source Name"] = ""
 
-    df['Source of Info'] = 'News Paper'
+    df["Source of Info"] = "News Paper"
 
     x = [f1.uuid4() for i in range(len(df))]
 
-    df['uuid'] = x
+    df["uuid"] = x
 
-    df['City/ State mentioned under the news'] = ''
+    df["City/ State mentioned under the news"] = ""
 
-    df.columns = ['Person Name mentioned in the news',
-       'Organization Name mentioned in the news',
-       'City/ State mentioned under the news', 'Article Date',
-       'Key word Used for identify the article',
-       'HDFC Bank Name under News / Article', 'Web link of news',
-       'Source Name', 'Source of Info', 'uuid']
+    df.columns = [
+        "Person Name mentioned in the news",
+        "Organization Name mentioned in the news",
+        "City/ State mentioned under the news",
+        "Article Date",
+        "Key word Used for identify the article",
+        "HDFC Bank Name under News / Article",
+        "Web link of news",
+        "Source Name",
+        "Source of Info",
+        "uuid",
+    ]
 
     # strip ending comma, spaces
-    df['Person Name mentioned in the news'] = df['Person Name mentioned in the news'].apply(lambda x: x.strip(', '))
-    df['Organization Name mentioned in the news'] = df['Organization Name mentioned in the news'].apply(lambda x: x.strip(', '))
-    df['City/ State mentioned under the news'] = df['City/ State mentioned under the news'].apply(lambda x: x.strip(', '))
-    df['Key word Used for identify the article'] = df['Key word Used for identify the article'].apply(lambda x: x.strip(', '))
-    df['HDFC Bank Name under News / Article'] = df['HDFC Bank Name under News / Article'].apply(lambda x: x.strip(', '))
-    df['Article Date'] = df['Article Date'].apply(lambda x: x.strip(', '))
-    df['City of News Paper'] = '' # document.pop('City of News Paper')
+    df["Person Name mentioned in the news"] = df[
+        "Person Name mentioned in the news"
+    ].apply(lambda x: x.strip(", "))
+    df["Organization Name mentioned in the news"] = df[
+        "Organization Name mentioned in the news"
+    ].apply(lambda x: x.strip(", "))
+    df["City/ State mentioned under the news"] = df[
+        "City/ State mentioned under the news"
+    ].apply(lambda x: x.strip(", "))
+    df["Key word Used for identify the article"] = df[
+        "Key word Used for identify the article"
+    ].apply(lambda x: x.strip(", "))
+    df["HDFC Bank Name under News / Article"] = df[
+        "HDFC Bank Name under News / Article"
+    ].apply(lambda x: x.strip(", "))
+    df["Article Date"] = df["Article Date"].apply(lambda x: x.strip(", "))
+    df["City of News Paper"] = ""  # document.pop('City of News Paper')
 
-    dicts = df.to_dict(orient='records')
-    client = MongoClient('localhost', 27017)
-    db = client['adverse_db']
-    collection_batches = db['adverse_db']
-    cursor = collection_batches.find({}, {'_id': False})
-    dbs = [database['Web link of news'] for database in cursor]
+    dicts = df.to_dict(orient="records")
+    client = MongoClient("localhost", 27017)
+    db = client["adverse_db"]
+    collection_batches = db["adverse_db"]
+    cursor = collection_batches.find({}, {"_id": False})
+    dbs = [database["Web link of news"] for database in cursor]
 
     for _dict in dicts:
-        if _dict['Web link of news'] in dbs:
+        if _dict["Web link of news"] in dbs:
             continue
         else:
             collection_batches.insert_one(_dict)
@@ -64,17 +82,16 @@ def postprocessing():
     return "Post processing Complete"
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     postprocessing()
 #     q_codes = []
 #     q_codes_dict = {}
 
 
-    # df['father'] = df['father'].apply(qcode2val)
+# df['father'] = df['father'].apply(qcode2val)
 
-    # df.to_csv('/home/ubuntu/data_temp/wiki_data1.csv')
+# df.to_csv('/home/ubuntu/data_temp/wiki_data1.csv')
 
 #     q_codes = return_qcodes(df, 'first_name', q_codes)
 #     print('first_name done')

@@ -2,10 +2,12 @@ from incre_batch import *
 import schedule
 import time
 
+
 def job():
-	print("Running Batch Table")
-	run_batch()
+    print("Running Batch Table")
+    run_batch()
     # print("I'm working...")
+
 
 # schedule.every(10).minutes.do(job)
 # schedule.every(2).hours.do(job)
