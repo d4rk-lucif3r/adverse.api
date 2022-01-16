@@ -23,7 +23,7 @@ model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
 # ner_xml = pipeline("ner", model=model_xml, tokenizer=tokenizer_xml)
 ner_bert = pipeline("ner", model=model, tokenizer=tokenizer)
 ner_stanza = stanza.Pipeline(lang="en")
-# ner_flair = SequenceTagger.load("flair/ner-english-ontonotes-large")
+# ner_flair_2 = SequenceTagger.load("flair/ner-english-ontonotes-large")
 ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
@@ -34,7 +34,7 @@ ner_spacy_2 = spacy.load("en_core_web_lg")
 #           'OBCikaner Gwa', 'Top News', 'Right Now', 'non-Yadav', 'ARTICLE', 'Black Cat', 'NDATR',
 #           'TSTR', 'Regis General of',
 #           ]
-org_fp = []
+org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India', 'ARTICLE', 'TSTR', 'NDATR']
 # loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
 loc_fp = []
 name_fp = [
@@ -67,8 +67,7 @@ def combined_matcher(data):
         flair_test2 = {}
         numeric_data = []
         final_numerical_data = []
-        # data = list(filter(None, data))
-        # print('[INFO] Filtering Started\n')
+        print('[INFO] Filtering Started\n')
         locations.append(locationtagger.find_locations(text=data).regions)
         dat = data.split('\n')
         for i in range(len(dat)):

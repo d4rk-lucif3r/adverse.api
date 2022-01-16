@@ -22,7 +22,7 @@ from ibm_watson import LanguageTranslatorV3
 from googletrans import Translator
 from google_trans_new import google_translator as google_translator2
 from combined_matcher import combined_matcher
-
+from fuzzywuzzy import fuzz
 translator2 = google_translator2()
 translator = Translator()
 
@@ -1305,7 +1305,47 @@ def _incre_mode(batch_id):
 
                         # for __loc in _loc:
                         # document['City/ State mentioned under the news'] += __loc + ', '
+                    org = document["Organization_Name_mentioned_in_the_news"].split(
+                        ","
+                    )
+                    for i in range(len(org)):
+                        org[i] = org[i].strip()
+                    org = list(set(filter(None, org)))
+                    if len(org) > 1:
+                        for (i, element) in enumerate(org):
+                            for (j, choice) in enumerate(org[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 70:
+                                    if element in org:
+                                        org.remove(element)
+                                        print("FUZZ org removed: ", element)
+                    loc = document["City_State_mentioned_under_the_news"].split(",")
+                    for i in range(len(org)):
+                        if org[i] in loc:
+                            org[i] = ''
 
+                    per = document["Person_Name_mentioned_in_the_news"].split(",")
+                    for i in range(len(per)):
+                        per[i] = per[i].strip()
+                    per = list(set(filter(None, per)))
+                    if len(per) > 0:
+                        for (i, element) in enumerate(per):
+                            for (j, choice) in enumerate(per[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 80:
+                                    if element in per:
+                                        per.remove(element)
+                                        print("FUZZ name removed: ", element)
+
+                    for i in range(len(loc)):
+                        loc[i] = loc[i].strip()
+                    loc = list(set(filter(None, loc)))
+
+                    if len(loc) > 1:
+                        for (i, element) in enumerate(loc):
+                            for (j, choice) in enumerate(loc[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 70:
+                                    if element in loc:
+                                        loc.remove(element)
+                                        print("FUZZ loc removed: ", element)
                     document["Organization Name mentioned in the news"] = document[
                         "Organization Name mentioned in the news"
                     ].split(",")
@@ -1607,67 +1647,97 @@ def _incre_mode(batch_id):
 
                     for i in range(len(text2)):
 
-                        doc = nlp_Name(text2[i])
+                            names_comb, orgs_comb, locations_comb = combined_matcher(
+                                text2[i]
+                            )
 
-                        # doc = nlp_Name(article.title + os.linesep + article.text)
+                            # iterate through each entity present
+                            # for count,ent in enumerate(doc.ents):
 
-                        # iterate through each entity present
-                        for count, ent in enumerate(doc.ents):
-                            # save data in profile
-                            # find persons in text
-                            if ent.label_ == "PERSON":
-                                profile["name"] += ent.text + ", "
+                            # if ent.label_ == 'PERSON':/
+                            for name in names_comb:
+                                profile["name"] += (
+                                    name + ", "
+                                )
 
-                            # find persons in text
-                            elif ent.label_ == "ORG":
+                            # elif ent.label_ == 'ORG':
 
-                                if ent.text in excludeorg:
-                                    _exc_org.append(ent.text)
 
-                                for _org in excludeorg:
+                            # elif ent.label_ == 'GPE':
+                            for location in locations_comb:
+                                profile["loc"] += (
+                                    location + ", "
+                                )
+                            for org in orgs_comb:
+                                    for _org in excludeorg:
+                                        if org.lower() == _org.lower():
+                                            _exc_org.append(org)
 
-                                    if ent.text.lower() == _org.lower():
-                                        _exc_org.append(ent.text)
+                                        if len(org.split("’")) > 1:
+                                            for _ent in org.lower().split("’"):
+                                                __org = _org.lower().split(" ")
+                                                __org = StripUnique(__org)
+                                                _ent_text = _ent.lower().split(" ")
+                                                _ent_text = StripUnique(_ent_text)
 
-                                    if len(ent.text.split("’")) > 1:
-                                        for _ent in ent.text.lower().split("’"):
-                                            __org = _org.lower().split(" ")
-                                            __org = StripUnique(__org)
-                                            _ent_text = _ent.lower().split(" ")
-                                            _ent_text = StripUnique(_ent_text)
+                                                if set(__org) <= set(_ent_text) or set(
+                                                    _ent_text
+                                                ) <= set(__org):
+                                                    _exc_org.append(org)
 
-                                            if set(__org) <= set(_ent_text) or set(
-                                                _ent_text
-                                            ) <= set(__org):
-                                                _exc_org.append(ent.text)
+                                        __org = _org.lower().split(" ")
+                                        __org = StripUnique(__org)
+                                        _ent_text = org.lower().split(" ")
+                                        _ent_text = StripUnique(_ent_text)
 
-                                    __org = _org.lower().split(" ")
-                                    __org = StripUnique(__org)
-                                    _ent_text = ent.text.lower().split(" ")
-                                    _ent_text = StripUnique(_ent_text)
+                                        if set(__org) <= set(_ent_text) or set(
+                                            _ent_text
+                                        ) <= set(__org):
+                                            _exc_org.append(org)
+                                    profile["org"] += (
+                                        org + ", "
+                                    )
+                    org = profile["org"].split(
+                        ","
+                    )
+                    for i in range(len(org)):
+                        org[i] = org[i].strip()
+                    org = list(set(filter(None, org)))
+                    if len(org) > 1:
+                        for (i, element) in enumerate(org):
+                            for (j, choice) in enumerate(org[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 70:
+                                    if element in org:
+                                        org.remove(element)
+                                        print("FUZZ org removed: ", element)
+                    loc = profile["loc"].split(",")
+                    for i in range(len(org)):
+                        if org[i] in loc:
+                            org[i] = ''
 
-                                    if set(__org) <= set(_ent_text) or set(
-                                        _ent_text
-                                    ) <= set(__org):
-                                        _exc_org.append(ent.text)
+                    per = profile["name"].split(",")
+                    for i in range(len(per)):
+                        per[i] = per[i].strip()
+                    per = list(set(filter(None, per)))
+                    if len(per) > 0:
+                        for (i, element) in enumerate(per):
+                            for (j, choice) in enumerate(per[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 80:
+                                    if element in per:
+                                        per.remove(element)
+                                        print("FUZZ name removed: ", element)
 
-                                profile["org"] += ent.text + ", "
+                    for i in range(len(loc)):
+                        loc[i] = loc[i].strip()
+                    loc = list(set(filter(None, loc)))
 
-                            # find persons in text
-                            elif ent.label_ == "GPE":
-                                profile["loc"] += ent.text + ", "
-
-                            # find persons in text
-                            elif ent.label_ == "LOC":
-                                profile["loc"] += ent.text + ", "
-
-                            # find persons in text
-                            elif ent.label_ == "FAC":
-                                profile["loc"] += ent.text + ", "
-
-                            else:
-                                continue
-
+                    if len(loc) > 1:
+                        for (i, element) in enumerate(loc):
+                            for (j, choice) in enumerate(loc[i + 1 :]):
+                                if fuzz.ratio(element, choice) >= 70:
+                                    if element in loc:
+                                        loc.remove(element)
+                                        print("FUZZ loc removed: ", element)
                     profile["date"] = link["published"]  # article.publish_date
                     profile["cities"] = keys[0]
 
