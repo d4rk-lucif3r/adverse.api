@@ -1,3 +1,4 @@
+import itertools
 from flask import Flask, request, render_template, jsonify, url_for, redirect
 from app import app
 from bson.json_util import dumps, loads
@@ -1239,8 +1240,9 @@ def adverseapi():
                         for i in range(len(text2)):
                             # doc = nlp_Name(text2[i])
                             if not len(text2[i]) == 0:
+                                re.sub("[\(\[].*?[\)\]]", "", text2[i])
                                 names_matched, orgs, locations = combined_matcher(
-                                    text2[i]
+                                    text2[i].replace('(', '').replace(')', '')
                                 )
 
                             # iterate through each entity present
@@ -1354,36 +1356,49 @@ def adverseapi():
                             for (i, element) in enumerate(org):
                                 for (j, choice) in enumerate(org[i + 1 :]):
                                     if fuzz.ratio(element, choice) >= 70:
-                                        if element in org:
-                                            org.remove(element)
+                                        if choice in org:
+                                            org.remove(choice)
                                             print("FUZZ org removed: ", element)
                         loc = profile["City_State_mentioned_under_the_news"].split(",")
+                        loc1 = []
+                        for i in range(len(loc)):
+                            loc[i] = loc[i].strip().replace('The', '').replace('the', '')
+                            loc1.append(loc[i].lower())
+                        loc1 = list(set(loc1))
                         for i in range(len(org)):
-                            if org[i] in loc:
-                                org[i] = ''
-
+                            for j in range(len(loc1)):
+                                if fuzz.ratio(org[i], loc1[j]) >= 80:
+                                    print("FUZZ loc removed from org: ", org[i])
+                                    org[i] = ''
+                                    loc1[i] = ''
+                        org = list(set(filter(None, org)))
                         per = profile["Person_Name_mentioned_in_the_news"].split(",")
                         for i in range(len(per)):
                             per[i] = per[i].strip()
+                            if per[i].isdigit():
+                                per[i] = ""
                         per = list(set(filter(None, per)))
                         if len(per) > 0:
                             for (i, element) in enumerate(per):
                                 for (j, choice) in enumerate(per[i + 1 :]):
-                                    if fuzz.ratio(element, choice) >= 80:
-                                        if element in per:
-                                            per.remove(element)
+                                    if fuzz.ratio(element, choice) >= 90:
+                                        if choice in per:
+                                            per.remove(choice)
                                             print("FUZZ name removed: ", element)
 
                         for i in range(len(loc)):
                             loc[i] = loc[i].strip()
+                            b = re.sub( r"([A-Z])", r" \1", loc[i]).split()
+                            for j in range(len(b)):
+                                loc.append(b[j].title())
+                                
                         loc = list(set(filter(None, loc)))
-
                         if len(loc) > 1:
                             for (i, element) in enumerate(loc):
                                 for (j, choice) in enumerate(loc[i + 1 :]):
                                     if fuzz.ratio(element, choice) >= 70:
-                                        if element in loc:
-                                            loc.remove(element)
+                                        if choice in loc:
+                                            loc.remove(choice)
                                             print("FUZZ loc removed: ", element)
 
 
@@ -1478,9 +1493,7 @@ def adverseapi():
                         profile["Organization_Name_mentioned_in_the_news"] = " | ".join(
                             profile["Organization_Name_mentioned_in_the_news"]
                         )
-                        profile["City_State_mentioned_under_the_news"] = profile[
-                            "City_State_mentioned_under_the_news"
-                        ].split(",")
+                        profile["City_State_mentioned_under_the_news"] = loc
                         # print(profile['City_State_mentioned_under_the_news'])
                         profile["City_State_mentioned_under_the_news"] = [
                             x.strip()
@@ -1521,7 +1534,7 @@ def adverseapi():
                             if "covid" not in i.lower()
                         ]
                         # profile['City_State_mentioned_under_the_news'] = [i.split("’")[0] for i in profile['City_State_mentioned_under_the_news']]
-                        print(profile["City_State_mentioned_under_the_news"])
+
                         for name in profile["City_State_mentioned_under_the_news"]:
                             if name.lower() in names["names"]:
                                 profile["City_State_mentioned_under_the_news"].remove(
@@ -1549,8 +1562,8 @@ def adverseapi():
                             profile["Article_Date"] = ""
 
                         profile["Source_Name"] = source2name[profile["Source_Name"]]
-                        # print(profile)
 
+                        print(profile["City_State_mentioned_under_the_news"])
                         return jsonify(
                             {
                                 "news_source_ids": ids["news_source_ids"],

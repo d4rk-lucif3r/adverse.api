@@ -8,7 +8,7 @@ from transformers import pipeline
 from flair.data import Sentence
 from flair.models import SequenceTagger
 import stanza
-
+import re
 # stanza.download('en')
 import pandas as pd
 from fuzzywuzzy import fuzz
@@ -23,8 +23,8 @@ model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
 # ner_xml = pipeline("ner", model=model_xml, tokenizer=tokenizer_xml)
 ner_bert = pipeline("ner", model=model, tokenizer=tokenizer)
 ner_stanza = stanza.Pipeline(lang="en")
-# ner_flair_2 = SequenceTagger.load("flair/ner-english-ontonotes-large")
-ner_flair = SequenceTagger.load("flair/ner-multi")
+ner_flair = SequenceTagger.load("flair/ner-english-large")
+# ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
 
@@ -34,9 +34,10 @@ ner_spacy_2 = spacy.load("en_core_web_lg")
 #           'OBCikaner Gwa', 'Top News', 'Right Now', 'non-Yadav', 'ARTICLE', 'Black Cat', 'NDATR',
 #           'TSTR', 'Regis General of',
 #           ]
-org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India', 'ARTICLE', 'TSTR', 'NDATR']
+org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
+          'ARTICLE', 'TSTR', 'NDATR', 'VET', 'cryptocurrencies','’','ATM', 'SSP', 'CHB']
 # loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
-loc_fp = []
+loc_fp = ['BNB']
 name_fp = [
     "maggi",
     "rooh afza",
@@ -67,7 +68,15 @@ def combined_matcher(data):
         flair_test2 = {}
         numeric_data = []
         final_numerical_data = []
+        misc_data = []
         print('[INFO] Filtering Started\n')
+        spacy_results = ner_spacy(data)
+        for ent in spacy_results.ents:
+            if ent.label_ == 'PERSON':
+                names.append(ent.text)
+        for i in range(len(names)):
+            if names[i] in str(data):
+                data = data.replace(names[i], '').replace(',', ' , ')
         locations.append(locationtagger.find_locations(text=data).regions)
         dat = data.split('\n')
         for i in range(len(dat)):
@@ -75,6 +84,10 @@ def combined_matcher(data):
             output = stream.read()
             if output != '':
                 numeric_data.append(output.split('\t'))
+
+            
+        
+        
         locations = list(itertools.chain(*locations))
         numeric_data = list(filter(None, numeric_data))
         for i in range(0, len(numeric_data)):
@@ -100,6 +113,10 @@ def combined_matcher(data):
                 org.append(ent.text)
             if ent.type == 'LOC':
                 locations.append(ent.text)
+            if ent.type == 'LAW':
+                misc_data.append(ent.text)
+            if ent.type == 'GPE':
+                locations.append(ent.text)
         raw_locations = []
         # locations = []
 
@@ -110,10 +127,12 @@ def combined_matcher(data):
                 locations.append(i)
             if j == 'GPE':
                 locations.append(i)
-            if j == 'FAC':
-                locations.append(i)
-            if j == 'ORG':
-                org.append(i)
+            if j == 'MISC':
+                misc_data.append(i)
+            # if j == 'FAC':
+            #     locations.append(i)
+            # if j == 'ORG':
+            #     org.append(i)
         # for entity in sentence_2.get_spans('ner'):
         #     flair_test2[entity.text] = entity.tag
         # for i, j in flair_test2.items():
@@ -130,9 +149,9 @@ def combined_matcher(data):
                 locations.append(ent.text)
             if ent.label_ == 'ORG':
                 org.append(ent.text)
-            if ent.label_ == 'FAC':
-                locations.append(ent.text)
-            if ent.label_ == 'PER':
+            # if ent.label_ == 'FAC':
+            #     locations.append(ent.text)
+            if ent.label_ == 'PERSON':
                 names.append(ent.text)
             if ent.label_ == 'DATE':
                 numeric_data.append(ent.text)
@@ -144,18 +163,24 @@ def combined_matcher(data):
                 numeric_data.append(ent.text)
             if ent.label_ == 'LOC':
                 locations.append(ent.text)
+            if ent.label_ == 'LAW':
+                misc_data.append(ent.text)
+            if ent.label_ == 'CARDINAL':
+                numeric_data.append(ent.text)
         for ent in spacy_results_2.ents:
             if ent.label_ == 'GPE':
                 locations.append(ent.text)
             if ent.label_ == 'ORG':
                 org.append(ent.text)
-            if ent.label_ == 'FAC':
-                locations.append(ent.text)
-            if ent.label_ == 'PER':
+            # if ent.label_ == 'FAC':
+            #     locations.append(ent.text)
+            if ent.label_ == 'PERSON':
                 names.append(ent.text)
             if ent.label_ == 'DATE':
                 numeric_data.append(ent.text)
             if ent.label_ == 'TIME':
+                numeric_data.append(ent.text)
+            if ent.label_ == 'CARDINAL':
                 numeric_data.append(ent.text)
             if ent.label_ == 'MONEY':
                 numeric_data.append(ent.text)
@@ -163,10 +188,11 @@ def combined_matcher(data):
                 numeric_data.append(ent.text)
             if ent.label_ == 'LOC':
                 locations.append(ent.text)
-        filter_words = locations + final_numerical_data + org + numeric_data
+        filter_words = locations + final_numerical_data + org + numeric_data + misc_data
         # for i in range(len(filter_words)):
         #     if filter_words[i] in str(data):
         #         data = data.replace(filter_words[i], '').replace(',', ' , ')
+        org = list(set(org)-set(misc_data))
         sentence = Sentence(data)
         ner_flair.predict(sentence, mini_batch_size=16)
         # print('Predicting with Flair done 2\n')
@@ -179,6 +205,8 @@ def combined_matcher(data):
         for ent in stanza_results.entities:
             if ent.type == 'PER':
                 names.append(ent.text)
+            if ent.type == 'GPE':
+                locations.append(ent.text)
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
         for i, j in flair_test.items():
@@ -192,9 +220,9 @@ def combined_matcher(data):
                 names.append(ent.text)
         # for entity in sentence_2.get_spans('ner'):
         #     flair_test2[entity.text] = entity.tag
-        for i, j in flair_test2.items():
-            if j == 'PER':
-                names.append(i)
+        # for i, j in flair_test2.items():
+        #     if j == 'PER':
+        #         names.append(i)
         # this_location = []
         # all_locations_list_tmp = []
         # for ner_dict in xml_results:
@@ -245,7 +273,7 @@ def combined_matcher(data):
         filter_words = locations + final_numerical_data + org
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
-                data = data.replace(filter_words[i], '').replace(',', ' , ')
+                data = data.replace(filter_words[i], '')
         print('[INFO] Filtering Done\n')
         print('[INFO] Name Prediction Started\n')
         bert_results = ner_bert(data)
@@ -274,10 +302,11 @@ def combined_matcher(data):
         names = names + final_name_list
 
         print('Post-Processing the Predictions\n')
+        
         if len(org) > 0:
             for i in range(len(org)):
                 org[i] = org[i].strip().replace("'s", '').replace(
-                    "'", '').replace('the', '').replace('The', '')
+                    "'", '').replace('the', '').replace('The', '').replace('@', '')
                 if org[i] in locations:
                     org[i] = ''
                 if org[i] in names:
@@ -303,7 +332,7 @@ def combined_matcher(data):
                 #             org[i] = ''
         if len(names) > 0:
             for i in range(len(names)):
-                names[i] = names[i].strip().replace("'s", '').replace("'",'').replace('the', '').replace('The', '')
+                names[i] = names[i].strip().replace("'s", '').replace("'",'').replace('@', '')
                 if names[i] in org:
                     names[i] = ''
                 if names[i] in locations:
@@ -317,6 +346,8 @@ def combined_matcher(data):
                     print('name removed: ', rem)
                     names[i] = names[i].lower().replace(
                         rem.lower(), '').strip().title()
+                if names[i].isdigit():
+                    names[i] = ''
             for (i, element) in enumerate(names):
                 for (j, choice) in enumerate(names[i+1:]):
                     if fuzz.ratio(names, choice) >= 90:
@@ -324,6 +355,7 @@ def combined_matcher(data):
 
                             names.remove(element)
                             print('FUZZ name removed: ', element)
+                
                 # if len(names[i].split()) == 1:
                 #     for j in range(len(names)):
                 #         if names[i] in names[j]:
@@ -331,7 +363,7 @@ def combined_matcher(data):
         if len(locations) > 0:
             for i in range(len(locations)):
                 locations[i] = locations[i].strip().replace("'s", '').replace(
-                    "'", '').replace('the', '').replace('The', '')
+                    "'", '').replace('@', '')
                 if locations[i] in org:
                     locations[i] = ''
                 if locations[i] in names:
