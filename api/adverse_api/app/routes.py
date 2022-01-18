@@ -1244,7 +1244,6 @@ def adverseapi():
                                 names_matched, orgs, locations = combined_matcher(
                                     text2[i].replace('(', '').replace(')', '')
                                 )
-
                             # iterate through each entity present
                             # for ent in doc.ents:
                             #   # save data in profile
@@ -1375,7 +1374,7 @@ def adverseapi():
                         per = profile["Person_Name_mentioned_in_the_news"].split(",")
                         for i in range(len(per)):
                             per[i] = per[i].strip()
-                            if per[i].isdigit():
+                            if per[i].isnumeric():
                                 per[i] = ""
                         per = list(set(filter(None, per)))
                         if len(per) > 0:

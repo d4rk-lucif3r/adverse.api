@@ -1,17 +1,19 @@
-import os
 import itertools
-from black import traceback
-import locationtagger
-import spacy
-from transformers import AutoTokenizer, AutoModelForTokenClassification
-from transformers import pipeline
-from flair.data import Sentence
-from flair.models import SequenceTagger
-import stanza
+import os
 import re
+
+import locationtagger
 # stanza.download('en')
 import pandas as pd
+import spacy
+import stanza
+from black import traceback
+from dateutil.parser import parse
+from flair.data import Sentence
+from flair.models import SequenceTagger
 from fuzzywuzzy import fuzz
+from transformers import (AutoModelForTokenClassification, AutoTokenizer,
+                          pipeline)
 
 tokenizer = AutoTokenizer.from_pretrained("dslim/bert-large-NER")
 model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
@@ -27,7 +29,8 @@ ner_flair = SequenceTagger.load("flair/ner-english-large")
 # ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-
+# stanza.download('en', package = 'partut')
+ner_stanza = stanza.Pipeline('en', package = 'partut') 
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
 #           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags', 
 #           'Bench', 'conscious', 'S://Images.Indianexpress.Com/2020/08/1X1.Png Top News',
@@ -35,7 +38,7 @@ ner_spacy_2 = spacy.load("en_core_web_lg")
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'ARTICLE', 'TSTR', 'NDATR', 'VET', 'cryptocurrencies','’','ATM', 'SSP', 'CHB']
+          'ARTICLE', 'TSTR', 'NDATR', 'VET', 'cryptocurrencies', '’', 'ATM', 'SSP', 'CHB', 'Newsguard ']
 # loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
 loc_fp = ['BNB']
 name_fp = [
@@ -52,6 +55,14 @@ name_fp = [
     "@",
 ]
 
+
+def is_date(string, fuzzy=False):
+    try:
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
 
 def combined_matcher(data):
     try:
@@ -320,6 +331,8 @@ def combined_matcher(data):
                     print('org removed: ', rem)
                     org[i] = org[i].lower().replace(
                         rem.lower(), '').strip().title()
+                if is_date(org[i]):
+                    org[i] = ''
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
@@ -346,7 +359,9 @@ def combined_matcher(data):
                     print('name removed: ', rem)
                     names[i] = names[i].lower().replace(
                         rem.lower(), '').strip().title()
-                if names[i].isdigit():
+                if names[i].isnumeric():
+                    names[i] = ''
+                if is_date(names[i]):
                     names[i] = ''
             for (i, element) in enumerate(names):
                 for (j, choice) in enumerate(names[i+1:]):
@@ -378,6 +393,8 @@ def combined_matcher(data):
                     print('loc removed: ', rem)
                     locations[i] = locations[i].lower().replace(
                         rem.lower(), '').strip().title()
+                if is_date(locations[i]):
+                    locations[i] = ''
             # for (i, element) in enumerate(locations):
             #     for (j, choice) in enumerate(locations[i+1:]):
             #         if fuzz.ratio(element, choice) >= 90:
