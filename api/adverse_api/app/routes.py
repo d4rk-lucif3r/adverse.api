@@ -1244,6 +1244,8 @@ def adverseapi():
                                 names_matched, orgs, locations = combined_matcher(
                                     text2[i].replace('(', '').replace(')', '')
                                 )
+                            else:
+                                names_matched, orgs, locations = [], [], []
                             # iterate through each entity present
                             # for ent in doc.ents:
                             #   # save data in profile

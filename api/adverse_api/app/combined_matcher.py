@@ -321,7 +321,7 @@ def combined_matcher(data):
         
         if len(org) > 0:
             for i in range(len(org)):
-                if org[i].replace('the') in misc_data:
+                if org[i].replace('the', '') in misc_data:
                     org[i] = ''
                 org[i] = org[i].strip().replace("'s", '').replace(
                     "'", '').replace('the', '').replace('The', '').replace('@', '').replace('-', ' ')
