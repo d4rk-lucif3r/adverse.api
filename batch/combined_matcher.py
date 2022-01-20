@@ -38,7 +38,7 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'ARTICLE', 'TSTR', 'NDATR', 'VET', 'cryptocurrencies', '’', 'ATM', 'SSP', 'CHB', 'Newsguard ']
+          'VET', 'cryptocurrencies', '’', 'ATM', 'SSP', 'CHB', 'Newsguard ']
 # loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
 loc_fp = ['BNB']
 name_fp = [
@@ -384,7 +384,7 @@ def combined_matcher(data):
                     locations[i] = ''
                 if '##' in locations[i]:
                     locations[i] = ''
-                if len(locations[i]) < 3:
+                if len(locations[i]) < 4:
                     locations[i] = ''
                 if any(emt in locations[i] for emt in loc_fp):
                     rem = [emt for emt in loc_fp if(

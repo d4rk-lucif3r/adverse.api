@@ -1351,10 +1351,11 @@ def adverseapi():
                         for i in range(len(org)):
                             org[i] = org[i].strip()
                         org = list(set(filter(None, org)))
+                        print(org)
                         if len(org) > 1:
                             for (i, element) in enumerate(org):
                                 for (j, choice) in enumerate(org[i + 1 :]):
-                                    if fuzz.ratio(element, choice) >= 70:
+                                    if fuzz.ratio(element.lower(), choice.lower()) >= 70:
                                         if choice in org:
                                             org.remove(choice)
                                             print("FUZZ org removed: ", element)
@@ -1384,18 +1385,19 @@ def adverseapi():
                                         if choice in per:
                                             per.remove(choice)
                                             print("FUZZ name removed: ", element)
-
+                        # print(loc)
                         for i in range(len(loc)):
                             loc[i] = loc[i].strip()
-                            b = re.sub( r"([A-Z])", r" \1", loc[i]).split()
-                            for j in range(len(b)):
-                                loc.append(b[j].title())
-                                
+                            if len(loc[i].split()) == 1:
+                                b = re.sub( r"([A-Z])", r" \1", loc[i]).split()
+                                for j in range(len(b)):
+                                    loc.append(b[j].title())
+                        # print(loc)       
                         loc = list(set(filter(None, loc)))
                         if len(loc) > 1:
                             for (i, element) in enumerate(loc):
                                 for (j, choice) in enumerate(loc[i + 1 :]):
-                                    if fuzz.ratio(element, choice) >= 70:
+                                    if fuzz.ratio(element.lower(), choice.lower()) >= 72:
                                         if choice in loc:
                                             loc.remove(choice)
                                             print("FUZZ loc removed: ", element)
@@ -1405,6 +1407,8 @@ def adverseapi():
                             org
                         )
                         profile["Person_Name_mentioned_in_the_news"] = ",".join(per)
+                        if 'And' in loc:
+                            loc.remove('And')
                         profile["City_State_mentioned_under_the_news"] = ",".join(loc)
 
                         profile["Article_Date"] = article.publish_date

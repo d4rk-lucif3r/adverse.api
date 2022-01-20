@@ -38,7 +38,7 @@ ner_stanza = stanza.Pipeline('en', package = 'partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'ARTICLE', 'TSTR', 'NDATR', 'VET', 'cryptocurrencies', '’', 'ATM', 'SSP', 'CHB', 'Newsguard ']
+           'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https']
 # loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
 loc_fp = ['BNB']
 name_fp = [
@@ -53,6 +53,7 @@ name_fp = [
     "'s",
     "http",
     "@",
+    "Did you",
 ]
 
 
@@ -87,7 +88,7 @@ def combined_matcher(data):
                 names.append(ent.text)
         for i in range(len(names)):
             if names[i] in str(data):
-                data = data.replace(names[i], '').replace(',', ' , ')
+                data = data.replace(names[i], '').replace(',', ' , ').replace('/', ' ')
         locations.append(locationtagger.find_locations(text=data).regions)
         dat = data.split('\n')
         for i in range(len(dat)):
@@ -96,9 +97,6 @@ def combined_matcher(data):
             if output != '':
                 numeric_data.append(output.split('\t'))
 
-            
-        
-        
         locations = list(itertools.chain(*locations))
         numeric_data = list(filter(None, numeric_data))
         for i in range(0, len(numeric_data)):
@@ -218,6 +216,8 @@ def combined_matcher(data):
                 names.append(ent.text)
             if ent.type == 'GPE':
                 locations.append(ent.text)
+            if ent.type == 'LAW':
+                misc_data.append(ent.text)
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
         for i, j in flair_test.items():
@@ -281,7 +281,8 @@ def combined_matcher(data):
         #     final_org_list[i] = final_org_list[i][0]
         # org = org + final_org_list
         
-        filter_words = locations + final_numerical_data + org
+        filter_words = locations + final_numerical_data + org + numeric_data + misc_data 
+        filter_words = list(set(filter_words))
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
                 data = data.replace(filter_words[i], '')
@@ -313,18 +314,24 @@ def combined_matcher(data):
         names = names + final_name_list
 
         print('Post-Processing the Predictions\n')
+        print(org)
+        # misc_data = list(set(misc_data))
+        misc_data = ' '.join(misc_data)
+        print(misc_data)
         
         if len(org) > 0:
             for i in range(len(org)):
+                if org[i].replace('the') in misc_data:
+                    org[i] = ''
                 org[i] = org[i].strip().replace("'s", '').replace(
-                    "'", '').replace('the', '').replace('The', '').replace('@', '')
+                    "'", '').replace('the', '').replace('The', '').replace('@', '').replace('-', ' ')
                 if org[i] in locations:
                     org[i] = ''
                 if org[i] in names:
                     org[i] = ''
                 if '##' in org[i]:
                     org[i] = ''
-                if len(org[i]) < 3:
+                if len(org[i].strip()) < 3:
                     org[i] = ''
                 if any(emt in org[i] for emt in org_fp):
                     rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
@@ -333,6 +340,7 @@ def combined_matcher(data):
                         rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
+
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
@@ -345,6 +353,8 @@ def combined_matcher(data):
                 #             org[i] = ''
         if len(names) > 0:
             for i in range(len(names)):
+                if names[i] in misc_data:
+                    names[i] = ''
                 names[i] = names[i].strip().replace("'s", '').replace("'",'').replace('@', '')
                 if names[i] in org:
                     names[i] = ''
@@ -367,7 +377,6 @@ def combined_matcher(data):
                 for (j, choice) in enumerate(names[i+1:]):
                     if fuzz.ratio(names, choice) >= 90:
                         if element in names:
-
                             names.remove(element)
                             print('FUZZ name removed: ', element)
                 
@@ -385,7 +394,7 @@ def combined_matcher(data):
                     locations[i] = ''
                 if '##' in locations[i]:
                     locations[i] = ''
-                if len(locations[i]) < 3:
+                if len(locations[i]) < 4:
                     locations[i] = ''
                 if any(emt in locations[i] for emt in loc_fp):
                     rem = [emt for emt in loc_fp if(

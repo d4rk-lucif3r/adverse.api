@@ -1305,7 +1305,7 @@ def _incre_mode(batch_id):
 
                         # for __loc in _loc:
                         # document['City/ State mentioned under the news'] += __loc + ', '
-                    org = document["Organization_Name_mentioned_in_the_news"].split(
+                    org = document["Organization Name mentioned in the new"].split(
                         ","
                     )
                     for i in range(len(org)):
@@ -1318,12 +1318,23 @@ def _incre_mode(batch_id):
                                     if element in org:
                                         org.remove(element)
                                         print("FUZZ org removed: ", element)
-                    loc = document["City_State_mentioned_under_the_news"].split(",")
+                    loc = document["City/ State mentioned under the news"].split(
+                        ",")
+                    loc1 = []
+                    for i in range(len(loc)):
+                        loc[i] = loc[i].strip().replace('The', '').replace('the', '')
+                        loc1.append(loc[i].lower())
+                    loc1 = list(set(loc1))
                     for i in range(len(org)):
-                        if org[i] in loc:
-                            org[i] = ''
+                        for j in range(len(loc1)):
+                            if fuzz.ratio(org[i], loc1[j]) >= 80:
+                                print("FUZZ loc removed from org: ", org[i])
+                                org[i] = ''
+                                loc1[i] = ''
+                    org = list(set(filter(None, org)))
 
-                    per = document["Person_Name_mentioned_in_the_news"].split(",")
+                    per = document["Person Name mentioned in the news"].split(
+                        ",")
                     for i in range(len(per)):
                         per[i] = per[i].strip()
                     per = list(set(filter(None, per)))
@@ -1346,9 +1357,8 @@ def _incre_mode(batch_id):
                                     if element in loc:
                                         loc.remove(element)
                                         print("FUZZ loc removed: ", element)
-                    document["Organization Name mentioned in the news"] = document[
-                        "Organization Name mentioned in the news"
-                    ].split(",")
+                    document["Person Name mentioned in the news"] = loc
+                    document["Organization Name mentioned in the news"] = org
                     document["Organization Name mentioned in the news"] = [
                         x.strip()
                         for x in document["Organization Name mentioned in the news"]
@@ -1358,7 +1368,7 @@ def _incre_mode(batch_id):
                         set(document["Organization Name mentioned in the news"])
                     )
                     document["Person Name mentioned in the news"] = (
-                        document["Person Name mentioned in the news"].split(",")
+                        per
                         + document["Organization Name mentioned in the news"]
                     )
                     document["Person Name mentioned in the news"] = [
