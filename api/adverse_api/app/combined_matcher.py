@@ -30,16 +30,15 @@ ner_flair = SequenceTagger.load("flair/ner-english-large")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
 # stanza.download('en', package = 'partut')
-ner_stanza = stanza.Pipeline('en', package = 'partut') 
+ner_stanza = stanza.Pipeline('en', package='partut')
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
-#           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags', 
+#           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags',
 #           'Bench', 'conscious', 'S://Images.Indianexpress.Com/2020/08/1X1.Png Top News',
 #           'OBCikaner Gwa', 'Top News', 'Right Now', 'non-Yadav', 'ARTICLE', 'Black Cat', 'NDATR',
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-           'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https']
-# loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
 loc_fp = ['BNB']
 name_fp = [
     "maggi",
@@ -50,7 +49,7 @@ name_fp = [
     ";td.",
     "CO.",
     "Omicron",
-    "'s",
+    "’s",
     "http",
     "@",
     "Did you",
@@ -64,6 +63,7 @@ def is_date(string, fuzzy=False):
 
     except ValueError:
         return False
+
 
 def combined_matcher(data):
     try:
@@ -88,7 +88,8 @@ def combined_matcher(data):
                 names.append(ent.text)
         for i in range(len(names)):
             if names[i] in str(data):
-                data = data.replace(names[i], '').replace(',', ' , ').replace('/', ' ')
+                data = data.replace(names[i], '').replace(
+                    ',', ' , ').replace('/', ' ')
         locations.append(locationtagger.find_locations(text=data).regions)
         dat = data.split('\n')
         for i in range(len(dat)):
@@ -280,8 +281,8 @@ def combined_matcher(data):
         # for i in range(len(final_org_list)):
         #     final_org_list[i] = final_org_list[i][0]
         # org = org + final_org_list
-        
-        filter_words = locations + final_numerical_data + org + numeric_data + misc_data 
+
+        filter_words = locations + final_numerical_data + org + numeric_data + misc_data
         filter_words = list(set(filter_words))
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
@@ -318,7 +319,7 @@ def combined_matcher(data):
         # misc_data = list(set(misc_data))
         misc_data = ' '.join(misc_data)
         print(misc_data)
-        
+
         if len(org) > 0:
             for i in range(len(org)):
                 if org[i].replace('the', '') in misc_data:
@@ -333,11 +334,12 @@ def combined_matcher(data):
                     org[i] = ''
                 if len(org[i].strip()) < 3:
                     org[i] = ''
-                if any(emt in org[i] for emt in org_fp):
-                    rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
-                    print('org removed: ', rem)
-                    org[i] = org[i].lower().replace(
-                        rem.lower(), '').strip().title()
+                for j in range(len(org_fp)):
+                    if any(emt in org[i] for emt in org_fp):
+                        rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
+                        print('org removed: ', rem)
+                        org[i] = org[i].lower().replace(
+                            rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
 
@@ -355,7 +357,8 @@ def combined_matcher(data):
             for i in range(len(names)):
                 if names[i] in misc_data:
                     names[i] = ''
-                names[i] = names[i].strip().replace("'s", '').replace("'",'').replace('@', '')
+                names[i] = names[i].strip().replace(
+                    "'s", '').replace("'", '').replace('@', '')
                 if names[i] in org:
                     names[i] = ''
                 if names[i] in locations:
@@ -379,7 +382,7 @@ def combined_matcher(data):
                         if element in names:
                             names.remove(element)
                             print('FUZZ name removed: ', element)
-                
+
                 # if len(names[i].split()) == 1:
                 #     for j in range(len(names)):
                 #         if names[i] in names[j]:

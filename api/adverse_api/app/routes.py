@@ -1246,6 +1246,7 @@ def adverseapi():
                                 )
                             else:
                                 names_matched, orgs, locations = [], [], []
+                            print(orgs)
                             # iterate through each entity present
                             # for ent in doc.ents:
                             #   # save data in profile
@@ -1353,7 +1354,7 @@ def adverseapi():
                         for i in range(len(org)):
                             org[i] = org[i].strip()
                         org = list(set(filter(None, org)))
-                        print(org)
+                        # print(org)
                         if len(org) > 1:
                             for (i, element) in enumerate(org):
                                 for (j, choice) in enumerate(org[i + 1 :]):
@@ -1404,7 +1405,7 @@ def adverseapi():
                                             loc.remove(choice)
                                             print("FUZZ loc removed: ", element)
 
-
+                        print(org)
                         profile["Organization_Name_mentioned_in_the_news"] = ",".join(
                             org
                         )

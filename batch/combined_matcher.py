@@ -38,8 +38,7 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https']
-# loc_fp = ["Wli Houseman ' s Wharf House House House", 'Batala', 'Hussainiwala']
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
 loc_fp = ['BNB']
 name_fp = [
     "maggi",
@@ -50,7 +49,7 @@ name_fp = [
     ";td.",
     "CO.",
     "Omicron",
-    "'s",
+    "’s",
     "http",
     "@",
     "Did you",
@@ -335,11 +334,12 @@ def combined_matcher(data):
                     org[i] = ''
                 if len(org[i].strip()) < 3:
                     org[i] = ''
-                if any(emt in org[i] for emt in org_fp):
-                    rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
-                    print('org removed: ', rem)
-                    org[i] = org[i].lower().replace(
-                        rem.lower(), '').strip().title()
+                for j in range(len(org_fp)):
+                    if any(emt in org[i] for emt in org_fp):
+                        rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
+                        print('org removed: ', rem)
+                        org[i] = org[i].lower().replace(
+                            rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
 
