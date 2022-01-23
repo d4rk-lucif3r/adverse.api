@@ -1305,7 +1305,7 @@ def _incre_mode(batch_id):
 
                         # for __loc in _loc:
                         # document['City/ State mentioned under the news'] += __loc + ', '
-                    org = document["Organization Name mentioned in the new"].split(
+                    org = document["Organization Name mentioned in the news"].split(
                         ","
                     )
                     for i in range(len(org)):
