@@ -10,6 +10,7 @@ make install
 
 python -m spacy download en_core_web_trf
 python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_lg
 python -m nltk.downloader punkt
 python -m nltk.downloader stopwords
 python -m nltk.downloader wordnet
