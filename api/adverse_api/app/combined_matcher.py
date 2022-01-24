@@ -29,7 +29,7 @@ ner_flair = SequenceTagger.load("flair/ner-english-large")
 # ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-# stanza.download('en', package = 'partut')
+stanza.download('en', package = 'partut')
 ner_stanza = stanza.Pipeline('en', package='partut')
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
 #           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags',
