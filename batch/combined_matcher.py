@@ -334,6 +334,12 @@ def combined_matcher(data):
                     org[i] = ''
                 if len(org[i].strip()) < 3:
                     org[i] = ''
+                if len(org[i].strip()) > 9:
+                    org[i] = ''
+                if 'Act' in org[i]:
+                    org[i] = ''
+                if 'Law' in org[i]:
+                    org[i] = ''
                 for j in range(len(org_fp)):
                     if any(emt in org[i] for emt in org_fp):
                         rem = [emt for emt in org_fp if(emt in str(org[i]))][0]

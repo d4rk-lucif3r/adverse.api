@@ -342,7 +342,12 @@ def combined_matcher(data):
                             rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
-
+                if len(org[i].strip()) > 9:
+                    org[i] = ''
+                if 'Act' in org[i]:
+                    org[i] = ''
+                if 'Law' in org[i]:
+                    org[i] = ''
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
