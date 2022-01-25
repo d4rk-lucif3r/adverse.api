@@ -24,12 +24,12 @@ model = AutoModelForTokenClassification.from_pretrained("dslim/bert-large-NER")
 #     "vesteinn/XLMR-ENIS-finetuned-ner")
 # ner_xml = pipeline("ner", model=model_xml, tokenizer=tokenizer_xml)
 ner_bert = pipeline("ner", model=model, tokenizer=tokenizer)
-# ner_stanza = stanza.Pipeline(lang="en")
+ner_stanza = stanza.Pipeline(lang="en")
 ner_flair = SequenceTagger.load("flair/ner-english-large")
 # ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-stanza.download('en', package = 'partut')
+stanza.download('en', package='partut')
 ner_stanza = stanza.Pipeline('en', package='partut')
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
 #           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags',
@@ -108,6 +108,8 @@ def combined_matcher(data):
         final_numerical_data = list(
             set(itertools.chain.from_iterable(final_numerical_data)))
         print('[INFO] Predicting Tokens\n')
+        if type(data) is list:
+            data = ' '.join(data)
         sentence = Sentence(data)
         ner_flair.predict(sentence, mini_batch_size=16)
         # sentence_2 = Sentence(data)
@@ -219,6 +221,8 @@ def combined_matcher(data):
                 locations.append(ent.text)
             if ent.type == 'LAW':
                 misc_data.append(ent.text)
+            if ent.type == 'MONEY':
+                numeric_data.append(ent.text)
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
         for i, j in flair_test.items():
@@ -283,7 +287,16 @@ def combined_matcher(data):
         # org = org + final_org_list
 
         filter_words = locations + final_numerical_data + org + numeric_data + misc_data
-        filter_words = list(set(filter_words))
+        print(filter_words)
+        try:
+            filter_words = list(set(filter_words))
+        except TypeError:
+            for i in range(len(filter_words)):
+                if type(filter_words[i]) == list:
+                    for j in filter_words[i]:
+                        filter_words.append(j)
+                    filter_words.remove(filter_words[i])
+        print(filter_words)
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
                 data = data.replace(filter_words[i], '')
@@ -334,12 +347,6 @@ def combined_matcher(data):
                     org[i] = ''
                 if len(org[i].strip()) < 3:
                     org[i] = ''
-                if len(org[i].strip()) > 9:
-                    org[i] = ''
-                if 'Act' in org[i]:
-                    org[i] = ''
-                if 'Law' in org[i]:
-                    org[i] = ''
                 for j in range(len(org_fp)):
                     if any(emt in org[i] for emt in org_fp):
                         rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
@@ -348,7 +355,12 @@ def combined_matcher(data):
                             rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
-
+                if len(org[i].strip()) > 9:
+                    org[i] = ''
+                if 'Act' in org[i]:
+                    org[i] = ''
+                if 'Law' in org[i]:
+                    org[i] = ''
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:

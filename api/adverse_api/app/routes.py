@@ -1361,19 +1361,25 @@ def adverseapi():
                                     if fuzz.ratio(element.lower(), choice.lower()) >= 70:
                                         if choice in org:
                                             org.remove(choice)
-                                            print("FUZZ org removed: ", element)
+                                            print("FUZZ org removed: ", choice)
                         loc = profile["City_State_mentioned_under_the_news"].split(",")
-                        loc1 = []
+                        loc1 = []                        
+                        org = list(set(filter(None, org)))
+                        loc = list(set(filter(None, loc)))
                         for i in range(len(loc)):
                             loc[i] = loc[i].strip().replace('The', '').replace('the', '')
                             loc1.append(loc[i].lower())
                         loc1 = list(set(loc1))
+                        print('[DEBUG] org 0: ', org)
+                        print('[DEBUG] city 0: ', loc)
                         for i in range(len(org)):
-                            for j in range(len(loc1)):
-                                if fuzz.ratio(org[i], loc1[j]) >= 80:
+                            for j in range(len(loc)):
+                                if fuzz.ratio(org[i].lower(), loc[j].lower()) >= 80:
                                     print("FUZZ loc removed from org: ", org[i])
                                     org[i] = ''
-                                    loc1[i] = ''
+                                    loc[j] = ''
+                        # loc = loc1
+                        print('[DEBUG] city 1: ', loc)
                         org = list(set(filter(None, org)))
                         per = profile["Person_Name_mentioned_in_the_news"].split(",")
                         for i in range(len(per)):
@@ -1387,7 +1393,7 @@ def adverseapi():
                                     if fuzz.ratio(element, choice) >= 90:
                                         if choice in per:
                                             per.remove(choice)
-                                            print("FUZZ name removed: ", element)
+                                            print("FUZZ name removed: ", choice)
                         # print(loc)
                         for i in range(len(loc)):
                             loc[i] = loc[i].strip()
@@ -1396,16 +1402,31 @@ def adverseapi():
                                 for j in range(len(b)):
                                     loc.append(b[j].title())
                         # print(loc)       
+                        for i in range(len(org)):
+                            if len(org[i]) < 3:
+                                org[i] = ''
+                        for i in range(len(loc)):
+                            if len(loc[i]) < 3:
+                                loc[i] = ''
+                            
+                        for i in range(len(per)):
+                            if len(per[i]) < 2:
+                                per[i] = ''
                         loc = list(set(filter(None, loc)))
+                        print('[DEBUG] city 1a: ', loc)
                         if len(loc) > 1:
                             for (i, element) in enumerate(loc):
                                 for (j, choice) in enumerate(loc[i + 1 :]):
                                     if fuzz.ratio(element.lower(), choice.lower()) >= 72:
                                         if choice in loc:
                                             loc.remove(choice)
-                                            print("FUZZ loc removed: ", element)
-
-                        print(org)
+                                            print("FUZZ loc removed: ", choice)
+                        print('[DEBUG] city 2: ', loc)
+                        org = list(set(filter(None, org)))
+                        loc = list(set(filter(None, loc)))
+                        per = list(set(filter(None, per)))
+                        
+                        print('[DEBUG] ORG is: ', org)
                         profile["Organization_Name_mentioned_in_the_news"] = ",".join(
                             org
                         )
@@ -1569,7 +1590,7 @@ def adverseapi():
 
                         profile["Source_Name"] = source2name[profile["Source_Name"]]
 
-                        print(profile["City_State_mentioned_under_the_news"])
+                        print('[DEBUG] City :', profile["City_State_mentioned_under_the_news"])
                         return jsonify(
                             {
                                 "news_source_ids": ids["news_source_ids"],

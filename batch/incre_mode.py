@@ -1710,44 +1710,85 @@ def _incre_mode(batch_id):
                     org = profile["org"].split(
                         ","
                     )
+                    per = profile["name"].split(",")
+                    loc = profile["loc"].split(",")
                     for i in range(len(org)):
                         org[i] = org[i].strip()
                     org = list(set(filter(None, org)))
+                    # print(org)
                     if len(org) > 1:
                         for (i, element) in enumerate(org):
                             for (j, choice) in enumerate(org[i + 1 :]):
-                                if fuzz.ratio(element, choice) >= 70:
-                                    if element in org:
-                                        org.remove(element)
-                                        print("FUZZ org removed: ", element)
-                    loc = profile["loc"].split(",")
+                                if fuzz.ratio(element.lower(), choice.lower()) >= 70:
+                                    if choice in org:
+                                        org.remove(choice)
+                                        print("FUZZ org removed: ", choice)
+                    loc1 = []                        
+                    org = list(set(filter(None, org)))
+                    loc = list(set(filter(None, loc)))
+                    for i in range(len(loc)):
+                        loc[i] = loc[i].strip().replace('The', '').replace('the', '')
+                        loc1.append(loc[i].lower())
+                    loc1 = list(set(loc1))
+                    print('[DEBUG] org 0: ', org)
+                    print('[DEBUG] city 0: ', loc)
                     for i in range(len(org)):
-                        if org[i] in loc:
-                            org[i] = ''
-
-                    per = profile["name"].split(",")
+                        for j in range(len(loc)):
+                            if fuzz.ratio(org[i].lower(), loc[j].lower()) >= 80:
+                                print("FUZZ loc removed from org: ", org[i])
+                                org[i] = ''
+                                loc[j] = ''
+                    # loc = loc1
+                    print('[DEBUG] city 1: ', loc)
+                    org = list(set(filter(None, org)))
                     for i in range(len(per)):
                         per[i] = per[i].strip()
+                        if per[i].isnumeric():
+                            per[i] = ""
                     per = list(set(filter(None, per)))
                     if len(per) > 0:
                         for (i, element) in enumerate(per):
-                            for (j, choice) in enumerate(per[i + 1 :]):
-                                if fuzz.ratio(element, choice) >= 80:
-                                    if element in per:
-                                        per.remove(element)
-                                        print("FUZZ name removed: ", element)
-
+                            for (j, choice) in enumerate(per[i + 1:]):
+                                if fuzz.ratio(element, choice) >= 90:
+                                    if choice in per:
+                                        per.remove(choice)
+                                        print("FUZZ name removed: ", choice)
+                    # print(loc)
                     for i in range(len(loc)):
                         loc[i] = loc[i].strip()
-                    loc = list(set(filter(None, loc)))
+                        if len(loc[i].split()) == 1:
+                            b = re.sub(r"([A-Z])", r" \1", loc[i]).split()
+                            for j in range(len(b)):
+                                loc.append(b[j].title())
+                    # print(loc)
+                    for i in range(len(org)):
+                        if len(org[i]) < 3:
+                            org[i] = ''
+                    for i in range(len(loc)):
+                        if len(loc[i]) < 3:
+                            loc[i] = ''
 
+                    for i in range(len(per)):
+                        if len(per[i]) < 2:
+                            per[i] = ''
+                    loc = list(set(filter(None, loc)))
+                    print('[DEBUG] city 1a: ', loc)
                     if len(loc) > 1:
                         for (i, element) in enumerate(loc):
-                            for (j, choice) in enumerate(loc[i + 1 :]):
-                                if fuzz.ratio(element, choice) >= 70:
-                                    if element in loc:
-                                        loc.remove(element)
-                                        print("FUZZ loc removed: ", element)
+                            for (j, choice) in enumerate(loc[i + 1:]):
+                                if fuzz.ratio(element.lower(), choice.lower()) >= 72:
+                                    if choice in loc:
+                                        loc.remove(choice)
+                                        print("FUZZ loc removed: ", choice)
+                    print('[DEBUG] city 2: ', loc)
+                    org = list(set(filter(None, org)))
+                    loc = list(set(filter(None, loc)))
+                    per = list(set(filter(None, per)))
+                    
+                    profile['loc'] = loc
+                    profile['org'] = org
+                    profile['per'] = per
+                    
                     profile["date"] = link["published"]  # article.publish_date
                     profile["cities"] = keys[0]
 

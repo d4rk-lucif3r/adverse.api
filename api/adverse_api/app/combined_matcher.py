@@ -38,7 +38,7 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File',]
 loc_fp = ['BNB']
 name_fp = [
     "maggi",
@@ -108,6 +108,8 @@ def combined_matcher(data):
         final_numerical_data = list(
             set(itertools.chain.from_iterable(final_numerical_data)))
         print('[INFO] Predicting Tokens\n')
+        if type(data) is list:
+            data = ' '.join(data)
         sentence = Sentence(data)
         ner_flair.predict(sentence, mini_batch_size=16)
         # sentence_2 = Sentence(data)
@@ -219,6 +221,8 @@ def combined_matcher(data):
                 locations.append(ent.text)
             if ent.type == 'LAW':
                 misc_data.append(ent.text)
+            if ent.type == 'MONEY':
+                numeric_data.append(ent.text)
         for entity in sentence.get_spans('ner'):
             flair_test[entity.text] = entity.tag
         for i, j in flair_test.items():
@@ -283,7 +287,16 @@ def combined_matcher(data):
         # org = org + final_org_list
 
         filter_words = locations + final_numerical_data + org + numeric_data + misc_data
-        filter_words = list(set(filter_words))
+        print(filter_words)
+        try:
+            filter_words = list(set(filter_words))
+        except TypeError:
+            for i in range(len(filter_words)):
+                if type(filter_words[i]) == list:
+                    for j in filter_words[i]:
+                        filter_words.append(j)
+                    filter_words.remove(filter_words[i])
+        print(filter_words)
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
                 data = data.replace(filter_words[i], '')
