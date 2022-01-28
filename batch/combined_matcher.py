@@ -73,6 +73,8 @@ def combined_matcher(data):
             else:
                 print('[ERROR] Combined Matcher', data)
                 raise TypeError('Data must be a str only')
+        if not data:
+            return [], [], []
         names = []
         org = []
         locations = []
