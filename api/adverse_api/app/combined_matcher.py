@@ -95,7 +95,8 @@ def combined_matcher(data):
         locations.append(locationtagger.find_locations(text=data).regions)
         dat = data.split('\n')
         for i in range(len(dat)):
-            stream = os.popen("echo "+data[i].strip()+" | finner extr")
+            dat[i] = re.sub(r'[^a-zA-Z0-9\s]', '', dat[i])
+            stream = os.popen("echo "+dat[i].strip()+" | finner extr")
             output = stream.read()
             if output != '':
                 numeric_data.append(output.split('\t'))

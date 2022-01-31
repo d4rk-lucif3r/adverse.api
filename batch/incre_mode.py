@@ -1797,7 +1797,7 @@ def _incre_mode(batch_id):
 
                     profile["batch_id"] = batch_id
                     profile["created_date"] = datetime.now()
-                    profile["org"] = profile["org"].split(",")
+                    # profile["org"] = profile["org"]
                     # print(profile['org'])
                     profile["org"] = [x.strip() for x in profile["org"] if x.strip()]
                     profile["org"] = list(set(profile["org"]))
