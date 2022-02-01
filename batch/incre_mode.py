@@ -1788,7 +1788,7 @@ def _incre_mode(batch_id):
                     
                     profile['loc'] = loc
                     profile['org'] = org
-                    profile['per'] = per
+                    profile['name'] = per
                     
                     profile["date"] = link["published"]  # article.publish_date
                     profile["cities"] = keys[0]
