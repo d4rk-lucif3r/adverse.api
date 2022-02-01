@@ -1837,7 +1837,7 @@ def _incre_mode(batch_id):
                             profile["loc"] += name + ", "
 
                     profile["name"] = "| ".join(profile["name"])
-                    profile["org"] = "| ".join(profile["org"])
+                    # profile["org"] = "| ".join(profile["org"])
                     profile["loc"] = profile["loc"]
                     # print(profile['loc'])
                     profile["loc"] = [x.strip() for x in profile["loc"] if x.strip()]
