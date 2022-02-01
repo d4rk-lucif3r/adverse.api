@@ -34,7 +34,6 @@ nlp_Name = spacy.load("en_core_web_trf")
 def index():
     return "Adverse Media being prepared for HDFC"
 
-
 @app.route("/adverseapi", methods=["GET", "POST"])
 def adverseapi():
 
@@ -1244,117 +1243,82 @@ def adverseapi():
                                 names_matched, orgs, locations = combined_matcher(
                                     text2[i].replace('(', '').replace(')', '')
                                 )
-                            else:
-                                names_matched, orgs, locations = [], [], []
-                            print(orgs)
-                            # iterate through each entity present
-                            # for ent in doc.ents:
-                            #   # save data in profile
-                            #   # find persons in text
-                            #   if ent.label_ == 'PERSON':
-                            for name in names_matched:
-                                profile["Person_Name_mentioned_in_the_news"] += (
-                                    name + ", "
-                                )
+                                print('[INFO] predicted ORG', orgs)     
+                                for name in names_matched:
+                                    profile["Person_Name_mentioned_in_the_news"] += (
+                                        name + ", "
+                                    )
+                                for org in orgs:
+                                    if "excludeorg" in list(_request.keys()):
 
-                                # find persons in text
-                                # elif ent.label_ == 'ORG':
-                            for org in orgs:
-                                # check if ent.text is a subset of any excludeorg:
-                                if "excludeorg" in list(_request.keys()):
-
-                                    if org in excludeorg:
-                                        _exc_org.append(org)
-                                        # continue
-
-                                    for _org in excludeorg:
-
-                                        special_characters = "’'"
-
-                                        if org.lower() == _org.lower():
+                                        if org in excludeorg:
                                             _exc_org.append(org)
                                             # continue
 
-                                        if any(c in special_characters for c in org):
-                                            SpecialCharacter = [
-                                                c
-                                                for c in org
-                                                if c in special_characters
-                                            ]
+                                        for _org in excludeorg:
 
-                                            if len(org.split(SpecialCharacter[0])) > 1:
-                                                for _ent in org.lower().split(
-                                                    SpecialCharacter[0]
-                                                ):
-                                                    __org = _org.lower().split(" ")
-                                                    __org = StripUnique(__org)
-                                                    _ent_text = _ent.lower().split(" ")
-                                                    _ent_text = StripUnique(_ent_text)
+                                            special_characters = "’'"
 
-                                                    if set(__org) <= set(
-                                                        _ent_text
-                                                    ) or set(_ent_text) <= set(__org):
-                                                        _exc_org.append(org)
+                                            if org.lower() == _org.lower():
+                                                _exc_org.append(org)
+                                                # continue
 
-                                        # print('org:', _org)
-                                        __org = _org.lower().split(" ")
-                                        __org = StripUnique(__org)
-                                        _ent_text = org.lower().split(" ")
-                                        _ent_text = StripUnique(_ent_text)
-                                        if set(__org) <= set(_ent_text) or set(
-                                            _ent_text
-                                        ) <= set(__org):
-                                            _exc_org.append(org)
-                                            # print('--------------- is a set: -------------')
-                                            # continue
-                                        # else:
-                                        # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
-                                    profile[
-                                        "Organization_Name_mentioned_in_the_news"
-                                    ] += (org + ", ")
+                                            if any(c in special_characters for c in org):
+                                                SpecialCharacter = [
+                                                    c
+                                                    for c in org
+                                                    if c in special_characters
+                                                ]
 
-                                # find persons in text
-                                # elif ent.label_ == 'GPE':
-                                else:
-                                    continue
-                            for location in locations:
-                                profile["City_State_mentioned_under_the_news"] += (
-                                    location + ", "
-                                )
+                                                if len(org.split(SpecialCharacter[0])) > 1:
+                                                    for _ent in org.lower().split(
+                                                        SpecialCharacter[0]
+                                                    ):
+                                                        __org = _org.lower().split(" ")
+                                                        __org = StripUnique(__org)
+                                                        _ent_text = _ent.lower().split(" ")
+                                                        _ent_text = StripUnique(_ent_text)
 
-                            # find persons in text
-                            # elif ent.label_ == 'LOC':
-                            for location in locations:
-                                profile["City_State_mentioned_under_the_news"] += (
-                                    location + ", "
-                                )
+                                                        if set(__org) <= set(
+                                                            _ent_text
+                                                        ) or set(_ent_text) <= set(__org):
+                                                            _exc_org.append(org)
 
-                            # find persons in text
-                            # elif ent.label_ == 'FAC':
-                            for location in locations:
-                                profile["City_State_mentioned_under_the_news"] += (
-                                    location + ", "
-                                )
-                            # _loc = text2[i].split(':')
-                            # _loc = [y for x in _loc for y in x.split(' ')]
-                            # _loc = [x.strip() for x in _loc]
-                            # _loc = [x for x in _loc if x.lower() in cities['cities']]
-                            # print('location:detected:', _loc)
-                            # for __loc in _loc:
-                            # profile['City_State_mentioned_under_the_news'] += __loc + ', '
+                                            # print('org:', _org)
+                                            __org = _org.lower().split(" ")
+                                            __org = StripUnique(__org)
+                                            _ent_text = org.lower().split(" ")
+                                            _ent_text = StripUnique(_ent_text)
+                                            if set(__org) <= set(_ent_text) or set(
+                                                _ent_text
+                                            ) <= set(__org):
+                                                _exc_org.append(org)
+                                                # print('--------------- is a set: -------------')
+                                                # continue
+                                            # else:
+                                            # profile['Organization_Name_mentioned_in_the_news'] += ent.text + ', '
+                                        profile[
+                                            "Organization_Name_mentioned_in_the_news"
+                                        ] += (org + ", ")
+                                    else:
+                                        for org in orgs:
+                                            profile[
+                                                "Organization_Name_mentioned_in_the_news"
+                                            ] += (org + ", ")
+                                    # print('[INFO] profile orgs', profile["Organization_Name_mentioned_in_the_news"])
+                                for location in locations:
+                                    profile["City_State_mentioned_under_the_news"] += (
+                                        location + ", "
+                                    )
 
-                            # for __loc in _loc:
-                            # __loc = __loc.split(' ')
-                            # __loc = [x for x in __loc if x in cities['cities']]
-                            # print('location found:', __loc)
-                            # profile['City_State_mentioned_under_the_news'] += __loc[-1] + ', '
+                            
                         org = profile["Organization_Name_mentioned_in_the_news"].split(
                             ","
                         )
                         for i in range(len(org)):
                             org[i] = org[i].strip()
                         org = list(set(filter(None, org)))
-                        # print(org)
+                        print('[INFO] ORG Before FUZZ',org)
                         if len(org) > 1:
                             for (i, element) in enumerate(org):
                                 for (j, choice) in enumerate(org[i + 1 :]):
@@ -1376,7 +1340,7 @@ def adverseapi():
                             for j in range(len(loc)):
                                 if fuzz.ratio(org[i].lower(), loc[j].lower()) >= 80:
                                     print("FUZZ loc removed from org: ", org[i])
-                                    org[i] = ''
+                                    # org[i] = ''
                                     loc[j] = ''
                         # loc = loc1
                         print('[DEBUG] city 1: ', loc)
@@ -1401,6 +1365,12 @@ def adverseapi():
                                 b = re.sub( r"([A-Z])", r" \1", loc[i]).split()
                                 for j in range(len(b)):
                                     loc.append(b[j].title())
+                        for i in range(len(org)):
+                            org[i] = org[i].strip()
+                            if len(org[i].split()) == 1:
+                                b = re.sub( r"([A-Z])", r" \1", org[i]).split()
+                                for j in range(len(b)):
+                                    org.append(b[j].title())
                         # print(loc)       
                         for i in range(len(org)):
                             if len(org[i]) < 3:

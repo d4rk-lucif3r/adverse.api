@@ -6,6 +6,7 @@ from newspaper import Article
 import pytz
 import csv
 import feedparser
+import traceback
 from pymongo import MongoClient
 from faker import Faker
 import pandas as pd
@@ -1805,7 +1806,7 @@ def _incre_mode(batch_id):
                         x.strip() for x in profile["org"] if x not in _exc_org
                     ]
                     # profile['org'] = ', '.join(profile['org'])
-                    profile["name"] = profile["name"].split(",") + profile["org"]
+                    profile["org"].append(profile["name"])
                     # print(profile['name'])
                     profile["name"] = [x.strip() for x in profile["name"] if x.strip()]
                     profile["name"] = list(set(profile["name"]))
@@ -1837,7 +1838,7 @@ def _incre_mode(batch_id):
 
                     profile["name"] = "| ".join(profile["name"])
                     profile["org"] = "| ".join(profile["org"])
-                    profile["loc"] = profile["loc"].split(",")
+                    profile["loc"] = profile["loc"]
                     # print(profile['loc'])
                     profile["loc"] = [x.strip() for x in profile["loc"] if x.strip()]
                     profile["loc"] = list(set(profile["loc"]))
@@ -1883,6 +1884,7 @@ def _incre_mode(batch_id):
                     # print(profile)
 
             except Exception as e:
+                print(traceback.format_exc())
                 print("_incre_mode:", e)
                 print("skipping:", val[0])
 

@@ -38,8 +38,8 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'VET', 'cryptocurrencies', '’s', 'ATM', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
-loc_fp = ['BNB']
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'IST', 'ASI', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
+loc_fp = ['BNB', 'deaths', 'IST', 'Daily']
 name_fp = [
     "maggi",
     "rooh afza",
@@ -290,7 +290,7 @@ def combined_matcher(data):
         # org = org + final_org_list
 
         filter_words = locations + final_numerical_data + org + numeric_data + misc_data
-        print(filter_words)
+        # print(filter_words)
         try:
             filter_words = list(set(filter_words))
         except TypeError:
@@ -299,7 +299,7 @@ def combined_matcher(data):
                     for j in filter_words[i]:
                         filter_words.append(j)
                     filter_words.remove(filter_words[i])
-        print(filter_words)
+        # print(filter_words)
         for i in range(len(filter_words)):
             if filter_words[i] in str(data):
                 data = data.replace(filter_words[i], '')
@@ -331,24 +331,33 @@ def combined_matcher(data):
         names = names + final_name_list
 
         print('Post-Processing the Predictions\n')
-        print(org)
         # misc_data = list(set(misc_data))
         misc_data = ' '.join(misc_data)
-        print(misc_data)
-
+        # print(misc_data)
+        org = list(set(filter(None, org)))
+        names = list(set(filter(None, names)))
+        locations = list(set(filter(None, locations)))
+        print('[INFO] ORG before pp', org)
+        print('[INFO] NAME before pp', names)
+        print('[INFO] LOC before pp', locations)
         if len(org) > 0:
             for i in range(len(org)):
                 if org[i].replace('the', '') in misc_data:
                     org[i] = ''
+                    
                 org[i] = org[i].strip().replace("'s", '').replace(
                     "'", '').replace('the', '').replace('The', '').replace('@', '').replace('-', ' ')
                 if org[i] in locations:
+                    print('[INFO] ORG removed pp - loc', org[i])
                     org[i] = ''
                 if org[i] in names:
+                    print('[INFO] ORG removed pp - names', org[i])
                     org[i] = ''
                 if '##' in org[i]:
+                    print('[INFO] ORG removed pp - ##', org[i])
                     org[i] = ''
                 if len(org[i].strip()) < 3:
+                    print('[INFO] ORG removed pp - strip', org[i])
                     org[i] = ''
                 for j in range(len(org_fp)):
                     if any(emt in org[i] for emt in org_fp):
@@ -358,24 +367,30 @@ def combined_matcher(data):
                             rem.lower(), '').strip().title()
                 if is_date(org[i]):
                     org[i] = ''
-                if len(org[i].strip()) > 9:
+                if len(org[i].split(' ')) > 9:
+                    print('[INFO] ORG removed pp - split', org[i])
                     org[i] = ''
                 if 'Act' in org[i]:
+                    print('[INFO] ORG removed pp - act', org[i])
                     org[i] = ''
                 if 'Law' in org[i]:
+                    print('[INFO] ORG removed pp - law', org[i])
                     org[i] = ''
             for (i, element) in enumerate(org):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
                         if element in org:
+                            print('[INFO Comb Matcher]FUZZ org removed: ', element)
                             org.remove(element)
-                            print('FUZZ org removed: ', element)
                 # if len(org[i].split()) == 1:
                 #     for j in range(len(org)):
                 #         if org[i] in org[j]:
                 #             org[i] = ''
+                org[i] = re.sub(r'[^\w\s]', '', org[i])
+                org[i] = re.sub(" \d+", " ", org[i])
         if len(names) > 0:
             for i in range(len(names)):
+
                 if names[i] in misc_data:
                     names[i] = ''
                 names[i] = names[i].strip().replace(
@@ -408,6 +423,8 @@ def combined_matcher(data):
                 #     for j in range(len(names)):
                 #         if names[i] in names[j]:
                 #             names[i] = ''
+                # names[i] = re.sub(r'[^\w\s]', '', names[i])
+                names[i] = re.sub(" \d+", " ", names[i])
         if len(locations) > 0:
             for i in range(len(locations)):
                 locations[i] = locations[i].strip().replace("'s", '').replace(
@@ -420,12 +437,12 @@ def combined_matcher(data):
                     locations[i] = ''
                 if len(locations[i]) < 4:
                     locations[i] = ''
-                if any(emt in locations[i] for emt in loc_fp):
-                    rem = [emt for emt in loc_fp if(
-                        emt in str(locations[i]))][0]
-                    print('loc removed: ', rem)
-                    locations[i] = locations[i].lower().replace(
-                        rem.lower(), '').strip().title()
+                for j in range(len(loc_fp)):
+                    if any(emt in locations[i] for emt in loc_fp):
+                        rem = [emt for emt in loc_fp if(emt in str(locations[i]))][0]
+                        print('Location removed: ', rem)
+                        locations[i] = locations[i].lower().replace(
+                            rem.lower(), '').strip().title()
                 if is_date(locations[i]):
                     locations[i] = ''
             # for (i, element) in enumerate(locations):
@@ -437,7 +454,8 @@ def combined_matcher(data):
                 #     for j in range(len(locations)):
                 #         if locations[i] in locations[j]:
                 #             locations[i] = ''
-
+                # locations[i] = re.sub(r'[^\w\s]', '', locations[i])
+                # locations[i] = re.sub(" \d+", " ", locations[i])
         org = list(set(filter(None, org)))
         names = list(set(filter(None, names)))
         locations = list(set(filter(None, locations)))
