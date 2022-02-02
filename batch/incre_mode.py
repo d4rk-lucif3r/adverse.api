@@ -1806,7 +1806,9 @@ def _incre_mode(batch_id):
                         x.strip() for x in profile["org"] if x not in _exc_org
                     ]
                     # profile['org'] = ', '.join(profile['org'])
-                    profile["org"].append(profile["name"])
+                    a = profile["org"]
+                    profile['name'] = a.append(profile["name"])
+                    
                     # print(profile['name'])
                     profile["name"] = [x.strip() for x in profile["name"] if x.strip()]
                     profile["name"] = list(set(profile["name"]))
