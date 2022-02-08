@@ -38,8 +38,8 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'VET', 'cryptocurrencies', '’s', 'ATM', 'IST', 'ASI', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
-loc_fp = ['BNB', 'deaths', 'IST', 'Daily']
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'IST', 'ASI', 'CCTV','SSP','CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', 'expressway', 'Premium ', 'Parliament']
+loc_fp = ['BNB', 'deaths', 'IST', 'Daily','Road', 'House', 'expressway', 'Sector', 'Day', 'Kharmate', 'Station', 'Platform', 'Street', '']
 name_fp = [
     "maggi",
     "rooh afza",
@@ -52,7 +52,7 @@ name_fp = [
     "’s",
     "http",
     "@",
-    "Did you",
+    "Did you",'He', 'She', 'Express Premium', 'Home', 'Finance'
 ]
 
 
@@ -82,6 +82,7 @@ def combined_matcher(data):
         flair_test2 = {}
         numeric_data = []
         final_numerical_data = []
+        data = re.sub(r'\([^)]*\)', '', data.strip())
         misc_data = []
         print('[INFO] Filtering Started\n')
         spacy_results = ner_spacy(data)
@@ -363,8 +364,9 @@ def combined_matcher(data):
                     if any(emt in org[i] for emt in org_fp):
                         rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
                         print('org removed: ', rem)
-                        org[i] = org[i].lower().replace(
-                            rem.lower(), '').strip().title()
+                        # org[i] = org[i].lower().replace(
+                        #     rem.lower(), '').strip().title()
+                        org[i] = ''
                 if is_date(org[i]):
                     org[i] = ''
                 if len(org[i].split(' ')) > 9:
@@ -441,8 +443,7 @@ def combined_matcher(data):
                     if any(emt in locations[i] for emt in loc_fp):
                         rem = [emt for emt in loc_fp if(emt in str(locations[i]))][0]
                         print('Location removed: ', rem)
-                        locations[i] = locations[i].lower().replace(
-                            rem.lower(), '').strip().title()
+                        locations[i] = ''
                 if is_date(locations[i]):
                     locations[i] = ''
             # for (i, element) in enumerate(locations):

@@ -1354,7 +1354,7 @@ def adverseapi():
                         if len(per) > 0:
                             for (i, element) in enumerate(per):
                                 for (j, choice) in enumerate(per[i + 1 :]):
-                                    if fuzz.ratio(element, choice) >= 90:
+                                    if fuzz.ratio(element, choice) >= 70:
                                         if choice in per:
                                             per.remove(choice)
                                             print("FUZZ name removed: ", choice)
@@ -1537,6 +1537,7 @@ def adverseapi():
                                 profile["City_State_mentioned_under_the_news"].remove(
                                     name
                                 )
+                                print('Removed for city:', )
                                 profile["Person_Name_mentioned_in_the_news"] += (
                                     " | " + name
                                 )
