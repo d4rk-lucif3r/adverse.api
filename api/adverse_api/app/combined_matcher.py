@@ -29,7 +29,7 @@ ner_flair = SequenceTagger.load("flair/ner-english-large")
 # ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-stanza.download('en', package='partut')
+# stanza.download('en', package='partut')
 ner_stanza = stanza.Pipeline('en', package='partut')
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
 #           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags',
@@ -101,7 +101,6 @@ def combined_matcher(data):
             output = stream.read()
             if output != '':
                 numeric_data.append(output.split('\t'))
-
         locations = list(itertools.chain(*locations))
         numeric_data = list(filter(None, numeric_data))
         for i in range(0, len(numeric_data)):
@@ -319,7 +318,6 @@ def combined_matcher(data):
                     this_name.append(ner_dict['word'])
             elif ner_dict['entity'] == 'I-PER':
                 this_name.append(ner_dict['word'])
-
         all_names_list_tmp.append([this_name])
         final_name_list = []
         for name_list in all_names_list_tmp:

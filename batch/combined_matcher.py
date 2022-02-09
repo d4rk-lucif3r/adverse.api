@@ -29,7 +29,7 @@ ner_flair = SequenceTagger.load("flair/ner-english-large")
 # ner_flair = SequenceTagger.load("flair/ner-multi")
 ner_spacy = spacy.load("en_core_web_trf")
 ner_spacy_2 = spacy.load("en_core_web_lg")
-stanza.download('en', package='partut')
+# stanza.download('en', package='partut')
 ner_stanza = stanza.Pipeline('en', package='partut')
 # org_fp = ["Latest", "Thanks", "Omicron", "Unionmic", "OTP",
 #           "FIR", "'s", "http", '@', 'SHO', 'Court of Judicial Ma', 'pan India', 'P) Ltd Tags',
@@ -38,8 +38,9 @@ ner_stanza = stanza.Pipeline('en', package='partut')
 #           'TSTR', 'Regis General of',
 #           ]
 org_fp = ['SHO', 'FIR', 'IPS', 'OTP', 'Omicron', 'pan India',
-          'VET', 'cryptocurrencies', '’s', 'ATM', 'IST', 'ASI', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', ]
-loc_fp = ['BNB', 'deaths', 'IST', 'Daily']
+          'VET', 'cryptocurrencies', '’s', 'ATM', 'IST', 'ASI', 'CCTV', 'SSP', 'CHB', 'Newsguard', '.gov.in', '.com', 'https', 'IAS', 'Photo', 'File', 'expressway', 'Premium ', 'Parliament']
+loc_fp = ['BNB', 'deaths', 'IST', 'Daily', 'Road', 'House', 'expressway',
+          'Sector', 'Day', 'Kharmate', 'Station', 'Platform', 'Street', '']
 name_fp = [
     "maggi",
     "rooh afza",
@@ -52,7 +53,7 @@ name_fp = [
     "’s",
     "http",
     "@",
-    "Did you",
+    "Did you", 'He', 'She', 'Express Premium', 'Home', 'Finance'
 ]
 
 
@@ -82,6 +83,7 @@ def combined_matcher(data):
         flair_test2 = {}
         numeric_data = []
         final_numerical_data = []
+        data = re.sub(r'\([^)]*\)', '', data.strip())
         misc_data = []
         print('[INFO] Filtering Started\n')
         spacy_results = ner_spacy(data)
@@ -100,7 +102,6 @@ def combined_matcher(data):
             output = stream.read()
             if output != '':
                 numeric_data.append(output.split('\t'))
-
         locations = list(itertools.chain(*locations))
         numeric_data = list(filter(None, numeric_data))
         for i in range(0, len(numeric_data)):
@@ -318,7 +319,6 @@ def combined_matcher(data):
                     this_name.append(ner_dict['word'])
             elif ner_dict['entity'] == 'I-PER':
                 this_name.append(ner_dict['word'])
-
         all_names_list_tmp.append([this_name])
         final_name_list = []
         for name_list in all_names_list_tmp:
@@ -344,7 +344,7 @@ def combined_matcher(data):
             for i in range(len(org)):
                 if org[i].replace('the', '') in misc_data:
                     org[i] = ''
-                    
+
                 org[i] = org[i].strip().replace("'s", '').replace(
                     "'", '').replace('the', '').replace('The', '').replace('@', '').replace('-', ' ')
                 if org[i] in locations:
@@ -363,8 +363,9 @@ def combined_matcher(data):
                     if any(emt in org[i] for emt in org_fp):
                         rem = [emt for emt in org_fp if(emt in str(org[i]))][0]
                         print('org removed: ', rem)
-                        org[i] = org[i].lower().replace(
-                            rem.lower(), '').strip().title()
+                        # org[i] = org[i].lower().replace(
+                        #     rem.lower(), '').strip().title()
+                        org[i] = ''
                 if is_date(org[i]):
                     org[i] = ''
                 if len(org[i].split(' ')) > 9:
@@ -380,7 +381,8 @@ def combined_matcher(data):
                 for (j, choice) in enumerate(org[i+1:]):
                     if fuzz.ratio(element, choice) >= 90:
                         if element in org:
-                            print('[INFO Comb Matcher]FUZZ org removed: ', element)
+                            print(
+                                '[INFO Comb Matcher]FUZZ org removed: ', element)
                             org.remove(element)
                 # if len(org[i].split()) == 1:
                 #     for j in range(len(org)):
@@ -439,10 +441,10 @@ def combined_matcher(data):
                     locations[i] = ''
                 for j in range(len(loc_fp)):
                     if any(emt in locations[i] for emt in loc_fp):
-                        rem = [emt for emt in loc_fp if(emt in str(locations[i]))][0]
+                        rem = [emt for emt in loc_fp if(
+                            emt in str(locations[i]))][0]
                         print('Location removed: ', rem)
-                        locations[i] = locations[i].lower().replace(
-                            rem.lower(), '').strip().title()
+                        locations[i] = ''
                 if is_date(locations[i]):
                     locations[i] = ''
             # for (i, element) in enumerate(locations):
