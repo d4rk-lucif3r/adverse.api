@@ -85,7 +85,7 @@ pycparser==2.20
 pydantic==1.8.2
 PyDispatcher==2.0.5
 PyHamcrest==2.0.2
-PyJWT==2.1.0
+PyJWT==2.4.0
 pymongo==3.11.3
 pyOpenSSL==19.1.0
 pyparsing==2.4.7
