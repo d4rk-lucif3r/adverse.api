@@ -47,7 +47,7 @@ pathy
 Pillow
 pkg-resources
 preshed
-protobuf
+protobuf>=3.18.3
 pydantic
 PyJWT
 pymongo
@@ -236,7 +236,7 @@ priority
 prometheus-client
 prompt-toolkit
 Protego
-protobuf
+protobuf>=3.18.3
 ptyprocess
 pyarrow
 pyasn1
