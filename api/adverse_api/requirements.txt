@@ -308,7 +308,7 @@ tornado
 tqdm
 traitlets
 transformers
-Twisted
+Twisted==24.7.0
 typer
 typing-extensions
 Unidecode
