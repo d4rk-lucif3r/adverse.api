@@ -292,7 +292,7 @@ tabulate
 tensorboard
 tensorboard-data-server
 tensorboard-plugin-wit
-tensorflow
+tensorflow==2.12.1
 tensorflow-estimator
 termcolor
 terminado
