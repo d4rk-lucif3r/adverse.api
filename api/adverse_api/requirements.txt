@@ -118,7 +118,7 @@ click
 cloudpickle
 conllu
 constantly
-cryptography
+cryptography==44.0.1
 cssselect
 cycler
 cymem
