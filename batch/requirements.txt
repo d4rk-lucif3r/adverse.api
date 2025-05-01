@@ -130,7 +130,7 @@ torch==1.7.1
 torchcontrib==0.0.2
 tqdm==4.49.0
 transformers==4.2.2
-Twisted==20.3.0
+Twisted==24.7.0
 typer==0.3.2
 typing-extensions==3.7.4.3
 tzlocal==2.1
