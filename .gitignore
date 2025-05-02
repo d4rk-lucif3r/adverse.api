@@ -147,4 +147,8 @@ dmypy.json
 
 # data files
 *.csv
+
+# Sensitive data files
+/backup_data/BatchRunStatusDetailStatus.json
+
 # End of https://www.toptal.com/developers/gitignore/api/python
