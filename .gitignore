@@ -147,4 +147,7 @@ dmypy.json
 
 # data files
 *.csv
+
+# Backup data files - contain sensitive information
+/backup_data/
 # End of https://www.toptal.com/developers/gitignore/api/python
