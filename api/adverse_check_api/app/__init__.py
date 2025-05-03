@@ -1,6 +1,7 @@
 from flask import Flask
 from elasticsearch import Elasticsearch
 from config import Config
+from flask_talisman import Talisman
 
 
 app = Flask(__name__)
@@ -11,5 +12,14 @@ app.elasticsearch = (
     else None
 )
 
+# Add Talisman to implement HSTS (HTTP Strict Transport Security)
+talisman = Talisman(
+    app,
+    force_https=True,
+    strict_transport_security=True,
+    strict_transport_security_max_age=31536000,  # 1 year in seconds
+    strict_transport_security_include_subdomains=True,
+    strict_transport_security_preload=True
+)
 
 from app import routes
