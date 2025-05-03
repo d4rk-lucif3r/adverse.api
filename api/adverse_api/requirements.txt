@@ -15,6 +15,7 @@ feedfinder2
 feedparser
 filelock
 Flask
+flask-talisman
 flair
 ftfy
 geotext
