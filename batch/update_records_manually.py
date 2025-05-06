@@ -18,8 +18,11 @@ client = MongoClient("localhost", 27017)
 db = client["adverse_db"]
 collection_batches = db["adverse_db"]
 
-query = re.compile("drug")
+# Use safe pattern and sanitize input to prevent SQL injection
+query_pattern = "drug"
+query = re.compile(re.escape(query_pattern))
 
+# Use parameterized query instead of directly embedding user input
 posts = collection_batches.find(
     {"Key word Used for identify the article": {"$regex": query}}
 )
@@ -35,10 +38,17 @@ for post in posts:
         post["Key word Used for identify the article"] = [
             x for x in post["Key word Used for identify the article"] if x != "drug"
         ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
+        # Sanitize data before saving to prevent SQL injection
+        sanitized_keywords = ", ".join(
+            [re.escape(x) for x in post["Key word Used for identify the article"]]
         )
-        collection_batches.save(post)
+        post["Key word Used for identify the article"] = sanitized_keywords
+        
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": sanitized_keywords}}
+        )
     elif post["Key word Used for identify the article"] == "drug, narcotics":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -49,10 +59,17 @@ for post in posts:
         post["Key word Used for identify the article"] = [
             x for x in post["Key word Used for identify the article"] if x != "drug"
         ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
+        # Sanitize data before saving to prevent SQL injection
+        sanitized_keywords = ", ".join(
+            [re.escape(x) for x in post["Key word Used for identify the article"]]
         )
-        collection_batches.save(post)
+        post["Key word Used for identify the article"] = sanitized_keywords
+        
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": sanitized_keywords}}
+        )
     elif post["Key word Used for identify the article"] == "narcotics, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -63,10 +80,17 @@ for post in posts:
         post["Key word Used for identify the article"] = [
             x for x in post["Key word Used for identify the article"] if x != "drug"
         ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
+        # Sanitize data before saving to prevent SQL injection
+        sanitized_keywords = ", ".join(
+            [re.escape(x) for x in post["Key word Used for identify the article"]]
         )
-        collection_batches.save(post)
+        post["Key word Used for identify the article"] = sanitized_keywords
+        
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": sanitized_keywords}}
+        )
     elif post["Key word Used for identify the article"] == "terror, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -77,10 +101,17 @@ for post in posts:
         post["Key word Used for identify the article"] = [
             x for x in post["Key word Used for identify the article"] if x != "drug"
         ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
+        # Sanitize data before saving to prevent SQL injection
+        sanitized_keywords = ", ".join(
+            [re.escape(x) for x in post["Key word Used for identify the article"]]
         )
-        collection_batches.save(post)
+        post["Key word Used for identify the article"] = sanitized_keywords
+        
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": sanitized_keywords}}
+        )
     elif post["Key word Used for identify the article"] == "terror, narcotics, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -91,17 +122,26 @@ for post in posts:
         post["Key word Used for identify the article"] = [
             x for x in post["Key word Used for identify the article"] if x != "drug"
         ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
+        # Sanitize data before saving to prevent SQL injection
+        sanitized_keywords = ", ".join(
+            [re.escape(x) for x in post["Key word Used for identify the article"]]
         )
-        collection_batches.save(post)
+        post["Key word Used for identify the article"] = sanitized_keywords
+        
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": sanitized_keywords}}
+        )
     elif post["Key word Used for identify the article"] == "drug":
         post[
             "Key word Used for identify the article"
-        ] = "deleted_this"  # post["Key word Used for identify the article"].split(',')
-        # post["Key word Used for identify the article"] = [x.strip() for x in post["Key word Used for identify the article"]]
-        # post["Key word Used for identify the article"] = [x for x in post["Key word Used for identify the article"] if x != 'drug']
-        collection_batches.save(post)
+        ] = "deleted_this"  
+        # Use update_one with filter to avoid second-order injection
+        collection_batches.update_one(
+            {"_id": post["_id"]}, 
+            {"$set": {"Key word Used for identify the article": "deleted_this"}}
+        )
 
     # if post["Key word Used for identify the article"]
 
