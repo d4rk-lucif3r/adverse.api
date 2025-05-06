@@ -3,6 +3,9 @@ from pymongo import MongoClient
 from flask import Flask, request, render_template, jsonify, url_for, redirect
 from app import app
 from bson.json_util import dumps, loads
+from flask import escape
+import html
+import bleach
 
 # from utils import *
 import ast
@@ -22,7 +25,9 @@ def home():
     # status = [document['BatchRunStatus'] for document in cursor]
     # print(cursor)
     for document in cursor:
-        docs.append(document)
+        # Sanitize all string values in the document to prevent XSS
+        sanitized_doc = sanitize_document(document)
+        docs.append(sanitized_doc)
         # print(document)
 
     results = {"results": docs}
@@ -30,6 +35,21 @@ def home():
 
     return jsonify(results)  # "Wiki Refresh Api test slave databases"
     # return render_template('home.html')
+
+def sanitize_document(document):
+    """
+    Recursively sanitize all string values in a document to prevent XSS attacks.
+    """
+    if isinstance(document, dict):
+        return {k: sanitize_document(v) for k, v in document.items()}
+    elif isinstance(document, list):
+        return [sanitize_document(item) for item in document]
+    elif isinstance(document, str):
+        # Use bleach to clean any HTML and prevent XSS
+        return bleach.clean(document, strip=True)
+    else:
+        # Return non-string values unchanged
+        return document
 
 
 @app.route("/status")
@@ -41,7 +61,8 @@ def status():
         db = client["BatchRunStatus"]
         collection_batches = db["OverallStatus"]
         cursor = collection_batches.find({}, {"_id": False})
-        status = [document["OverallStatus"] for document in cursor]
+        # Sanitize the status value
+        status = [sanitize_document(document["OverallStatus"]) for document in cursor]
         # print(cursor)
         # for document in cursor:
         # docs.append(document)
