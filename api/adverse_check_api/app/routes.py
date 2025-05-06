@@ -22,7 +22,16 @@ def home():
     # status = [document['BatchRunStatus'] for document in cursor]
     # print(cursor)
     for document in cursor:
-        docs.append(document)
+        # Sanitize each document to prevent XSS attacks
+        sanitized_doc = {}
+        for key, value in document.items():
+            if isinstance(value, str):
+                # Escape HTML entities in string values
+                sanitized_value = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+                sanitized_doc[key] = sanitized_value
+            else:
+                sanitized_doc[key] = value
+        docs.append(sanitized_doc)
         # print(document)
 
     results = {"results": docs}
@@ -46,7 +55,16 @@ def status():
         # for document in cursor:
         # docs.append(document)
         # print(document)
-        results = {"status": status[-1]}
+        
+        # Apply sanitization to status data to prevent XSS
+        if status and len(status) > 0:
+            # Ensure we're only returning sanitized data
+            sanitized_status = str(status[-1])
+            # Escape HTML entities to prevent XSS
+            sanitized_status = sanitized_status.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+            results = {"status": sanitized_status}
+        else:
+            results = {"status": None}
     except Exception as e:
         print(e)
         results = {"status": None}
