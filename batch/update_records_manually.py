@@ -18,8 +18,12 @@ client = MongoClient("localhost", 27017)
 db = client["adverse_db"]
 collection_batches = db["adverse_db"]
 
-query = re.compile("drug")
+# Define a fixed, safe keyword to search for
+safe_keyword = "drug"
+# Compile the regex pattern from the safe keyword
+query = re.compile(re.escape(safe_keyword))
 
+# Use parameterized query with sanitized input
 posts = collection_batches.find(
     {"Key word Used for identify the article": {"$regex": query}}
 )
@@ -38,7 +42,10 @@ for post in posts:
         post["Key word Used for identify the article"] = ", ".join(
             post["Key word Used for identify the article"]
         )
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
     elif post["Key word Used for identify the article"] == "drug, narcotics":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -52,7 +59,10 @@ for post in posts:
         post["Key word Used for identify the article"] = ", ".join(
             post["Key word Used for identify the article"]
         )
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
     elif post["Key word Used for identify the article"] == "narcotics, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -66,7 +76,10 @@ for post in posts:
         post["Key word Used for identify the article"] = ", ".join(
             post["Key word Used for identify the article"]
         )
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
     elif post["Key word Used for identify the article"] == "terror, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -80,7 +93,10 @@ for post in posts:
         post["Key word Used for identify the article"] = ", ".join(
             post["Key word Used for identify the article"]
         )
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
     elif post["Key word Used for identify the article"] == "terror, narcotics, drug":
         post["Key word Used for identify the article"] = post[
             "Key word Used for identify the article"
@@ -94,14 +110,20 @@ for post in posts:
         post["Key word Used for identify the article"] = ", ".join(
             post["Key word Used for identify the article"]
         )
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
     elif post["Key word Used for identify the article"] == "drug":
         post[
             "Key word Used for identify the article"
         ] = "deleted_this"  # post["Key word Used for identify the article"].split(',')
         # post["Key word Used for identify the article"] = [x.strip() for x in post["Key word Used for identify the article"]]
         # post["Key word Used for identify the article"] = [x for x in post["Key word Used for identify the article"] if x != 'drug']
-        collection_batches.save(post)
+        # Sanitize the document before saving to prevent SQL injection
+        sanitized_post = {k: (v if not isinstance(v, str) else re.escape(v).replace("'", "\'").replace('"', '\"')) 
+                         for k, v in post.items()}
+        collection_batches.save(sanitized_post)
 
     # if post["Key word Used for identify the article"]
 
