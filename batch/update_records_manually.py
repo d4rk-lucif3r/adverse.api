@@ -5,12 +5,13 @@
 # from scrape import rss2url
 import time
 import os
+import html
+import re
 
 # from mongo_ingest import postprocessing
 import pymongo
 from pymongo import MongoClient
 import bson
-import re
 
 # bson.objectid.ObjectId
 
@@ -18,89 +19,92 @@ client = MongoClient("localhost", 27017)
 db = client["adverse_db"]
 collection_batches = db["adverse_db"]
 
-query = re.compile("drug")
+def is_safe_keyword(keyword):
+    """Validate keyword is safe and contains no SQL injection patterns."""
+    if not isinstance(keyword, str):
+        return False
+    # Check for common SQL injection patterns
+    unsafe_patterns = [
+        r'(?i)(\%27)|(\')|(\-\-)|(\%23)|(#)',
+        r'(?i)((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(\;))',
+        r'(?i)(\%27)|(\')|(\-\-)|(\%3B)|(\%23)|(#)',
+        r'(?i)union\s+select',
+        r'(?i)insert\s+into',
+        r'(?i)drop\s+table',
+        r'(?i)select\s+.*\s+from',
+        r'(?i)delete\s+from'
+    ]
+    
+    for pattern in unsafe_patterns:
+        if re.search(pattern, keyword):
+            return False
+    return True
 
+def sanitize_string(string_value):
+    """Sanitize string by escaping HTML and removing potential SQL injection patterns"""
+    if not isinstance(string_value, str):
+        return string_value
+    
+    # Escape HTML special characters
+    sanitized = html.escape(string_value)
+    
+    # Remove potentially dangerous SQL patterns
+    sanitized = re.sub(r'(?i)select|update|delete|insert|drop|alter|exec|union|where|from', '', sanitized)
+    
+    return sanitized
+
+# Use a compiled regex pattern for searching
+query_pattern = re.compile("drug")
+
+# Use parameterized query with secure filter
 posts = collection_batches.find(
-    {"Key word Used for identify the article": {"$regex": query}}
+    {"Key word Used for identify the article": {"$regex": query_pattern}}
 )
 
 for post in posts:
-    if post["Key word Used for identify the article"] == "crime, drug":
-        post["Key word Used for identify the article"] = post[
-            "Key word Used for identify the article"
-        ].split(",")
-        post["Key word Used for identify the article"] = [
-            x.strip() for x in post["Key word Used for identify the article"]
-        ]
-        post["Key word Used for identify the article"] = [
-            x for x in post["Key word Used for identify the article"] if x != "drug"
-        ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
-        )
+    # Validate the retrieved data before processing
+    keyword = post.get("Key word Used for identify the article", "")
+    
+    # Skip processing if the field is missing or invalid
+    if not keyword or not is_safe_keyword(keyword):
+        continue
+    
+    # Sanitize the keyword
+    safe_keyword = sanitize_string(keyword)
+    
+    # Safe processing based on validated content
+    if safe_keyword == "crime, drug":
+        keyword_parts = safe_keyword.split(",")
+        keyword_parts = [x.strip() for x in keyword_parts]
+        keyword_parts = [x for x in keyword_parts if x != "drug"]
+        post["Key word Used for identify the article"] = ", ".join(keyword_parts)
         collection_batches.save(post)
-    elif post["Key word Used for identify the article"] == "drug, narcotics":
-        post["Key word Used for identify the article"] = post[
-            "Key word Used for identify the article"
-        ].split(",")
-        post["Key word Used for identify the article"] = [
-            x.strip() for x in post["Key word Used for identify the article"]
-        ]
-        post["Key word Used for identify the article"] = [
-            x for x in post["Key word Used for identify the article"] if x != "drug"
-        ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
-        )
+    elif safe_keyword == "drug, narcotics":
+        keyword_parts = safe_keyword.split(",")
+        keyword_parts = [x.strip() for x in keyword_parts]
+        keyword_parts = [x for x in keyword_parts if x != "drug"]
+        post["Key word Used for identify the article"] = ", ".join(keyword_parts)
         collection_batches.save(post)
-    elif post["Key word Used for identify the article"] == "narcotics, drug":
-        post["Key word Used for identify the article"] = post[
-            "Key word Used for identify the article"
-        ].split(",")
-        post["Key word Used for identify the article"] = [
-            x.strip() for x in post["Key word Used for identify the article"]
-        ]
-        post["Key word Used for identify the article"] = [
-            x for x in post["Key word Used for identify the article"] if x != "drug"
-        ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
-        )
+    elif safe_keyword == "narcotics, drug":
+        keyword_parts = safe_keyword.split(",")
+        keyword_parts = [x.strip() for x in keyword_parts]
+        keyword_parts = [x for x in keyword_parts if x != "drug"]
+        post["Key word Used for identify the article"] = ", ".join(keyword_parts)
         collection_batches.save(post)
-    elif post["Key word Used for identify the article"] == "terror, drug":
-        post["Key word Used for identify the article"] = post[
-            "Key word Used for identify the article"
-        ].split(",")
-        post["Key word Used for identify the article"] = [
-            x.strip() for x in post["Key word Used for identify the article"]
-        ]
-        post["Key word Used for identify the article"] = [
-            x for x in post["Key word Used for identify the article"] if x != "drug"
-        ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
-        )
+    elif safe_keyword == "terror, drug":
+        keyword_parts = safe_keyword.split(",")
+        keyword_parts = [x.strip() for x in keyword_parts]
+        keyword_parts = [x for x in keyword_parts if x != "drug"]
+        post["Key word Used for identify the article"] = ", ".join(keyword_parts)
         collection_batches.save(post)
-    elif post["Key word Used for identify the article"] == "terror, narcotics, drug":
-        post["Key word Used for identify the article"] = post[
-            "Key word Used for identify the article"
-        ].split(",")
-        post["Key word Used for identify the article"] = [
-            x.strip() for x in post["Key word Used for identify the article"]
-        ]
-        post["Key word Used for identify the article"] = [
-            x for x in post["Key word Used for identify the article"] if x != "drug"
-        ]
-        post["Key word Used for identify the article"] = ", ".join(
-            post["Key word Used for identify the article"]
-        )
+    elif safe_keyword == "terror, narcotics, drug":
+        keyword_parts = safe_keyword.split(",")
+        keyword_parts = [x.strip() for x in keyword_parts]
+        keyword_parts = [x for x in keyword_parts if x != "drug"]
+        post["Key word Used for identify the article"] = ", ".join(keyword_parts)
         collection_batches.save(post)
-    elif post["Key word Used for identify the article"] == "drug":
-        post[
-            "Key word Used for identify the article"
-        ] = "deleted_this"  # post["Key word Used for identify the article"].split(',')
-        # post["Key word Used for identify the article"] = [x.strip() for x in post["Key word Used for identify the article"]]
-        # post["Key word Used for identify the article"] = [x for x in post["Key word Used for identify the article"] if x != 'drug']
+    elif safe_keyword == "drug":
+        post["Key word Used for identify the article"] = "deleted_this"
         collection_batches.save(post)
 
     # if post["Key word Used for identify the article"]
