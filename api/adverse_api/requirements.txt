@@ -55,7 +55,7 @@ pyparsing
 python-dateutil
 python-dotenv
 pytz
-PyYAML
+PyYAML>=5.4
 regex
 requests
 requests-file
@@ -256,7 +256,7 @@ python-dateutil
 python-Levenshtein-wheels
 pytictoc
 pytz
-PyYAML
+PyYAML>=5.4
 pyzmq
 qtconsole
 QtPy
